@@ -88,16 +88,16 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
   const getAlternativeStyle = (key: string) => {
     if (!answered) {
       return selectedAnswer === key 
-        ? 'bg-netflix-red border-red-500 text-white shadow-lg transform scale-[1.02] transition-all duration-200' 
-        : 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-700 hover:border-gray-500 transition-all duration-200';
+        ? 'bg-netflix-red border-red-500 text-white shadow-lg transform scale-[1.02] transition-all duration-200 ring-2 ring-red-300' 
+        : 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-700 hover:border-gray-500 transition-all duration-200 active:scale-95';
     }
     
     if (key === question.resposta_correta) {
-      return 'bg-green-600 border-green-500 text-white shadow-lg';
+      return 'bg-green-600 border-green-500 text-white shadow-lg ring-2 ring-green-300';
     }
     
     if (key === selectedAnswer && key !== question.resposta_correta) {
-      return 'bg-red-600 border-red-500 text-white shadow-lg';
+      return 'bg-red-600 border-red-500 text-white shadow-lg ring-2 ring-red-300';
     }
     
     return 'bg-gray-800 border-gray-600 text-gray-400 opacity-60';
@@ -105,28 +105,28 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
 
   return (
     <>
-      <Card className="bg-netflix-card border-netflix-border p-6 max-w-4xl mx-auto shadow-xl">
+      <Card className="bg-netflix-card border-netflix-border p-4 sm:p-6 max-w-4xl mx-auto shadow-xl">
         {/* Question */}
-        <div className="mb-6">
-          <div className="text-gray-100 text-lg leading-relaxed whitespace-pre-wrap">
+        <div className="mb-6 sm:mb-8">
+          <div className="text-gray-100 text-lg sm:text-xl leading-relaxed whitespace-pre-wrap font-medium">
             {question.questao}
           </div>
         </div>
 
-        {/* Alternatives */}
-        <div className="space-y-3 mb-6">
+        {/* Alternatives - Mobile Optimized */}
+        <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
           {alternatives.map((alternative) => (
             <button
               key={alternative.key}
               onClick={() => handleAnswerSelect(alternative.key)}
               disabled={answered}
-              className={`w-full p-4 rounded-lg border-2 text-left transition-all duration-200 ${getAlternativeStyle(alternative.key)}`}
+              className={`w-full p-4 sm:p-5 rounded-xl border-2 text-left transition-all duration-200 min-h-[60px] sm:min-h-[70px] ${getAlternativeStyle(alternative.key)}`}
             >
-              <div className="flex items-start gap-3">
-                <span className="font-bold text-lg min-w-[24px] flex-shrink-0">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <span className="font-bold text-xl sm:text-2xl min-w-[28px] sm:min-w-[32px] flex-shrink-0 mt-1">
                   {alternative.key})
                 </span>
-                <span className="flex-1 text-base whitespace-pre-wrap">
+                <span className="flex-1 text-base sm:text-lg whitespace-pre-wrap leading-relaxed">
                   {alternative.value}
                 </span>
               </div>
@@ -139,22 +139,22 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
           <Button
             onClick={handleSubmitAnswer}
             disabled={!selectedAnswer}
-            className="w-full bg-netflix-red hover:bg-red-700 text-white py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            className="w-full bg-netflix-red hover:bg-red-700 text-white py-4 sm:py-5 text-lg sm:text-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 rounded-xl shadow-lg min-h-[56px] sm:min-h-[64px] active:scale-95"
           >
             Responder
           </Button>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 sm:space-y-6">
             {/* Question Info (appears after answering) */}
-            <div className="flex items-center justify-between flex-wrap gap-4 p-4 bg-gray-800 rounded-lg">
+            <div className="flex items-center justify-between flex-wrap gap-4 p-4 sm:p-5 bg-gray-800 rounded-xl">
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-900">
+                <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-900 text-sm sm:text-base px-3 py-1">
                   {question.exame}ª {question.ano}
                 </Badge>
-                <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-900">
+                <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-900 text-sm sm:text-base px-3 py-1">
                   Questão {question.numero}
                 </Badge>
-                <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-900">
+                <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-900 text-sm sm:text-base px-3 py-1">
                   {question.area}
                 </Badge>
               </div>
@@ -164,9 +164,9 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
                   variant="ghost"
                   size="sm"
                   onClick={toggleFavorite}
-                  className={`${isFavorite ? 'text-red-500 hover:text-red-400' : 'text-gray-400 hover:text-gray-300'} transition-colors`}
+                  className={`${isFavorite ? 'text-red-500 hover:text-red-400' : 'text-gray-400 hover:text-gray-300'} transition-colors p-3 rounded-full active:scale-95`}
                 >
-                  <Heart size={20} fill={isFavorite ? 'currentColor' : 'none'} />
+                  <Heart size={24} fill={isFavorite ? 'currentColor' : 'none'} />
                 </Button>
               </div>
             </div>
@@ -175,9 +175,9 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
             {question.justificativa && (
               <Button
                 onClick={() => setShowJustification(true)}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-semibold transition-all duration-200"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 sm:py-5 text-lg sm:text-xl font-semibold transition-all duration-200 rounded-xl shadow-lg min-h-[56px] sm:min-h-[64px] active:scale-95"
               >
-                <MessageSquare size={20} className="mr-2" />
+                <MessageSquare size={24} className="mr-3" />
                 Ver Comentário
               </Button>
             )}
