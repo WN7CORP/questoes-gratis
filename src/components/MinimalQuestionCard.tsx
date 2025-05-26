@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -127,6 +128,39 @@ const MinimalQuestionCard = ({
     return 'bg-red-600/70 border-red-500/70 text-white/80 shadow-lg ring-2 ring-red-300/50 border-2 opacity-70';
   };
 
+  const getItemNumber = (key: string) => {
+    const itemNumbers = { 'A': '1º', 'B': '2º', 'C': '3º', 'D': '4º' };
+    return itemNumbers[key] || key;
+  };
+
+  const renderItemStatus = () => {
+    if (!answered) return null;
+    
+    return (
+      <div className="mb-6 p-4 bg-gray-800/50 rounded-lg border border-gray-600/50">
+        <div className="space-y-2">
+          {alternatives.map((alternative) => {
+            const isCorrect = alternative.key === question.resposta_correta;
+            const itemNumber = getItemNumber(alternative.key);
+            
+            return (
+              <div 
+                key={alternative.key}
+                className={`text-sm font-medium ${
+                  isCorrect 
+                    ? 'text-green-400/80' 
+                    : 'text-red-400/80'
+                }`}
+              >
+                {itemNumber} Item: {isCorrect ? 'Correto' : 'Incorreto'}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <Card className="bg-netflix-card border-netflix-border p-4 sm:p-6 max-w-4xl mx-auto shadow-xl transition-all duration-300 hover:shadow-2xl">
@@ -163,6 +197,9 @@ const MinimalQuestionCard = ({
             {question.questao}
           </div>
         </div>
+
+        {/* Item Status - appears after answering */}
+        {renderItemStatus()}
 
         {/* Alternatives - with enhanced visual feedback */}
         <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
