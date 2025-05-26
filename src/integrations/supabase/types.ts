@@ -5372,6 +5372,44 @@ export type Database = {
           },
         ]
       }
+      user_question_answers: {
+        Row: {
+          created_at: string
+          id: string
+          is_correct: boolean
+          question_id: number
+          selected_answer: string
+          session_id: string
+          time_spent: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_correct: boolean
+          question_id: number
+          selected_answer: string
+          session_id: string
+          time_spent?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          question_id?: number
+          selected_answer?: string
+          session_id?: string
+          time_spent?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_question_answers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "user_study_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_question_responses: {
         Row: {
           answer: string
@@ -5499,6 +5537,42 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           videos_assistidos?: number | null
+        }
+        Relationships: []
+      }
+      user_study_sessions: {
+        Row: {
+          area: string | null
+          completed_at: string | null
+          correct_answers: number
+          created_at: string
+          id: string
+          mode: string
+          questions_answered: number
+          total_time: number
+          user_id: string
+        }
+        Insert: {
+          area?: string | null
+          completed_at?: string | null
+          correct_answers?: number
+          created_at?: string
+          id?: string
+          mode: string
+          questions_answered?: number
+          total_time?: number
+          user_id: string
+        }
+        Update: {
+          area?: string | null
+          completed_at?: string | null
+          correct_answers?: number
+          created_at?: string
+          id?: string
+          mode?: string
+          questions_answered?: number
+          total_time?: number
+          user_id?: string
         }
         Relationships: []
       }

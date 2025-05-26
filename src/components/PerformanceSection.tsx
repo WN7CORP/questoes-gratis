@@ -3,10 +3,21 @@ import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, TrendingDown, Target, Clock, CheckCircle, Download, Filter } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, Clock, CheckCircle, Filter } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import UserStatsCard from './UserStatsCard';
-import { UserStudySession } from "@/types/database";
+
+interface UserStudySession {
+  id: string;
+  user_id: string;
+  mode: string;
+  area: string | null;
+  questions_answered: number;
+  correct_answers: number;
+  total_time: number;
+  created_at: string;
+  completed_at: string | null;
+}
 
 const PerformanceSection = () => {
   const [sessions, setSessions] = useState<UserStudySession[]>([]);
@@ -25,37 +36,48 @@ const PerformanceSection = () => {
         return;
       }
 
-      // Mock data for now - this will work once the tables are properly synced
-      const mockSessions: UserStudySession[] = [];
-      setSessions(mockSessions);
+      // Calcular data limite baseada no filtro
+      let dateFilter = '';
+      const now = new Date();
+      
+      switch (timeFilter) {
+        case '7d':
+          now.setDate(now.getDate() - 7);
+          dateFilter = now.toISOString();
+          break;
+        case '30d':
+          now.setDate(now.getDate() - 30);
+          dateFilter = now.toISOString();
+          break;
+        case '3m':
+          now.setMonth(now.getMonth() - 3);
+          dateFilter = now.toISOString();
+          break;
+        default:
+          dateFilter = '';
+      }
+
+      let query = supabase
+        .from('user_study_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (dateFilter) {
+        query = query.gte('created_at', dateFilter);
+      }
+
+      const { data: sessionsData, error } = await query;
+
+      if (error) {
+        console.error('Error fetching sessions:', error);
+      } else {
+        setSessions(sessionsData || []);
+      }
     } catch (error) {
       console.error('Error:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const exportPerformanceReport = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Mock CSV export for now
-      let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "Area,Total_Questoes,Acertos,Percentual,Tempo_Medio\n";
-      csvContent += "Direito Civil,50,40,80%,45s\n";
-      csvContent += "Direito Penal,30,25,83%,38s\n";
-
-      // Download do arquivo
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `relatorio_desempenho_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error('Error exporting report:', error);
     }
   };
 
@@ -75,6 +97,16 @@ const PerformanceSection = () => {
     });
   };
 
+  const getModeLabel = (mode: string) => {
+    switch (mode) {
+      case 'random': return 'Aleatórias';
+      case 'simulado': return 'Simulado';
+      case 'recent': return 'Recentes';
+      case 'area': return 'Por Área';
+      default: return mode;
+    }
+  };
+
   return (
     <div className="h-full overflow-y-auto bg-black">
       {/* Header */}
@@ -88,16 +120,6 @@ const PerformanceSection = () => {
               Acompanhe seu progresso e identifique pontos de melhoria
             </p>
           </div>
-          
-          <Button
-            onClick={exportPerformanceReport}
-            variant="outline"
-            size="sm"
-            className="border-gray-600 text-gray-300 hover:bg-gray-800"
-          >
-            <Download size={16} className="mr-1" />
-            Exportar
-          </Button>
         </div>
 
         {/* Time Filter */}
@@ -119,7 +141,7 @@ const PerformanceSection = () => {
                 className={`text-xs ${
                   timeFilter === key 
                     ? 'bg-red-600 hover:bg-red-700 text-white' 
-                    : 'border-gray-600 text-gray-300 hover:bg-gray-800'
+                    : 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700'
                 }`}
               >
                 {label}
@@ -167,10 +189,10 @@ const PerformanceSection = () => {
                       </div>
                       <div>
                         <div className="text-white font-medium">
-                          {session.area || 'Todas as áreas'}
+                          {session.area || 'Todas as áreas'} • {getModeLabel(session.mode)}
                         </div>
                         <div className="text-gray-400 text-sm">
-                          {formatDate(session.created_at)} • {session.mode}
+                          {formatDate(session.created_at)}
                         </div>
                       </div>
                     </div>
@@ -183,7 +205,7 @@ const PerformanceSection = () => {
                         </div>
                         
                         <div className="text-center">
-                          <div className={`font-bold ${accuracy >= 70 ? 'text-green-400' : 'text-yellow-400'}`}>
+                          <div className={`font-bold ${accuracy >= 70 ? 'text-green-400' : accuracy >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
                             {accuracy}%
                           </div>
                           <div className="text-gray-400 text-xs">acertos</div>

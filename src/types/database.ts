@@ -24,14 +24,23 @@ export interface UserQuestionFavorite {
 export interface UserStudySession {
   id: string;
   user_id: string;
+  mode: string;
   area: string | null;
   questions_answered: number;
   correct_answers: number;
   total_time: number;
-  mode: string;
-  completed: boolean;
   created_at: string;
-  updated_at: string;
+  completed_at: string | null;
+}
+
+export interface UserQuestionAnswer {
+  id: string;
+  session_id: string;
+  question_id: number;
+  selected_answer: string;
+  is_correct: boolean;
+  time_spent: number;
+  created_at: string;
 }
 
 export interface UserQuestionAttempt {
