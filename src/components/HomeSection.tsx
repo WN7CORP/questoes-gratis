@@ -51,6 +51,7 @@ const HomeSection = () => {
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUser(user);
+    console.log('Current user:', user);
   };
 
   const fetchHomeData = async () => {
@@ -68,15 +69,20 @@ const HomeSection = () => {
         setRecentQuestions(questionsData || []);
       }
 
-      // Fetch user performance statistics by area
+      // Fetch user performance statistics by area with better query
+      console.log('Fetching user area statistics...');
       const { data: statsData, error: statsError } = await supabase
         .from('user_study_sessions')
-        .select('area, questions_answered, correct_answers, total_time')
-        .not('area', 'is', null);
+        .select('*')
+        .not('area', 'is', null)
+        .order('created_at', { ascending: false });
+
+      console.log('Raw stats data:', statsData);
+      console.log('Stats error:', statsError);
 
       if (statsError) {
         console.error('Error fetching user stats:', statsError);
-      } else {
+      } else if (statsData && statsData.length > 0) {
         // Process stats by area
         const areaStats: Record<string, {
           total_sessions: number;
@@ -85,8 +91,8 @@ const HomeSection = () => {
           total_time: number;
         }> = {};
 
-        statsData?.forEach(session => {
-          if (session.area) {
+        statsData.forEach(session => {
+          if (session.area && session.area.trim() !== '') {
             if (!areaStats[session.area]) {
               areaStats[session.area] = {
                 total_sessions: 0,
@@ -96,11 +102,13 @@ const HomeSection = () => {
               };
             }
             areaStats[session.area].total_sessions += 1;
-            areaStats[session.area].total_questions += session.questions_answered;
-            areaStats[session.area].total_correct += session.correct_answers;
-            areaStats[session.area].total_time += session.total_time;
+            areaStats[session.area].total_questions += session.questions_answered || 0;
+            areaStats[session.area].total_correct += session.correct_answers || 0;
+            areaStats[session.area].total_time += session.total_time || 0;
           }
         });
+
+        console.log('Processed area stats:', areaStats);
 
         const processedStats = Object.entries(areaStats)
           .map(([area, stats]) => ({
@@ -115,14 +123,18 @@ const HomeSection = () => {
               ? Math.round(stats.total_time / stats.total_questions) 
               : 0
           }))
-          .filter(stat => stat.total_questions >= 5) // Only show areas with at least 5 questions answered
+          .filter(stat => stat.total_questions >= 3) // Reduzindo para 3 questões mínimas
           .sort((a, b) => b.accuracy_percentage - a.accuracy_percentage)
           .slice(0, 6);
 
+        console.log('Final processed stats:', processedStats);
         setUserAreaStats(processedStats);
+      } else {
+        console.log('No statistics data found');
+        setUserAreaStats([]);
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in fetchHomeData:', error);
     } finally {
       setLoading(false);
     }
@@ -276,7 +288,13 @@ const HomeSection = () => {
           Estatísticas de Desempenho por Área
         </h2>
         {user ? (
-          userAreaStats.length > 0 ? (
+          loading ? (
+            <Card className="bg-netflix-card border-netflix-border p-6 text-center">
+              <div className="text-netflix-text-secondary">
+                Carregando estatísticas...
+              </div>
+            </Card>
+          ) : userAreaStats.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {userAreaStats.map((stat, index) => (
                 <Card 
