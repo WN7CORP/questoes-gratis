@@ -8,6 +8,7 @@ import { User, Settings, Bell, Download, Star, BookOpen, Trophy, Clock, Heart, T
 import { supabase } from "@/integrations/supabase/client";
 import FavoriteQuestions from './FavoriteQuestions';
 import UserStatsCard from './UserStatsCard';
+import { UserAchievement } from "@/types/database";
 
 interface UserProfile {
   id: string;
@@ -15,17 +16,9 @@ interface UserProfile {
   created_at: string;
 }
 
-interface Achievement {
-  id: string;
-  achievement_name: string;
-  description: string;
-  points: number;
-  unlocked_at: string;
-}
-
 const ProfileSection = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [achievements, setAchievements] = useState<UserAchievement[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -55,11 +48,10 @@ const ProfileSection = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
-        .from('user_achievements')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('unlocked_at', { ascending: false });
+      // Usar RPC para buscar achievements
+      const { data, error } = await supabase.rpc('get_user_achievements', {
+        p_user_id: user.id
+      });
 
       if (error) {
         console.error('Error fetching achievements:', error);

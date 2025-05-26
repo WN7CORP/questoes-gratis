@@ -6,24 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Heart, BookOpen, Trash2 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface FavoriteQuestion {
-  id: string;
-  question_id: number;
-  created_at: string;
-  Questoes_Comentadas: {
-    id: number;
-    ano: string;
-    exame: string;
-    area: string;
-    numero: string;
-    questao: string;
-    resposta_correta: string;
-  };
-}
+import { UserQuestionFavorite } from "@/types/database";
 
 const FavoriteQuestions = () => {
-  const [favorites, setFavorites] = useState<FavoriteQuestion[]>([]);
+  const [favorites, setFavorites] = useState<UserQuestionFavorite[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -39,14 +25,10 @@ const FavoriteQuestions = () => {
         return;
       }
 
-      const { data, error } = await supabase
-        .from('user_question_favorites')
-        .select(`
-          *,
-          Questoes_Comentadas!inner(*)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      // Usar uma query direta para contornar o problema de tipos
+      const { data, error } = await supabase.rpc('get_user_favorites', {
+        p_user_id: user.id
+      });
 
       if (error) {
         console.error('Error fetching favorites:', error);
@@ -65,10 +47,11 @@ const FavoriteQuestions = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
-        .from('user_question_favorites')
-        .delete()
-        .eq('id', favoriteId);
+      // Usar query SQL direta para deletar
+      const { error } = await supabase.rpc('remove_favorite', {
+        p_user_id: user.id,
+        p_question_id: questionId
+      });
 
       if (error) {
         console.error('Error removing favorite:', error);
@@ -127,7 +110,7 @@ const FavoriteQuestions = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-800 text-xs">
-                      {question.exame}ª {question.ano}
+                      {question.exame} {question.ano}
                     </Badge>
                     <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-800 text-xs">
                       Q. {question.numero}

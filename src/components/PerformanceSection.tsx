@@ -6,19 +6,10 @@ import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown, Target, Clock, CheckCircle, Download, Filter } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import UserStatsCard from './UserStatsCard';
-
-interface SessionData {
-  id: string;
-  area: string;
-  questions_answered: number;
-  correct_answers: number;
-  total_time: number;
-  created_at: string;
-  mode: string;
-}
+import { UserStudySession } from "@/types/database";
 
 const PerformanceSection = () => {
-  const [sessions, setSessions] = useState<SessionData[]>([]);
+  const [sessions, setSessions] = useState<UserStudySession[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<'7d' | '30d' | '3m' | 'all'>('30d');
 
@@ -34,27 +25,11 @@ const PerformanceSection = () => {
         return;
       }
 
-      let query = supabase
-        .from('user_study_sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('completed', true)
-        .order('created_at', { ascending: false });
-
-      // Apply time filter
-      const now = new Date();
-      if (timeFilter === '7d') {
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        query = query.gte('created_at', weekAgo.toISOString());
-      } else if (timeFilter === '30d') {
-        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        query = query.gte('created_at', monthAgo.toISOString());
-      } else if (timeFilter === '3m') {
-        const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        query = query.gte('created_at', threeMonthsAgo.toISOString());
-      }
-
-      const { data, error } = await query.limit(50);
+      // Usar RPC para buscar sessões
+      const { data, error } = await supabase.rpc('get_user_sessions', {
+        p_user_id: user.id,
+        p_time_filter: timeFilter
+      });
 
       if (error) {
         console.error('Error fetching sessions:', error);
@@ -73,36 +48,29 @@ const PerformanceSection = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch comprehensive data
-      const { data: attempts } = await supabase
-        .from('user_question_attempts')
-        .select(`
-          *,
-          Questoes_Comentadas!inner(area, ano, exame)
-        `)
-        .eq('user_id', user.id);
-
-      const { data: areaStats } = await supabase
-        .from('user_performance_stats')
-        .select('*')
-        .eq('user_id', user.id);
-
-      // Generate CSV content
-      let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "Area,Total_Questoes,Acertos,Percentual,Tempo_Medio\n";
-      
-      areaStats?.forEach(stat => {
-        csvContent += `${stat.area},${stat.total_questions},${stat.correct_answers},${stat.accuracy_percentage}%,${stat.average_time_per_question}s\n`;
+      // Buscar dados para export via RPC
+      const { data } = await supabase.rpc('get_performance_report', {
+        p_user_id: user.id
       });
 
-      // Create and download file
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `relatorio_desempenho_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      if (data) {
+        // Gerar CSV
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Area,Total_Questoes,Acertos,Percentual,Tempo_Medio\n";
+        
+        data.forEach((row: any) => {
+          csvContent += `${row.area},${row.total_questions},${row.correct_answers},${row.accuracy_percentage}%,${row.average_time_per_question}s\n`;
+        });
+
+        // Download do arquivo
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `relatorio_desempenho_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     } catch (error) {
       console.error('Error exporting report:', error);
     }
