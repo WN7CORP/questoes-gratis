@@ -43,27 +43,7 @@ const Index = () => {
   }
   return <div className="min-h-screen bg-netflix-black text-white">
       {/* Top Navigation */}
-      <div className="bg-gray-900 border-b border-gray-700 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <BookOpen className="text-red-500" size={24} />
-            <h1 className="text-white font-semibold">Questões Jurídicas</h1>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {user ? <>
-                <span className="text-gray-300 text-sm">
-                  {user.email}
-                </span>
-                <Button variant="outline" size="sm" onClick={handleSignOut} className="border-gray-600 text-gray-300 hover:bg-gray-800 bg-gray-800">
-                  Sair
-                </Button>
-              </> : <Button variant="outline" size="sm" onClick={() => navigate('/auth')} className="border-gray-600 text-gray-300 hover:bg-gray-800 bg-gray-800">
-                Login
-              </Button>}
-          </div>
-        </div>
-      </div>
+      
 
       <Tabs defaultValue="home" className="h-screen flex flex-col">
         {/* Top Navigation Tabs */}
