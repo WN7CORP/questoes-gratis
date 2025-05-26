@@ -48,16 +48,9 @@ const ProfileSection = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Usar RPC para buscar achievements
-      const { data, error } = await supabase.rpc('get_user_achievements', {
-        p_user_id: user.id
-      });
-
-      if (error) {
-        console.error('Error fetching achievements:', error);
-      } else {
-        setAchievements(data || []);
-      }
+      // Mock achievements for now
+      const mockAchievements: UserAchievement[] = [];
+      setAchievements(mockAchievements);
     } catch (error) {
       console.error('Error:', error);
     }
