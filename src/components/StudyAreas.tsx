@@ -1,32 +1,26 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Target, TrendingUp } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import QuestionsSection from './QuestionsSection';
-
 interface AreaStats {
   area: string;
   total_questoes: number;
 }
-
 const StudyAreas = () => {
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [areaStats, setAreaStats] = useState<AreaStats[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     fetchAreaStats();
   }, []);
-
   const fetchAreaStats = async () => {
     try {
-      const { data, error } = await supabase
-        .from('Questoes_Comentadas')
-        .select('area')
-        .not('area', 'is', null);
-
+      const {
+        data,
+        error
+      } = await supabase.from('Questoes_Comentadas').select('area').not('area', 'is', null);
       if (error) {
         console.error('Error fetching area stats:', error);
       } else {
@@ -37,12 +31,10 @@ const StudyAreas = () => {
             areaCounts[item.area] = (areaCounts[item.area] || 0) + 1;
           }
         });
-
         const stats = Object.entries(areaCounts).map(([area, count]) => ({
           area,
           total_questoes: count
         })).sort((a, b) => b.total_questoes - a.total_questoes);
-
         setAreaStats(stats);
       }
     } catch (error) {
@@ -51,16 +43,11 @@ const StudyAreas = () => {
       setLoading(false);
     }
   };
-
   if (selectedArea) {
-    return (
-      <div className="h-full overflow-y-auto bg-netflix-black">
-        <div className="p-6">
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => setSelectedArea('')}
-              className="text-netflix-red hover:text-red-400 transition-colors"
-            >
+    return <div className="h-full overflow-y-auto bg-netflix-black">
+        <div className="p-6 my-0 mx-0 px-px py-[13px]">
+          <div className="flex items-center gap-4 mb-6 px-[12px]">
+            <button onClick={() => setSelectedArea('')} className="text-netflix-red hover:text-red-400 transition-colors">
               ← Voltar
             </button>
             <h1 className="text-2xl font-bold text-white">
@@ -70,12 +57,9 @@ const StudyAreas = () => {
           
           <QuestionsSection selectedArea={selectedArea} limit={50} />
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="h-full overflow-y-auto bg-netflix-black">
+  return <div className="h-full overflow-y-auto bg-netflix-black">
       {/* Header */}
       <div className="p-6 pb-4">
         <h1 className="text-2xl font-bold text-white mb-2">
@@ -88,18 +72,10 @@ const StudyAreas = () => {
 
       {/* Areas Grid */}
       <div className="px-6 pb-6">
-        {loading ? (
-          <div className="text-netflix-text-secondary text-center py-8">
+        {loading ? <div className="text-netflix-text-secondary text-center py-8">
             Carregando áreas...
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {areaStats.map((area) => (
-              <Card 
-                key={area.area}
-                className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-colors"
-                onClick={() => setSelectedArea(area.area)}
-              >
+          </div> : <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {areaStats.map(area => <Card key={area.area} className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => setSelectedArea(area.area)}>
                 <div className="flex items-start gap-4">
                   <div className="bg-netflix-red rounded-lg p-3 mt-1">
                     <BookOpen className="text-white" size={24} />
@@ -126,10 +102,8 @@ const StudyAreas = () => {
                     <TrendingUp size={20} />
                   </div>
                 </div>
-              </Card>
-            ))}
-          </div>
-        )}
+              </Card>)}
+          </div>}
       </div>
 
       {/* Quick Stats */}
@@ -173,8 +147,6 @@ const StudyAreas = () => {
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default StudyAreas;
