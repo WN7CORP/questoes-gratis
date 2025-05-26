@@ -127,39 +127,6 @@ const MinimalQuestionCard = ({
     return 'bg-red-600/70 border-red-500/70 text-white/80 shadow-lg ring-2 ring-red-300/50 border-2 opacity-70';
   };
 
-  const getItemNumber = (key: string) => {
-    const itemNumbers = { 'A': '1º', 'B': '2º', 'C': '3º', 'D': '4º' };
-    return itemNumbers[key] || key;
-  };
-
-  const renderItemStatus = () => {
-    if (!answered) return null;
-    
-    return (
-      <div className="mb-6 p-3 bg-gray-900/30 rounded-lg border border-gray-700/30">
-        <div className="space-y-1">
-          {alternatives.map((alternative) => {
-            const isCorrect = alternative.key === question.resposta_correta;
-            const itemNumber = getItemNumber(alternative.key);
-            
-            return (
-              <div 
-                key={alternative.key}
-                className={`text-xs font-normal ${
-                  isCorrect 
-                    ? 'text-green-300/60' 
-                    : 'text-red-300/60'
-                }`}
-              >
-                {itemNumber} Item: {isCorrect ? 'Correto' : 'Incorreto'}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <>
       <Card className="bg-netflix-card border-netflix-border p-4 sm:p-6 max-w-4xl mx-auto shadow-xl transition-all duration-300 hover:shadow-2xl">
@@ -196,9 +163,6 @@ const MinimalQuestionCard = ({
             {question.questao}
           </div>
         </div>
-
-        {/* Item Status - appears after answering */}
-        {renderItemStatus()}
 
         {/* Alternatives - with enhanced visual feedback */}
         <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
