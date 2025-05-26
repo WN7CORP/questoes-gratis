@@ -122,6 +122,36 @@ export type Database = {
           },
         ]
       }
+      Artigo_comentado: {
+        Row: {
+          abreviacao: string | null
+          area: string | null
+          artigo: string | null
+          created_at: string
+          id: number
+          link: string | null
+          numero: string | null
+        }
+        Insert: {
+          abreviacao?: string | null
+          area?: string | null
+          artigo?: string | null
+          created_at?: string
+          id?: number
+          link?: string | null
+          numero?: string | null
+        }
+        Update: {
+          abreviacao?: string | null
+          area?: string | null
+          artigo?: string | null
+          created_at?: string
+          id?: number
+          link?: string | null
+          numero?: string | null
+        }
+        Relationships: []
+      }
       biblioteca_anotacoes: {
         Row: {
           cor: string | null
