@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown, Target, Clock, CheckCircle, Filter } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import UserStatsCard from './UserStatsCard';
-
 interface UserStudySession {
   id: string;
   user_id: string;
@@ -18,19 +16,20 @@ interface UserStudySession {
   created_at: string;
   completed_at: string | null;
 }
-
 const PerformanceSection = () => {
   const [sessions, setSessions] = useState<UserStudySession[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<'7d' | '30d' | '3m' | 'all'>('30d');
-
   useEffect(() => {
     fetchSessions();
   }, [timeFilter]);
-
   const fetchSessions = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);
         return;
@@ -39,7 +38,6 @@ const PerformanceSection = () => {
       // Calcular data limite baseada no filtro
       let dateFilter = '';
       const now = new Date();
-      
       switch (timeFilter) {
         case '7d':
           now.setDate(now.getDate() - 7);
@@ -56,19 +54,16 @@ const PerformanceSection = () => {
         default:
           dateFilter = '';
       }
-
-      let query = supabase
-        .from('user_study_sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
+      let query = supabase.from('user_study_sessions').select('*').eq('user_id', user.id).order('created_at', {
+        ascending: false
+      });
       if (dateFilter) {
         query = query.gte('created_at', dateFilter);
       }
-
-      const { data: sessionsData, error } = await query;
-
+      const {
+        data: sessionsData,
+        error
+      } = await query;
       if (error) {
         console.error('Error fetching sessions:', error);
       } else {
@@ -80,13 +75,11 @@ const PerformanceSection = () => {
       setLoading(false);
     }
   };
-
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -96,19 +89,21 @@ const PerformanceSection = () => {
       minute: '2-digit'
     });
   };
-
   const getModeLabel = (mode: string) => {
     switch (mode) {
-      case 'random': return 'Aleatórias';
-      case 'simulado': return 'Simulado';
-      case 'recent': return 'Recentes';
-      case 'area': return 'Por Área';
-      default: return mode;
+      case 'random':
+        return 'Aleatórias';
+      case 'simulado':
+        return 'Simulado';
+      case 'recent':
+        return 'Recentes';
+      case 'area':
+        return 'Por Área';
+      default:
+        return mode;
     }
   };
-
-  return (
-    <div className="h-full overflow-y-auto bg-black">
+  return <div className="h-full overflow-y-auto bg-black">
       {/* Header */}
       <div className="p-4 sm:p-6 pb-4">
         <div className="flex items-center justify-between mb-4">
@@ -127,26 +122,24 @@ const PerformanceSection = () => {
           <Filter size={16} className="text-gray-400" />
           <span className="text-white text-sm">Período:</span>
           <div className="flex gap-1">
-            {[
-              { key: '7d', label: '7 dias' },
-              { key: '30d', label: '30 dias' },
-              { key: '3m', label: '3 meses' },
-              { key: 'all', label: 'Tudo' }
-            ].map(({ key, label }) => (
-              <Button
-                key={key}
-                variant={timeFilter === key ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeFilter(key as any)}
-                className={`text-xs ${
-                  timeFilter === key 
-                    ? 'bg-red-600 hover:bg-red-700 text-white' 
-                    : 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700'
-                }`}
-              >
+            {[{
+            key: '7d',
+            label: '7 dias'
+          }, {
+            key: '30d',
+            label: '30 dias'
+          }, {
+            key: '3m',
+            label: '3 meses'
+          }, {
+            key: 'all',
+            label: 'Tudo'
+          }].map(({
+            key,
+            label
+          }) => <Button key={key} variant={timeFilter === key ? "default" : "outline"} size="sm" onClick={() => setTimeFilter(key as any)} className={`text-xs ${timeFilter === key ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700'}`}>
                 {label}
-              </Button>
-            ))}
+              </Button>)}
           </div>
         </div>
       </div>
@@ -156,33 +149,24 @@ const PerformanceSection = () => {
         <UserStatsCard />
 
         {/* Recent Sessions */}
-        <Card className="bg-gray-900 border-gray-700 p-6">
+        <Card className="bg-gray-900 border-gray-700 p-6 px-[4px] py-[26px] my-[11px]">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <Clock className="text-red-500" size={20} />
             Sessões Recentes
           </h2>
           
-          {loading ? (
-            <div className="text-gray-400 text-center py-8">
+          {loading ? <div className="text-gray-400 text-center py-8">
               Carregando sessões...
-            </div>
-          ) : sessions.length === 0 ? (
-            <div className="text-center py-8">
+            </div> : sessions.length === 0 ? <div className="text-center py-8">
               <CheckCircle className="mx-auto mb-4 text-gray-500" size={48} />
               <h3 className="text-white text-lg font-semibold mb-2">Nenhuma sessão encontrada</h3>
               <p className="text-gray-400">
                 Complete algumas sessões de estudo para ver seu histórico
               </p>
-            </div>
-          ) : (
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {sessions.map((session) => {
-                const accuracy = session.questions_answered > 0 
-                  ? Math.round((session.correct_answers / session.questions_answered) * 100) 
-                  : 0;
-                
-                return (
-                  <div key={session.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+            </div> : <div className="space-y-3 max-h-96 overflow-y-auto">
+              {sessions.map(session => {
+            const accuracy = session.questions_answered > 0 ? Math.round(session.correct_answers / session.questions_answered * 100) : 0;
+            return <div key={session.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg py-[17px]">
                     <div className="flex items-center gap-4">
                       <div className="bg-red-600 p-2 rounded-lg">
                         <CheckCircle className="text-white" size={16} />
@@ -217,15 +201,11 @@ const PerformanceSection = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  </div>;
+          })}
+            </div>}
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default PerformanceSection;
