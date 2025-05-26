@@ -179,9 +179,7 @@ const HomeSection = () => {
       <div className="p-6 pb-4">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
-              Bem-vindo ao OAB Questões
-            </h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Questões OAB Comentadas</h1>
             <p className="text-netflix-text-secondary text-lg">
               Estude com questões comentadas e prepare-se para o exame
             </p>
