@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, Target, Clock, TrendingUp } from 'lucide-react';
+import { X, Target, Clock, TrendingUp, BookOpen, Zap, Brain } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
 interface StudyOptionsModalProps {
@@ -21,13 +21,33 @@ const StudyOptionsModal = ({ isVisible, onClose, onStart, mode }: StudyOptionsMo
   const [availableAreas, setAvailableAreas] = useState<string[]>([]);
   const [totalQuestionsAvailable, setTotalQuestionsAvailable] = useState(0);
 
-  const questionOptions = mode === 'simulado' ? [20] : [5, 10, 15, 20, 30];
+  // Define question options based on mode
+  const getQuestionOptions = () => {
+    switch (mode) {
+      case 'quick':
+        return [10]; // Fixed 10 questions for quick mode
+      case 'desafio':
+        return [5]; // Fixed 5 questions for daily challenge
+      case 'area':
+        return [5, 10, 15, 20, 30]; // Variable for area study
+      default:
+        return [5, 10, 15, 20, 30];
+    }
+  };
+
+  const questionOptions = getQuestionOptions();
 
   useEffect(() => {
     if (isVisible) {
       fetchAvailableAreas();
+      // Set default question count based on mode
+      if (mode === 'quick') {
+        setQuestionCount(10);
+      } else if (mode === 'desafio') {
+        setQuestionCount(5);
+      }
     }
-  }, [isVisible]);
+  }, [isVisible, mode]);
 
   const fetchAvailableAreas = async () => {
     try {
@@ -73,20 +93,37 @@ const StudyOptionsModal = ({ isVisible, onClose, onStart, mode }: StudyOptionsMo
 
   const getModeTitle = () => {
     switch (mode) {
-      case 'random': return 'Questões Aleatórias';
-      case 'simulado': return 'Simulado Rápido';
-      case 'recent': return 'Questões Recentes';
+      case 'area': return 'Estudar por Área';
+      case 'quick': return 'Questões Rápidas';
+      case 'desafio': return 'Desafio Diário';
       default: return 'Estudo';
     }
   };
 
   const getModeIcon = () => {
     switch (mode) {
-      case 'random': return <Target className="text-white" size={24} />;
-      case 'simulado': return <Clock className="text-white" size={24} />;
-      case 'recent': return <TrendingUp className="text-white" size={24} />;
+      case 'area': return <BookOpen className="text-white" size={24} />;
+      case 'quick': return <Zap className="text-white" size={24} />;
+      case 'desafio': return <Brain className="text-white" size={24} />;
       default: return <Target className="text-white" size={24} />;
     }
+  };
+
+  const getModeDescription = () => {
+    switch (mode) {
+      case 'area': return 'Escolha uma área específica para focar seus estudos';
+      case 'quick': return 'Pratique com 10 questões aleatórias para aquecimento';
+      case 'desafio': return 'Teste seus conhecimentos com 5 questões desafiadoras';
+      default: return 'Configure suas opções de estudo';
+    }
+  };
+
+  const shouldShowAreaSelection = () => {
+    return mode === 'area' || mode === 'quick';
+  };
+
+  const shouldShowQuestionCount = () => {
+    return mode === 'area';
   };
 
   if (!isVisible) return null;
@@ -100,7 +137,10 @@ const StudyOptionsModal = ({ isVisible, onClose, onStart, mode }: StudyOptionsMo
             <div className="bg-netflix-red rounded-lg p-3">
               {getModeIcon()}
             </div>
-            <h2 className="text-2xl font-bold text-white">{getModeTitle()}</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-white">{getModeTitle()}</h2>
+              <p className="text-netflix-text-secondary text-sm">{getModeDescription()}</p>
+            </div>
           </div>
           <Button
             variant="outline"
@@ -113,12 +153,12 @@ const StudyOptionsModal = ({ isVisible, onClose, onStart, mode }: StudyOptionsMo
         </div>
 
         {/* Quantidade de Questões */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-white mb-3">
-            {mode === 'simulado' ? 'Quantidade de Questões (Fixo)' : 'Quantidade de Questões'}
-          </h3>
-          
-          {mode !== 'simulado' && (
+        {shouldShowQuestionCount() && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-white mb-3">
+              Quantidade de Questões
+            </h3>
+            
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-3">
                 <input
@@ -145,28 +185,26 @@ const StudyOptionsModal = ({ isVisible, onClose, onStart, mode }: StudyOptionsMo
                 />
               )}
             </div>
-          )}
-          
-          <div className="flex gap-2 flex-wrap">
-            {questionOptions.map(count => (
-              <Button
-                key={count}
-                variant="outline"
-                onClick={() => {
-                  setQuestionCount(count);
-                  setUseCustomCount(false);
-                }}
-                disabled={mode === 'simulado' || useCustomCount}
-                className={`${!useCustomCount && questionCount === count 
-                  ? 'bg-netflix-red hover:bg-red-700 text-white border-netflix-red' 
-                  : 'border-gray-600 text-gray-300 hover:bg-gray-700 bg-transparent'
-                } ${mode === 'simulado' || useCustomCount ? 'opacity-75' : ''}`}
-              >
-                {count} questões
-              </Button>
-            ))}
             
-            {mode !== 'simulado' && (
+            <div className="flex gap-2 flex-wrap">
+              {questionOptions.map(count => (
+                <Button
+                  key={count}
+                  variant="outline"
+                  onClick={() => {
+                    setQuestionCount(count);
+                    setUseCustomCount(false);
+                  }}
+                  disabled={useCustomCount}
+                  className={`${!useCustomCount && questionCount === count 
+                    ? 'bg-netflix-red hover:bg-red-700 text-white border-netflix-red' 
+                    : 'border-gray-600 text-gray-300 hover:bg-gray-700 bg-transparent'
+                  } ${useCustomCount ? 'opacity-75' : ''}`}
+                >
+                  {count} questões
+                </Button>
+              ))}
+              
               <Button
                 variant="outline"
                 onClick={() => {
@@ -180,18 +218,21 @@ const StudyOptionsModal = ({ isVisible, onClose, onStart, mode }: StudyOptionsMo
               >
                 Todas ({totalQuestionsAvailable})
               </Button>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Seleção de Áreas */}
-        {mode !== 'simulado' && (
+        {shouldShowAreaSelection() && (
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-white mb-3">
-              Áreas de Estudo (Opcional)
+              {mode === 'area' ? 'Selecione a Área' : 'Áreas de Estudo (Opcional)'}
             </h3>
             <p className="text-gray-400 text-sm mb-4">
-              Deixe vazio para incluir todas as áreas
+              {mode === 'area' 
+                ? 'Escolha uma área específica para estudar' 
+                : 'Deixe vazio para incluir todas as áreas'
+              }
             </p>
             <div className="flex gap-2 flex-wrap max-h-48 overflow-y-auto">
               {availableAreas.map(area => (
@@ -220,12 +261,18 @@ const StudyOptionsModal = ({ isVisible, onClose, onStart, mode }: StudyOptionsMo
           </p>
           {selectedAreas.length > 0 && (
             <p className="text-gray-300">
-              • {selectedAreas.length} área(s) selecionada(s)
+              • {selectedAreas.length} área(s) selecionada(s): {selectedAreas.slice(0, 3).join(', ')}
+              {selectedAreas.length > 3 && ` +${selectedAreas.length - 3} mais`}
             </p>
           )}
-          {selectedAreas.length === 0 && mode !== 'simulado' && (
+          {selectedAreas.length === 0 && shouldShowAreaSelection() && (
             <p className="text-gray-300">
               • Todas as áreas incluídas
+            </p>
+          )}
+          {mode === 'desafio' && (
+            <p className="text-gray-300">
+              • Questões de nível avançado selecionadas automaticamente
             </p>
           )}
         </div>
@@ -241,7 +288,8 @@ const StudyOptionsModal = ({ isVisible, onClose, onStart, mode }: StudyOptionsMo
           </Button>
           <Button
             onClick={handleStart}
-            className="flex-1 bg-netflix-red hover:bg-red-700 text-white"
+            disabled={mode === 'area' && selectedAreas.length === 0}
+            className="flex-1 bg-netflix-red hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Iniciar Estudo
           </Button>

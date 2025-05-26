@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, TrendingUp, Clock, Target, ChevronRight, User, Trophy, Award } from 'lucide-react';
+import { BookOpen, TrendingUp, Clock, Target, ChevronRight, User, Trophy, Award, Zap, Brain } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
 import QuestionsSection from './QuestionsSection';
 import StudyOptionsModal from './StudyOptionsModal';
+
 interface Question {
   id: number;
   ano: string;
@@ -195,45 +196,45 @@ const HomeSection = () => {
       <div className="px-6 mb-8">
         <h2 className="text-xl font-semibold text-white mb-4">Começar Estudos</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => handleStartStudy('random')}>
+          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => handleStartStudy('area')}>
             <div className="flex items-center gap-4">
               <div className="bg-netflix-red rounded-lg p-3">
-                <Target className="text-white" size={24} />
+                <BookOpen className="text-white" size={24} />
               </div>
               <div className="flex-1">
-                <h3 className="text-white font-semibold mb-1">Questões Aleatórias</h3>
+                <h3 className="text-white font-semibold mb-1">Estudar por Área</h3>
                 <p className="text-netflix-text-secondary text-sm">
-                  Pratique com questões variadas
+                  Escolha uma área específica para focar
                 </p>
               </div>
               <ChevronRight className="text-netflix-text-secondary" size={20} />
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => handleStartStudy('simulado')}>
+          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => handleStartStudy('quick')}>
             <div className="flex items-center gap-4">
               <div className="bg-netflix-red rounded-lg p-3">
-                <Clock className="text-white" size={24} />
+                <Zap className="text-white" size={24} />
               </div>
               <div className="flex-1">
-                <h3 className="text-white font-semibold mb-1">Simulado Rápido</h3>
+                <h3 className="text-white font-semibold mb-1">Questões Rápidas</h3>
                 <p className="text-netflix-text-secondary text-sm">
-                  20 questões cronometradas
+                  10 questões aleatórias para praticar
                 </p>
               </div>
               <ChevronRight className="text-netflix-text-secondary" size={20} />
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => handleStartStudy('recent')}>
+          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => handleStartStudy('desafio')}>
             <div className="flex items-center gap-4">
               <div className="bg-netflix-red rounded-lg p-3">
-                <TrendingUp className="text-white" size={24} />
+                <Brain className="text-white" size={24} />
               </div>
               <div className="flex-1">
-                <h3 className="text-white font-semibold mb-1">Questões Recentes</h3>
+                <h3 className="text-white font-semibold mb-1">Desafio Diário</h3>
                 <p className="text-netflix-text-secondary text-sm">
-                  Últimas questões adicionadas
+                  5 questões difíceis do dia
                 </p>
               </div>
               <ChevronRight className="text-netflix-text-secondary" size={20} />
