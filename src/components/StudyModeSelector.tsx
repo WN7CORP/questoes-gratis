@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Filter, Shuffle, RotateCcw, Settings, X } from 'lucide-react';
 
 interface StudyModeSelectorProps {
-  studyMode: string;
-  setStudyMode: (mode: string) => void;
+  studyMode: 'all' | 'favorites' | 'wrong';
+  setStudyMode: (mode: 'all' | 'favorites' | 'wrong') => void;
   selectedAreaFilter: string;
   setSelectedAreaFilter: (area: string) => void;
   areas: string[];
@@ -27,9 +27,9 @@ const StudyModeSelector = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const studyModes = [
-    { key: 'all', label: 'Todas as Questões' },
-    { key: 'favorites', label: 'Favoritas' },
-    { key: 'wrong', label: 'Erradas' },
+    { key: 'all' as const, label: 'Todas as Questões' },
+    { key: 'favorites' as const, label: 'Favoritas' },
+    { key: 'wrong' as const, label: 'Erradas' },
   ];
 
   if (!isOpen) {
