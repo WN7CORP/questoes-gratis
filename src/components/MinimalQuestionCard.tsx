@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -159,7 +160,7 @@ const MinimalQuestionCard = ({
 
         {/* Question */}
         <div className="mb-6 sm:mb-8">
-          <div className="text-gray-100 text-lg sm:text-xl leading-relaxed whitespace-pre-wrap font-medium">
+          <div className="text-gray-100 text-base sm:text-lg leading-relaxed whitespace-pre-wrap font-medium">
             {question.questao}
           </div>
         </div>
