@@ -152,17 +152,7 @@ const MinimalQuestionCard = ({
             Responder
           </Button> : <div className="space-y-4 sm:space-y-6">
             {/* Enhanced Feedback - Now using answerResult state */}
-            <div className={`p-6 rounded-xl text-center border-2 transition-all duration-300 ${answerResult ? 'bg-green-900/30 border-green-500 shadow-green-500/20 shadow-lg' : 'bg-red-900/30 border-red-500 shadow-red-500/20 shadow-lg'}`}>
-              <div className="flex items-center justify-center gap-3 mb-3">
-                {answerResult ? <CheckCircle className="text-green-500 animate-bounce" size={32} /> : <XCircle className="text-red-500 animate-bounce" size={32} />}
-                <h3 className={`text-2xl font-bold ${answerResult ? 'text-green-400' : 'text-red-400'}`}>
-                  {answerResult ? 'Parabéns! Você acertou!' : 'Ops! Resposta incorreta'}
-                </h3>
-              </div>
-              <p className="text-gray-300 text-lg">
-                {answerResult ? 'Continue assim, você está indo muito bem!' : `A resposta correta era: ${question.resposta_correta}`}
-              </p>
-            </div>
+            
 
             {/* Comment Button with area colors */}
             {question.justificativa && <Button onClick={() => setShowJustification(true)} className={`w-full ${areaColorScheme.secondary} ${areaColorScheme.hover} text-white py-4 sm:py-5 text-lg sm:text-xl font-semibold transition-all duration-200 rounded-xl shadow-lg min-h-[56px] sm:min-h-[64px] active:scale-95`}>
