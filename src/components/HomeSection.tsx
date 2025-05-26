@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -145,7 +144,7 @@ const HomeSection = () => {
           <QuestionsSection 
             limit={studyOptions.questionCount} 
             showFilters={selectedMode !== 'simulado'}
-            selectedAreas={studyOptions.areas}
+            selectedArea={studyOptions.areas.length > 0 ? studyOptions.areas[0] : undefined}
             mode={selectedMode}
           />
         </div>
