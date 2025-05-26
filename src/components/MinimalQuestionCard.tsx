@@ -37,6 +37,7 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
   const [showFeedback, setShowFeedback] = useState(false);
   const [showJustification, setShowJustification] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [answerResult, setAnswerResult] = useState<boolean | null>(null);
   const { toast } = useToast();
 
   const areaColorScheme = getAreaColors(question.area);
@@ -48,6 +49,7 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
     setAnswered(isAnswered);
     setShowFeedback(false);
     setShowJustification(false);
+    setAnswerResult(null);
   }, [question.id, isAnswered]);
 
   const alternatives = [
@@ -72,6 +74,7 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
     
     setAnswered(true);
     setShowResult(true);
+    setAnswerResult(isCorrect);
     
     // Show feedback animation
     setShowFeedback(true);
@@ -109,9 +112,6 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
     
     return 'bg-gray-800 border-gray-600 text-gray-400 opacity-60 border-2';
   };
-
-  // Fixed the logic here - calculate if the answer is correct
-  const isCorrect = answered && selectedAnswer === question.resposta_correta;
 
   return (
     <>
@@ -181,20 +181,20 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
           </Button>
         ) : (
           <div className="space-y-4 sm:space-y-6">
-            {/* Enhanced Feedback - Fixed the logic here */}
-            <div className={`p-6 rounded-xl text-center border-2 transition-all duration-300 ${isCorrect ? 'bg-green-900/30 border-green-500 shadow-green-500/20 shadow-lg' : 'bg-red-900/30 border-red-500 shadow-red-500/20 shadow-lg'}`}>
+            {/* Enhanced Feedback - Now using answerResult state */}
+            <div className={`p-6 rounded-xl text-center border-2 transition-all duration-300 ${answerResult ? 'bg-green-900/30 border-green-500 shadow-green-500/20 shadow-lg' : 'bg-red-900/30 border-red-500 shadow-red-500/20 shadow-lg'}`}>
               <div className="flex items-center justify-center gap-3 mb-3">
-                {isCorrect ? (
+                {answerResult ? (
                   <CheckCircle className="text-green-500 animate-bounce" size={32} />
                 ) : (
                   <XCircle className="text-red-500 animate-bounce" size={32} />
                 )}
-                <h3 className={`text-2xl font-bold ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>
-                  {isCorrect ? 'Parabéns! Você acertou!' : 'Ops! Resposta incorreta'}
+                <h3 className={`text-2xl font-bold ${answerResult ? 'text-green-400' : 'text-red-400'}`}>
+                  {answerResult ? 'Parabéns! Você acertou!' : 'Ops! Resposta incorreta'}
                 </h3>
               </div>
               <p className="text-gray-300 text-lg">
-                {isCorrect 
+                {answerResult 
                   ? 'Continue assim, você está indo muito bem!' 
                   : `A resposta correta era: ${question.resposta_correta}`
                 }
@@ -215,9 +215,9 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
         )}
       </Card>
 
-      {/* Feedback Animation - Fixed to use the correct logic */}
+      {/* Feedback Animation - Now using answerResult state */}
       <AnswerFeedback 
-        isCorrect={isCorrect} 
+        isCorrect={answerResult || false} 
         show={showFeedback} 
       />
 
