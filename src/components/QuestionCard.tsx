@@ -27,17 +27,28 @@ interface QuestionCardProps {
   onAnswer?: (questionId: number, selectedAnswer: string, isCorrect: boolean) => void;
   mode?: 'practice' | 'simulation' | 'review';
   timeLimit?: number;
+  isAnswered?: boolean;
 }
 
-const QuestionCard = ({ question, onAnswer, mode = 'practice', timeLimit }: QuestionCardProps) => {
+const QuestionCard = ({ question, onAnswer, mode = 'practice', timeLimit, isAnswered = false }: QuestionCardProps) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [showResult, setShowResult] = useState(false);
-  const [answered, setAnswered] = useState(false);
+  const [answered, setAnswered] = useState(isAnswered);
   const [timeSpent, setTimeSpent] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showNote, setShowNote] = useState(false);
   const [note, setNote] = useState('');
   const { toast } = useToast();
+
+  // Reset state when question changes
+  useEffect(() => {
+    setSelectedAnswer('');
+    setShowResult(false);
+    setAnswered(isAnswered);
+    setTimeSpent(0);
+    setShowNote(false);
+    setNote('');
+  }, [question.id, isAnswered]);
 
   // Timer effect
   useEffect(() => {
@@ -54,23 +65,6 @@ const QuestionCard = ({ question, onAnswer, mode = 'practice', timeLimit }: Ques
       return () => clearInterval(timer);
     }
   }, [answered, mode, timeLimit]);
-
-  // Check if question is favorite
-  useEffect(() => {
-    checkIfFavorite();
-  }, [question.id]);
-
-  const checkIfFavorite = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // For now, set as false since the table isn't available yet
-      setIsFavorite(false);
-    } catch (error) {
-      // Not favorite
-    }
-  };
 
   const alternatives = [
     { key: 'A', value: question.alternativa_a },
@@ -91,9 +85,6 @@ const QuestionCard = ({ question, onAnswer, mode = 'practice', timeLimit }: Ques
     setAnswered(true);
     setShowResult(true);
     
-    // Save attempt to database (mocked for now)
-    await saveAttempt(selectedAnswer, isCorrect);
-    
     if (onAnswer) {
       onAnswer(question.id, selectedAnswer, isCorrect);
     }
@@ -103,30 +94,14 @@ const QuestionCard = ({ question, onAnswer, mode = 'practice', timeLimit }: Ques
     if (!answered) {
       setAnswered(true);
       setShowResult(true);
-      saveAttempt('', false);
+      if (onAnswer) {
+        onAnswer(question.id, '', false);
+      }
       toast({
         title: "Tempo esgotado!",
         description: "A questão foi marcada como incorreta.",
         variant: "destructive"
       });
-    }
-  };
-
-  const saveAttempt = async (answer: string, isCorrect: boolean) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Mock save for now - will work once tables are synced
-      console.log('Saving attempt:', { 
-        user_id: user.id, 
-        question_id: question.id, 
-        selected_answer: answer, 
-        is_correct: isCorrect,
-        time_spent: timeSpent 
-      });
-    } catch (error) {
-      console.error('Error saving attempt:', error);
     }
   };
 
@@ -264,11 +239,11 @@ const QuestionCard = ({ question, onAnswer, mode = 'practice', timeLimit }: Ques
         </div>
       </div>
 
-      {/* Question */}
+      {/* Question - respecting line breaks */}
       <div className="mb-6">
-        <p className="text-gray-100 text-base sm:text-lg leading-relaxed">
+        <div className="text-gray-100 text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
           {question.questao}
-        </p>
+        </div>
       </div>
 
       {/* Note section */}
@@ -285,7 +260,7 @@ const QuestionCard = ({ question, onAnswer, mode = 'practice', timeLimit }: Ques
             <Button onClick={saveNote} size="sm" className="bg-red-600 hover:bg-red-700">
               Salvar
             </Button>
-            <Button onClick={() => setShowNote(false)} variant="outline" size="sm">
+            <Button onClick={() => setShowNote(false)} variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-gray-800 bg-gray-800">
               Cancelar
             </Button>
           </div>
@@ -305,7 +280,7 @@ const QuestionCard = ({ question, onAnswer, mode = 'practice', timeLimit }: Ques
               <span className="font-bold text-lg min-w-[24px] flex-shrink-0">
                 {alternative.key})
               </span>
-              <span className="flex-1 text-sm sm:text-base">
+              <span className="flex-1 text-sm sm:text-base whitespace-pre-wrap">
                 {alternative.value}
               </span>
             </div>
@@ -331,9 +306,9 @@ const QuestionCard = ({ question, onAnswer, mode = 'practice', timeLimit }: Ques
             <Star size={16} className="text-yellow-500" />
             Comentário da Questão
           </h4>
-          <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
+          <div className="text-gray-300 leading-relaxed text-sm sm:text-base whitespace-pre-wrap">
             {question.justificativa}
-          </p>
+          </div>
         </div>
       )}
     </Card>

@@ -38,38 +38,13 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
   const [selectedAreaFilter, setSelectedAreaFilter] = useState<string>(selectedArea || '');
   const [mode, setMode] = useState<'practice' | 'simulation' | 'review'>('practice');
   const [studyMode, setStudyMode] = useState<'all' | 'favorites' | 'wrong' | 'unanswered'>('all');
-  const [sessionId, setSessionId] = useState<string>('');
   const [sessionStats, setSessionStats] = useState({ correct: 0, total: 0, startTime: Date.now() });
   const { toast } = useToast();
 
   useEffect(() => {
     fetchQuestions();
     fetchAreas();
-    createStudySession();
   }, [selectedAreaFilter, limit, studyMode]);
-
-  const createStudySession = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('user_study_sessions')
-        .insert({
-          user_id: user.id,
-          area: selectedAreaFilter || null,
-          mode
-        })
-        .select()
-        .single();
-
-      if (data && !error) {
-        setSessionId(data.id);
-      }
-    } catch (error) {
-      console.error('Error creating session:', error);
-    }
-  };
 
   const fetchQuestions = async () => {
     setLoading(true);
@@ -80,44 +55,6 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
 
       if (selectedAreaFilter) {
         query = query.eq('area', selectedAreaFilter);
-      }
-
-      // Apply study mode filters
-      if (studyMode === 'favorites') {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: favorites } = await supabase
-            .from('user_question_favorites')
-            .select('question_id')
-            .eq('user_id', user.id);
-          
-          if (favorites && favorites.length > 0) {
-            const questionIds = favorites.map(f => f.question_id);
-            query = query.in('id', questionIds);
-          } else {
-            setQuestions([]);
-            setLoading(false);
-            return;
-          }
-        }
-      } else if (studyMode === 'wrong') {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: wrongAnswers } = await supabase
-            .from('user_question_attempts')
-            .select('question_id')
-            .eq('user_id', user.id)
-            .eq('is_correct', false);
-          
-          if (wrongAnswers && wrongAnswers.length > 0) {
-            const questionIds = [...new Set(wrongAnswers.map(w => w.question_id))];
-            query = query.in('id', questionIds);
-          } else {
-            setQuestions([]);
-            setLoading(false);
-            return;
-          }
-        }
       }
 
       query = query.limit(limit);
@@ -132,6 +69,9 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
         });
       } else {
         setQuestions(data || []);
+        // Reset answers when new questions are loaded
+        setAnswers({});
+        setCurrentQuestionIndex(0);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -169,13 +109,6 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
       total: prev.total + 1,
       correct: prev.correct + (isCorrect ? 1 : 0)
     }));
-
-    // Auto advance after 2 seconds in practice mode
-    if (mode === 'practice') {
-      setTimeout(() => {
-        nextQuestion();
-      }, 2000);
-    }
   };
 
   const nextQuestion = () => {
@@ -193,29 +126,11 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
   };
 
   const finishSession = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !sessionId) return;
-
-      const totalTime = Math.floor((Date.now() - sessionStats.startTime) / 1000);
-
-      await supabase
-        .from('user_study_sessions')
-        .update({
-          questions_answered: sessionStats.total,
-          correct_answers: sessionStats.correct,
-          total_time: totalTime,
-          completed: true
-        })
-        .eq('id', sessionId);
-
-      toast({
-        title: "Sessão finalizada!",
-        description: `Você acertou ${sessionStats.correct} de ${sessionStats.total} questões (${Math.round((sessionStats.correct / sessionStats.total) * 100)}%)`,
-      });
-    } catch (error) {
-      console.error('Error finishing session:', error);
-    }
+    const totalTime = Math.floor((Date.now() - sessionStats.startTime) / 1000);
+    toast({
+      title: "Sessão finalizada!",
+      description: `Você acertou ${sessionStats.correct} de ${sessionStats.total} questões (${Math.round((sessionStats.correct / sessionStats.total) * 100)}%)`,
+    });
   };
 
   const shuffleQuestions = () => {
@@ -230,7 +145,6 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
     setCurrentQuestionIndex(0);
     setAnswers({});
     setSessionStats({ correct: 0, total: 0, startTime: Date.now() });
-    createStudySession();
   };
 
   const getStats = () => {
@@ -284,7 +198,7 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
                 className={`${
                   studyMode === key 
                     ? 'bg-red-600 hover:bg-red-700 text-white' 
-                    : 'border-gray-600 text-gray-300 hover:bg-gray-800'
+                    : 'border-gray-600 text-gray-300 hover:bg-gray-800 bg-gray-800'
                 }`}
               >
                 <Icon size={16} className="mr-1" />
@@ -316,7 +230,7 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
               onClick={shuffleQuestions}
               variant="outline"
               size="sm"
-              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+              className="border-gray-600 text-gray-300 hover:bg-gray-800 bg-gray-800"
             >
               <Shuffle size={16} className="mr-1" />
               Embaralhar
@@ -326,7 +240,7 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
               onClick={resetSession}
               variant="outline"
               size="sm"
-              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+              className="border-gray-600 text-gray-300 hover:bg-gray-800 bg-gray-800"
             >
               <RotateCcw size={16} className="mr-1" />
               Reiniciar
@@ -369,6 +283,7 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
         onAnswer={handleAnswer}
         mode={mode}
         timeLimit={mode === 'simulation' ? 300 : undefined}
+        isAnswered={!!answers[currentQuestion.id]}
       />
 
       {/* Navigation */}
@@ -377,7 +292,7 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
           onClick={previousQuestion}
           disabled={currentQuestionIndex === 0}
           variant="outline"
-          className="border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50"
+          className="border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 bg-gray-800"
         >
           Anterior
         </Button>
