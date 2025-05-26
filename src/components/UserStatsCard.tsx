@@ -91,8 +91,8 @@ const UserStatsCard = () => {
 
   if (loading) {
     return (
-      <Card className="bg-gray-900 border-gray-700 p-6">
-        <div className="text-gray-400 text-center py-8">
+      <Card className="bg-netflix-card border-netflix-border p-6">
+        <div className="text-netflix-text-secondary text-center py-8">
           Carregando estatísticas...
         </div>
       </Card>
@@ -100,61 +100,77 @@ const UserStatsCard = () => {
   }
 
   return (
-    <Card className="bg-gray-900 border-gray-700 p-6">
-      <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <TrendingUp className="text-red-500" size={20} />
+    <Card className="bg-netflix-card border-netflix-border p-6">
+      <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
+        <div className="bg-netflix-red rounded-lg p-2">
+          <TrendingUp className="text-white" size={24} />
+        </div>
         Estatísticas Gerais
       </h2>
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="text-center p-4 bg-gray-800 rounded-lg">
-          <Target className="mx-auto mb-2 text-blue-500" size={24} />
-          <div className="text-2xl font-bold text-white">{stats.totalQuestions}</div>
-          <div className="text-gray-400 text-sm">Questões</div>
+        <div className="text-center p-4 bg-netflix-black/50 rounded-lg border border-netflix-border/30">
+          <div className="bg-blue-600/20 rounded-lg p-3 mb-3 mx-auto w-fit">
+            <Target className="mx-auto text-blue-400" size={24} />
+          </div>
+          <div className="text-2xl font-bold text-white mb-1">{stats.totalQuestions}</div>
+          <div className="text-netflix-text-secondary text-sm">Questões</div>
         </div>
         
-        <div className="text-center p-4 bg-gray-800 rounded-lg">
-          <Award className="mx-auto mb-2 text-green-500" size={24} />
-          <div className="text-2xl font-bold text-white">{stats.averageAccuracy}%</div>
-          <div className="text-gray-400 text-sm">Acurácia Média</div>
+        <div className="text-center p-4 bg-netflix-black/50 rounded-lg border border-netflix-border/30">
+          <div className="bg-green-600/20 rounded-lg p-3 mb-3 mx-auto w-fit">
+            <Award className="mx-auto text-green-400" size={24} />
+          </div>
+          <div className="text-2xl font-bold text-white mb-1">{stats.averageAccuracy}%</div>
+          <div className="text-netflix-text-secondary text-sm">Acurácia Média</div>
         </div>
         
-        <div className="text-center p-4 bg-gray-800 rounded-lg">
-          <Clock className="mx-auto mb-2 text-orange-500" size={24} />
-          <div className="text-2xl font-bold text-white">{formatTime(stats.totalTime)}</div>
-          <div className="text-gray-400 text-sm">Tempo Total</div>
+        <div className="text-center p-4 bg-netflix-black/50 rounded-lg border border-netflix-border/30">
+          <div className="bg-orange-600/20 rounded-lg p-3 mb-3 mx-auto w-fit">
+            <Clock className="mx-auto text-orange-400" size={24} />
+          </div>
+          <div className="text-2xl font-bold text-white mb-1">{formatTime(stats.totalTime)}</div>
+          <div className="text-netflix-text-secondary text-sm">Tempo Total</div>
         </div>
         
-        <div className="text-center p-4 bg-gray-800 rounded-lg">
-          <TrendingUp className="mx-auto mb-2 text-purple-500" size={24} />
-          <div className="text-2xl font-bold text-white">{stats.bestAccuracy}%</div>
-          <div className="text-gray-400 text-sm">Melhor Resultado</div>
+        <div className="text-center p-4 bg-netflix-black/50 rounded-lg border border-netflix-border/30">
+          <div className="bg-purple-600/20 rounded-lg p-3 mb-3 mx-auto w-fit">
+            <TrendingUp className="mx-auto text-purple-400" size={24} />
+          </div>
+          <div className="text-2xl font-bold text-white mb-1">{stats.bestAccuracy}%</div>
+          <div className="text-netflix-text-secondary text-sm">Melhor Resultado</div>
         </div>
       </div>
 
       {stats.totalSessions > 0 && (
-        <div className="mt-6 p-4 bg-gray-800 rounded-lg">
-          <h3 className="text-white font-semibold mb-2">Resumo de Atividade</h3>
+        <div className="mt-6 p-4 bg-netflix-black/30 rounded-lg border border-netflix-border/30">
+          <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+            <div className="w-2 h-2 bg-netflix-red rounded-full"></div>
+            Resumo de Atividade
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <span className="text-gray-400">Total de Sessões:</span>
-              <span className="text-white ml-2 font-semibold">{stats.totalSessions}</span>
+            <div className="flex justify-between items-center p-2 bg-netflix-black/50 rounded">
+              <span className="text-netflix-text-secondary">Total de Sessões:</span>
+              <span className="text-white font-semibold">{stats.totalSessions}</span>
             </div>
-            <div>
-              <span className="text-gray-400">Acertos:</span>
-              <span className="text-green-400 ml-2 font-semibold">{stats.correctAnswers}</span>
+            <div className="flex justify-between items-center p-2 bg-netflix-black/50 rounded">
+              <span className="text-netflix-text-secondary">Acertos:</span>
+              <span className="text-green-400 font-semibold">{stats.correctAnswers}</span>
             </div>
-            <div>
-              <span className="text-gray-400">Erros:</span>
-              <span className="text-red-400 ml-2 font-semibold">{stats.totalQuestions - stats.correctAnswers}</span>
+            <div className="flex justify-between items-center p-2 bg-netflix-black/50 rounded">
+              <span className="text-netflix-text-secondary">Erros:</span>
+              <span className="text-red-400 font-semibold">{stats.totalQuestions - stats.correctAnswers}</span>
             </div>
           </div>
         </div>
       )}
 
       {stats.totalSessions === 0 && (
-        <div className="mt-6 p-4 bg-gray-800 rounded-lg text-center">
-          <p className="text-gray-400">
+        <div className="mt-6 p-4 bg-netflix-black/30 rounded-lg border border-netflix-border/30 text-center">
+          <div className="bg-netflix-red/20 rounded-lg p-3 mb-3 mx-auto w-fit">
+            <Award className="mx-auto text-netflix-red" size={32} />
+          </div>
+          <p className="text-netflix-text-secondary">
             Complete algumas sessões de estudo para ver suas estatísticas!
           </p>
         </div>
