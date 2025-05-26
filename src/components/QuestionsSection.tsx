@@ -5,7 +5,8 @@ import QuestionCard from './QuestionCard';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Filter, Shuffle, Target } from 'lucide-react';
+import { BookOpen, Filter, Shuffle, Target, Timer, Heart, TrendingUp, RotateCcw } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 interface Question {
   id: number;
@@ -32,31 +33,103 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, { answer: string; correct: boolean }>>({});
+  const [answers, setAnswers] = useState<Record<number, { answer: string; correct: boolean; timestamp: number }>>({});
   const [areas, setAreas] = useState<string[]>([]);
   const [selectedAreaFilter, setSelectedAreaFilter] = useState<string>(selectedArea || '');
+  const [mode, setMode] = useState<'practice' | 'simulation' | 'review'>('practice');
+  const [studyMode, setStudyMode] = useState<'all' | 'favorites' | 'wrong' | 'unanswered'>('all');
+  const [sessionId, setSessionId] = useState<string>('');
+  const [sessionStats, setSessionStats] = useState({ correct: 0, total: 0, startTime: Date.now() });
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchQuestions();
     fetchAreas();
-  }, [selectedAreaFilter, limit]);
+    createStudySession();
+  }, [selectedAreaFilter, limit, studyMode]);
+
+  const createStudySession = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('user_study_sessions')
+        .insert({
+          user_id: user.id,
+          area: selectedAreaFilter || null,
+          mode
+        })
+        .select()
+        .single();
+
+      if (data && !error) {
+        setSessionId(data.id);
+      }
+    } catch (error) {
+      console.error('Error creating session:', error);
+    }
+  };
 
   const fetchQuestions = async () => {
     setLoading(true);
     try {
       let query = supabase
         .from('Questoes_Comentadas')
-        .select('*')
-        .limit(limit);
+        .select('*');
 
       if (selectedAreaFilter) {
         query = query.eq('area', selectedAreaFilter);
       }
 
+      // Apply study mode filters
+      if (studyMode === 'favorites') {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: favorites } = await supabase
+            .from('user_question_favorites')
+            .select('question_id')
+            .eq('user_id', user.id);
+          
+          if (favorites && favorites.length > 0) {
+            const questionIds = favorites.map(f => f.question_id);
+            query = query.in('id', questionIds);
+          } else {
+            setQuestions([]);
+            setLoading(false);
+            return;
+          }
+        }
+      } else if (studyMode === 'wrong') {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: wrongAnswers } = await supabase
+            .from('user_question_attempts')
+            .select('question_id')
+            .eq('user_id', user.id)
+            .eq('is_correct', false);
+          
+          if (wrongAnswers && wrongAnswers.length > 0) {
+            const questionIds = [...new Set(wrongAnswers.map(w => w.question_id))];
+            query = query.in('id', questionIds);
+          } else {
+            setQuestions([]);
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
+      query = query.limit(limit);
       const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching questions:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar as questões",
+          variant: "destructive"
+        });
       } else {
         setQuestions(data || []);
       }
@@ -88,13 +161,28 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
   const handleAnswer = (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
     setAnswers(prev => ({
       ...prev,
-      [questionId]: { answer: selectedAnswer, correct: isCorrect }
+      [questionId]: { answer: selectedAnswer, correct: isCorrect, timestamp: Date.now() }
     }));
+
+    setSessionStats(prev => ({
+      ...prev,
+      total: prev.total + 1,
+      correct: prev.correct + (isCorrect ? 1 : 0)
+    }));
+
+    // Auto advance after 2 seconds in practice mode
+    if (mode === 'practice') {
+      setTimeout(() => {
+        nextQuestion();
+      }, 2000);
+    }
   };
 
   const nextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
+    } else {
+      finishSession();
     }
   };
 
@@ -104,11 +192,45 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
     }
   };
 
+  const finishSession = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !sessionId) return;
+
+      const totalTime = Math.floor((Date.now() - sessionStats.startTime) / 1000);
+
+      await supabase
+        .from('user_study_sessions')
+        .update({
+          questions_answered: sessionStats.total,
+          correct_answers: sessionStats.correct,
+          total_time: totalTime,
+          completed: true
+        })
+        .eq('id', sessionId);
+
+      toast({
+        title: "Sessão finalizada!",
+        description: `Você acertou ${sessionStats.correct} de ${sessionStats.total} questões (${Math.round((sessionStats.correct / sessionStats.total) * 100)}%)`,
+      });
+    } catch (error) {
+      console.error('Error finishing session:', error);
+    }
+  };
+
   const shuffleQuestions = () => {
     const shuffled = [...questions].sort(() => Math.random() - 0.5);
     setQuestions(shuffled);
     setCurrentQuestionIndex(0);
     setAnswers({});
+    setSessionStats({ correct: 0, total: 0, startTime: Date.now() });
+  };
+
+  const resetSession = () => {
+    setCurrentQuestionIndex(0);
+    setAnswers({});
+    setSessionStats({ correct: 0, total: 0, startTime: Date.now() });
+    createStudySession();
   };
 
   const getStats = () => {
@@ -122,17 +244,17 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-netflix-text-secondary">Carregando questões...</div>
+        <div className="text-gray-400">Carregando questões...</div>
       </div>
     );
   }
 
   if (questions.length === 0) {
     return (
-      <Card className="bg-netflix-card border-netflix-border p-8 text-center">
-        <BookOpen className="mx-auto mb-4 text-netflix-text-secondary" size={48} />
+      <Card className="bg-gray-900 border-gray-700 p-8 text-center">
+        <BookOpen className="mx-auto mb-4 text-gray-500" size={48} />
         <h3 className="text-white text-xl font-semibold mb-2">Nenhuma questão encontrada</h3>
-        <p className="text-netflix-text-secondary">
+        <p className="text-gray-400">
           Não há questões disponíveis para os filtros selecionados.
         </p>
       </Card>
@@ -143,58 +265,101 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
   const currentQuestion = questions[currentQuestionIndex];
 
   return (
-    <div className="space-y-6">
-      {/* Filters */}
-      {showFilters && (
-        <Card className="bg-netflix-card border-netflix-border p-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Filter size={16} className="text-netflix-text-secondary" />
-              <span className="text-white font-medium">Filtros:</span>
-            </div>
-            
-            <select
-              value={selectedAreaFilter}
-              onChange={(e) => setSelectedAreaFilter(e.target.value)}
-              className="bg-netflix-black border border-netflix-border rounded px-3 py-1 text-white"
-            >
-              <option value="">Todas as áreas</option>
-              {areas.map(area => (
-                <option key={area} value={area}>{area}</option>
-              ))}
-            </select>
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-0">
+      {/* Study Mode Selector */}
+      <Card className="bg-gray-900 border-gray-700 p-4">
+        <div className="flex flex-wrap items-center gap-4 mb-4">
+          <h3 className="text-white font-medium">Modo de Estudo:</h3>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { key: 'all', label: 'Todas', icon: BookOpen },
+              { key: 'favorites', label: 'Favoritas', icon: Heart },
+              { key: 'wrong', label: 'Erradas', icon: RotateCcw },
+            ].map(({ key, label, icon: Icon }) => (
+              <Button
+                key={key}
+                variant={studyMode === key ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStudyMode(key as any)}
+                className={`${
+                  studyMode === key 
+                    ? 'bg-red-600 hover:bg-red-700 text-white' 
+                    : 'border-gray-600 text-gray-300 hover:bg-gray-800'
+                }`}
+              >
+                <Icon size={16} className="mr-1" />
+                {label}
+              </Button>
+            ))}
+          </div>
+        </div>
 
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Filter size={16} className="text-gray-400" />
+            <span className="text-white font-medium">Filtros:</span>
+          </div>
+          
+          <select
+            value={selectedAreaFilter}
+            onChange={(e) => setSelectedAreaFilter(e.target.value)}
+            className="bg-gray-800 border border-gray-600 rounded px-3 py-1 text-white text-sm"
+          >
+            <option value="">Todas as áreas</option>
+            {areas.map(area => (
+              <option key={area} value={area}>{area}</option>
+            ))}
+          </select>
+
+          <div className="flex gap-2">
             <Button
               onClick={shuffleQuestions}
               variant="outline"
               size="sm"
-              className="border-netflix-border text-netflix-text-secondary hover:bg-netflix-red hover:text-white"
+              className="border-gray-600 text-gray-300 hover:bg-gray-800"
             >
               <Shuffle size={16} className="mr-1" />
               Embaralhar
             </Button>
+
+            <Button
+              onClick={resetSession}
+              variant="outline"
+              size="sm"
+              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+            >
+              <RotateCcw size={16} className="mr-1" />
+              Reiniciar
+            </Button>
           </div>
-        </Card>
-      )}
+        </div>
+      </Card>
 
       {/* Stats */}
-      <Card className="bg-netflix-card border-netflix-border p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Badge variant="outline" className="border-netflix-border text-netflix-text-secondary">
+      <Card className="bg-gray-900 border-gray-700 p-4">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-800">
               Questão {currentQuestionIndex + 1} de {questions.length}
             </Badge>
-            <Badge variant="outline" className="border-netflix-border text-netflix-text-secondary">
+            <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-800">
               Respondidas: {stats.answeredQuestions}
             </Badge>
             <Badge 
               variant="outline" 
-              className={`border-netflix-border ${stats.percentage >= 70 ? 'text-green-400' : 'text-netflix-text-secondary'}`}
+              className={`border-gray-600 ${stats.percentage >= 70 ? 'text-green-400 bg-green-900/20' : 'text-gray-300 bg-gray-800'}`}
             >
               <Target size={14} className="mr-1" />
               Acertos: {stats.percentage}%
             </Badge>
           </div>
+          
+          {mode === 'simulation' && (
+            <Badge variant="outline" className="border-orange-600 text-orange-300 bg-orange-900/20">
+              <Timer size={14} className="mr-1" />
+              Modo Simulado
+            </Badge>
+          )}
         </div>
       </Card>
 
@@ -202,25 +367,39 @@ const QuestionsSection = ({ selectedArea, limit = 10, showFilters = true }: Ques
       <QuestionCard
         question={currentQuestion}
         onAnswer={handleAnswer}
+        mode={mode}
+        timeLimit={mode === 'simulation' ? 300 : undefined}
       />
 
       {/* Navigation */}
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center gap-4">
         <Button
           onClick={previousQuestion}
           disabled={currentQuestionIndex === 0}
           variant="outline"
-          className="border-netflix-border text-netflix-text-secondary hover:bg-netflix-card"
+          className="border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50"
         >
           Anterior
         </Button>
         
+        <div className="text-center">
+          <div className="text-gray-400 text-sm">
+            Progresso: {Math.round(((currentQuestionIndex + 1) / questions.length) * 100)}%
+          </div>
+          <div className="w-32 sm:w-48 bg-gray-800 rounded-full h-2 mt-1">
+            <div 
+              className="bg-red-600 h-2 rounded-full transition-all duration-300" 
+              style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+        
         <Button
           onClick={nextQuestion}
           disabled={currentQuestionIndex === questions.length - 1}
-          className="bg-netflix-red hover:bg-red-700 text-white"
+          className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
         >
-          Próxima
+          {currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Próxima'}
         </Button>
       </div>
     </div>
