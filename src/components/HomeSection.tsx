@@ -145,7 +145,6 @@ const HomeSection = () => {
             limit={studyOptions.questionCount} 
             showFilters={selectedMode !== 'simulado'}
             selectedArea={studyOptions.areas.length > 0 ? studyOptions.areas[0] : undefined}
-            mode={selectedMode}
           />
         </div>
       </div>

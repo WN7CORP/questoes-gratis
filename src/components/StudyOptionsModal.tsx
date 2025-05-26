@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, Target, Clock, TrendingUp, Input } from 'lucide-react';
+import { X, Target, Clock, TrendingUp } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
 interface StudyOptionsModalProps {
@@ -103,10 +103,10 @@ const StudyOptionsModal = ({ isVisible, onClose, onStart, mode }: StudyOptionsMo
             <h2 className="text-2xl font-bold text-white">{getModeTitle()}</h2>
           </div>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={onClose}
-            className="text-gray-400 hover:text-white hover:bg-gray-700"
+            className="text-gray-400 hover:text-white hover:bg-gray-700 bg-transparent border-gray-600"
           >
             <X size={20} />
           </Button>
@@ -151,15 +151,15 @@ const StudyOptionsModal = ({ isVisible, onClose, onStart, mode }: StudyOptionsMo
             {questionOptions.map(count => (
               <Button
                 key={count}
-                variant="ghost"
+                variant="outline"
                 onClick={() => {
                   setQuestionCount(count);
                   setUseCustomCount(false);
                 }}
                 disabled={mode === 'simulado' || useCustomCount}
                 className={`${!useCustomCount && questionCount === count 
-                  ? 'bg-netflix-red hover:bg-red-700 text-white' 
-                  : 'border border-gray-600 text-gray-300 hover:bg-gray-700 bg-transparent'
+                  ? 'bg-netflix-red hover:bg-red-700 text-white border-netflix-red' 
+                  : 'border-gray-600 text-gray-300 hover:bg-gray-700 bg-transparent'
                 } ${mode === 'simulado' || useCustomCount ? 'opacity-75' : ''}`}
               >
                 {count} questões
@@ -168,14 +168,14 @@ const StudyOptionsModal = ({ isVisible, onClose, onStart, mode }: StudyOptionsMo
             
             {mode !== 'simulado' && (
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={() => {
                   setUseCustomCount(true);
                   setCustomQuestionCount(totalQuestionsAvailable.toString());
                 }}
                 className={`${useCustomCount && customQuestionCount === totalQuestionsAvailable.toString()
-                  ? 'bg-netflix-red hover:bg-red-700 text-white' 
-                  : 'border border-gray-600 text-gray-300 hover:bg-gray-700 bg-transparent'
+                  ? 'bg-netflix-red hover:bg-red-700 text-white border-netflix-red' 
+                  : 'border-gray-600 text-gray-300 hover:bg-gray-700 bg-transparent'
                 }`}
               >
                 Todas ({totalQuestionsAvailable})
@@ -197,11 +197,11 @@ const StudyOptionsModal = ({ isVisible, onClose, onStart, mode }: StudyOptionsMo
               {availableAreas.map(area => (
                 <Badge
                   key={area}
-                  variant="ghost"
+                  variant="outline"
                   className={`cursor-pointer transition-colors ${
                     selectedAreas.includes(area)
-                      ? 'bg-netflix-red hover:bg-red-700 text-white'
-                      : 'border border-gray-600 text-gray-300 hover:bg-gray-700 bg-transparent'
+                      ? 'bg-netflix-red hover:bg-red-700 text-white border-netflix-red'
+                      : 'border-gray-600 text-gray-300 hover:bg-gray-700 bg-transparent'
                   }`}
                   onClick={() => handleAreaToggle(area)}
                 >
@@ -233,9 +233,9 @@ const StudyOptionsModal = ({ isVisible, onClose, onStart, mode }: StudyOptionsMo
         {/* Botões */}
         <div className="flex gap-4">
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={onClose}
-            className="flex-1 border border-gray-600 text-gray-300 hover:bg-gray-700 bg-transparent"
+            className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 bg-transparent"
           >
             Cancelar
           </Button>
