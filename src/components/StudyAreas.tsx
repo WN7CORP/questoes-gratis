@@ -1,67 +1,78 @@
 
+import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, Scale, Shield, Home as HomeIcon, Users, Briefcase, Globe } from 'lucide-react';
+import { BookOpen, Target, TrendingUp } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
+import QuestionsSection from './QuestionsSection';
+
+interface AreaStats {
+  area: string;
+  total_questoes: number;
+}
 
 const StudyAreas = () => {
-  const areas = [
-    {
-      name: "Ética Profissional",
-      description: "Código de Ética e Disciplina da OAB",
-      questionsCount: 245,
-      progress: 78,
-      icon: Scale,
-      color: "bg-blue-500"
-    },
-    {
-      name: "Direito Constitucional",
-      description: "Princípios e normas constitucionais",
-      questionsCount: 312,
-      progress: 45,
-      icon: Shield,
-      color: "bg-green-500"
-    },
-    {
-      name: "Direito Civil",
-      description: "Pessoas, bens, fatos jurídicos",
-      questionsCount: 428,
-      progress: 62,
-      icon: HomeIcon,
-      color: "bg-purple-500"
-    },
-    {
-      name: "Direito Penal",
-      description: "Crimes e contravenções penais",
-      questionsCount: 356,
-      progress: 33,
-      icon: Shield,
-      color: "bg-red-500"
-    },
-    {
-      name: "Direito do Trabalho",
-      description: "Relações de trabalho e emprego",
-      questionsCount: 289,
-      progress: 55,
-      icon: Users,
-      color: "bg-yellow-500"
-    },
-    {
-      name: "Direito Empresarial",
-      description: "Sociedades e atividade empresarial",
-      questionsCount: 198,
-      progress: 28,
-      icon: Briefcase,
-      color: "bg-indigo-500"
-    },
-    {
-      name: "Direito Tributário",
-      description: "Sistema tributário nacional",
-      questionsCount: 267,
-      progress: 41,
-      icon: Globe,
-      color: "bg-orange-500"
+  const [selectedArea, setSelectedArea] = useState<string>('');
+  const [areaStats, setAreaStats] = useState<AreaStats[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAreaStats();
+  }, []);
+
+  const fetchAreaStats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('Questoes_Comentadas')
+        .select('area')
+        .not('area', 'is', null);
+
+      if (error) {
+        console.error('Error fetching area stats:', error);
+      } else {
+        // Count questions per area
+        const areaCounts: Record<string, number> = {};
+        data?.forEach(item => {
+          if (item.area) {
+            areaCounts[item.area] = (areaCounts[item.area] || 0) + 1;
+          }
+        });
+
+        const stats = Object.entries(areaCounts).map(([area, count]) => ({
+          area,
+          total_questoes: count
+        })).sort((a, b) => b.total_questoes - a.total_questoes);
+
+        setAreaStats(stats);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  if (selectedArea) {
+    return (
+      <div className="h-full overflow-y-auto bg-netflix-black">
+        <div className="p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => setSelectedArea('')}
+              className="text-netflix-red hover:text-red-400 transition-colors"
+            >
+              ← Voltar
+            </button>
+            <h1 className="text-2xl font-bold text-white">
+              {selectedArea}
+            </h1>
+          </div>
+          
+          <QuestionsSection selectedArea={selectedArea} limit={50} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full overflow-y-auto bg-netflix-black">
@@ -71,95 +82,96 @@ const StudyAreas = () => {
           Áreas de Estudo
         </h1>
         <p className="text-netflix-text-secondary">
-          Escolha uma disciplina para começar a estudar
+          Escolha uma área para começar a estudar
         </p>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="px-6 mb-6">
-        <Card className="bg-netflix-card border-netflix-border p-4">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-netflix-red">7</div>
-              <div className="text-sm text-netflix-text-secondary">Disciplinas</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-blue-500">2,095</div>
-              <div className="text-sm text-netflix-text-secondary">Questões</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-green-500">52%</div>
-              <div className="text-sm text-netflix-text-secondary">Progresso Médio</div>
-            </div>
-          </div>
-        </Card>
       </div>
 
       {/* Areas Grid */}
       <div className="px-6 pb-6">
-        <div className="space-y-4">
-          {areas.map((area, index) => (
-            <Card 
-              key={index}
-              className="bg-netflix-card border-netflix-border p-5 cursor-pointer hover:bg-gray-800 transition-colors duration-200"
-            >
-              <div className="flex items-center gap-4">
-                {/* Icon */}
-                <div className={`${area.color} p-3 rounded-lg`}>
-                  <area.icon className="text-white" size={24} />
-                </div>
-
-                {/* Content */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-white font-semibold text-lg">
-                      {area.name}
-                    </h3>
-                    <Badge variant="secondary" className="bg-netflix-border text-netflix-text-secondary">
-                      {area.questionsCount}
-                    </Badge>
+        {loading ? (
+          <div className="text-netflix-text-secondary text-center py-8">
+            Carregando áreas...
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {areaStats.map((area) => (
+              <Card 
+                key={area.area}
+                className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-colors"
+                onClick={() => setSelectedArea(area.area)}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="bg-netflix-red rounded-lg p-3 mt-1">
+                    <BookOpen className="text-white" size={24} />
                   </div>
-                  <p className="text-netflix-text-secondary text-sm mb-3">
-                    {area.description}
-                  </p>
                   
-                  {/* Progress Bar */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 bg-netflix-border rounded-full h-2">
-                      <div 
-                        className="bg-netflix-red h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${area.progress}%` }}
-                      ></div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold text-lg mb-2">
+                      {area.area}
+                    </h3>
+                    
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge variant="secondary" className="bg-netflix-border text-netflix-text-secondary">
+                        <Target size={12} className="mr-1" />
+                        {area.total_questoes} questões
+                      </Badge>
                     </div>
-                    <span className="text-sm text-netflix-text-secondary min-w-[3rem]">
-                      {area.progress}%
-                    </span>
+                    
+                    <p className="text-netflix-text-secondary text-sm">
+                      Pratique com questões comentadas e melhore seu desempenho
+                    </p>
+                  </div>
+                  
+                  <div className="text-netflix-red">
+                    <TrendingUp size={20} />
                   </div>
                 </div>
-
-                {/* Arrow */}
-                <ChevronRight className="text-netflix-text-secondary" size={20} />
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Stats */}
       <div className="px-6 pb-6">
-        <Card className="bg-gradient-to-r from-netflix-red to-red-700 border-none p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-white font-bold text-lg mb-1">
-                Simulado Geral
-              </h3>
-              <p className="text-gray-200 text-sm">
-                Questões mistas de todas as disciplinas
-              </p>
+        <h2 className="text-lg font-semibold text-white mb-4">Estatísticas Gerais</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="bg-netflix-card border-netflix-border p-4 text-center">
+            <div className="text-2xl font-bold text-netflix-red mb-1">
+              {areaStats.length}
             </div>
-            <ChevronRight className="text-white" size={24} />
-          </div>
-        </Card>
+            <div className="text-netflix-text-secondary text-sm">
+              Áreas Disponíveis
+            </div>
+          </Card>
+          
+          <Card className="bg-netflix-card border-netflix-border p-4 text-center">
+            <div className="text-2xl font-bold text-netflix-red mb-1">
+              {areaStats.reduce((sum, area) => sum + area.total_questoes, 0)}
+            </div>
+            <div className="text-netflix-text-secondary text-sm">
+              Total de Questões
+            </div>
+          </Card>
+          
+          <Card className="bg-netflix-card border-netflix-border p-4 text-center">
+            <div className="text-2xl font-bold text-netflix-red mb-1">
+              {areaStats.length > 0 ? Math.round(areaStats.reduce((sum, area) => sum + area.total_questoes, 0) / areaStats.length) : 0}
+            </div>
+            <div className="text-netflix-text-secondary text-sm">
+              Média por Área
+            </div>
+          </Card>
+          
+          <Card className="bg-netflix-card border-netflix-border p-4 text-center">
+            <div className="text-2xl font-bold text-netflix-red mb-1">
+              100%
+            </div>
+            <div className="text-netflix-text-secondary text-sm">
+              Questões Comentadas
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );

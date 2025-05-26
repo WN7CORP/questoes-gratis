@@ -3952,13 +3952,13 @@ export type Database = {
           alternativa_c: string | null
           alternativa_d: string | null
           ano: string | null
+          area: string | null
           exame: string | null
           id: number
           justificativa: string | null
           numero: string | null
           questao: string | null
           resposta_correta: string | null
-          tema: string | null
         }
         Insert: {
           alternativa_a?: string | null
@@ -3966,13 +3966,13 @@ export type Database = {
           alternativa_c?: string | null
           alternativa_d?: string | null
           ano?: string | null
+          area?: string | null
           exame?: string | null
           id?: number
           justificativa?: string | null
           numero?: string | null
           questao?: string | null
           resposta_correta?: string | null
-          tema?: string | null
         }
         Update: {
           alternativa_a?: string | null
@@ -3980,13 +3980,13 @@ export type Database = {
           alternativa_c?: string | null
           alternativa_d?: string | null
           ano?: string | null
+          area?: string | null
           exame?: string | null
           id?: number
           justificativa?: string | null
           numero?: string | null
           questao?: string | null
           resposta_correta?: string | null
-          tema?: string | null
         }
         Relationships: []
       }
