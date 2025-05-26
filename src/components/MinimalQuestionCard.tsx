@@ -66,6 +66,10 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
     if (!selectedAnswer || answered) return;
     
     const isCorrect = selectedAnswer === question.resposta_correta;
+    console.log('Selected answer:', selectedAnswer);
+    console.log('Correct answer:', question.resposta_correta);
+    console.log('Is correct:', isCorrect);
+    
     setAnswered(true);
     setShowResult(true);
     
@@ -106,7 +110,8 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
     return 'bg-gray-800 border-gray-600 text-gray-400 opacity-60 border-2';
   };
 
-  const isCorrect = selectedAnswer === question.resposta_correta;
+  // Fixed the logic here - calculate if the answer is correct
+  const isCorrect = answered && selectedAnswer === question.resposta_correta;
 
   return (
     <>
@@ -176,7 +181,7 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
           </Button>
         ) : (
           <div className="space-y-4 sm:space-y-6">
-            {/* Enhanced Feedback */}
+            {/* Enhanced Feedback - Fixed the logic here */}
             <div className={`p-6 rounded-xl text-center border-2 transition-all duration-300 ${isCorrect ? 'bg-green-900/30 border-green-500 shadow-green-500/20 shadow-lg' : 'bg-red-900/30 border-red-500 shadow-red-500/20 shadow-lg'}`}>
               <div className="flex items-center justify-center gap-3 mb-3">
                 {isCorrect ? (
@@ -210,9 +215,9 @@ const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false }: Minimal
         )}
       </Card>
 
-      {/* Feedback Animation */}
+      {/* Feedback Animation - Fixed to use the correct logic */}
       <AnswerFeedback 
-        isCorrect={selectedAnswer === question.resposta_correta} 
+        isCorrect={isCorrect} 
         show={showFeedback} 
       />
 
