@@ -1,115 +1,131 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, BookOpen, Target, Award, TrendingUp, Users, Heart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BookOpen, Target, TrendingUp, Brain } from 'lucide-react';
 
 const banners = [
   {
     id: 1,
-    title: "Bem-vindo ao Questões Jurídicas",
-    description: "A plataforma mais completa para estudar direito com questões comentadas e análises detalhadas.",
+    title: "OAB Questões",
+    subtitle: "Prepare-se com questões comentadas",
+    description: "Milhares de questões da OAB com comentários detalhados para sua aprovação",
     icon: BookOpen,
-    color: "from-red-600 to-red-800"
+    gradient: "from-red-600 to-red-800"
   },
   {
     id: 2,
-    title: "Pratique com Questões Reais",
-    description: "Milhares de questões de concursos anteriores com comentários explicativos de especialistas.",
+    title: "Simulados Inteligentes",
+    subtitle: "Teste seus conhecimentos",
+    description: "Simulados cronometrados que replicam o exame real da OAB",
     icon: Target,
-    color: "from-blue-600 to-blue-800"
+    gradient: "from-blue-600 to-blue-800"
   },
   {
     id: 3,
     title: "Acompanhe seu Progresso",
-    description: "Estatísticas detalhadas para identificar pontos fortes e áreas que precisam de mais estudo.",
+    subtitle: "Estatísticas detalhadas",
+    description: "Veja seu desempenho por área e identifique pontos de melhoria",
     icon: TrendingUp,
-    color: "from-green-600 to-green-800"
+    gradient: "from-green-600 to-green-800"
   },
   {
     id: 4,
-    title: "Conquiste suas Metas",
-    description: "Sistema de gamificação com badges, pontos e rankings para manter sua motivação.",
-    icon: Award,
-    color: "from-yellow-600 to-yellow-800"
-  },
-  {
-    id: 5,
-    title: "Comunidade Ativa",
-    description: "Participe de discussões, tire dúvidas e compartilhe conhecimento com outros estudantes.",
-    icon: Users,
-    color: "from-purple-600 to-purple-800"
-  },
-  {
-    id: 6,
-    title: "Favoritos e Anotações",
-    description: "Salve questões importantes, faça anotações personalizadas e organize seu estudo.",
-    icon: Heart,
-    color: "from-pink-600 to-pink-800"
+    title: "Estudo Adaptativo",
+    subtitle: "Foque no que importa",
+    description: "Nossa IA identifica suas dificuldades e sugere o melhor plano de estudos",
+    icon: Brain,
+    gradient: "from-purple-600 to-purple-800"
   }
 ];
 
 const AppBanner = () => {
-  const [currentBanner, setCurrentBanner] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  const nextBanner = () => {
-    setCurrentBanner((prev) => (prev + 1) % banners.length);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % banners.length);
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 1) % banners.length);
   };
 
-  const prevBanner = () => {
-    setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length);
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
   };
 
-  const currentBannerData = banners[currentBanner];
-  const IconComponent = currentBannerData.icon;
+  const currentBanner = banners[currentIndex];
+  const Icon = currentBanner.icon;
 
   return (
-    <Card className="bg-gray-900 border-gray-700 mb-6 overflow-hidden">
-      <div className={`bg-gradient-to-r ${currentBannerData.color} p-6 text-white relative`}>
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={prevBanner}
-            className="text-white hover:bg-white/20"
-          >
-            <ChevronLeft size={20} />
-          </Button>
-          
-          <div className="flex-1 text-center px-4">
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <IconComponent size={32} />
-              <h2 className="text-xl font-bold">{currentBannerData.title}</h2>
+    <div className="relative mb-6 mx-4">
+      <Card className={`
+        relative overflow-hidden bg-gradient-to-r ${currentBanner.gradient} 
+        border-none text-white p-6 md:p-8 min-h-[200px] flex items-center
+      `}>
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]" />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 flex items-center gap-6 w-full">
+          <div className="hidden md:block">
+            <div className="bg-white/20 rounded-full p-4">
+              <Icon size={48} className="text-white" />
             </div>
-            <p className="text-white/90 text-sm max-w-2xl mx-auto">
-              {currentBannerData.description}
-            </p>
           </div>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={nextBanner}
-            className="text-white hover:bg-white/20"
-          >
-            <ChevronRight size={20} />
-          </Button>
+          <div className="flex-1">
+            <h2 className="text-2xl md:text-3xl font-bold mb-2 animate-fade-in">
+              {currentBanner.title}
+            </h2>
+            <h3 className="text-lg md:text-xl text-white/90 mb-3 animate-fade-in">
+              {currentBanner.subtitle}
+            </h3>
+            <p className="text-white/80 text-sm md:text-base animate-fade-in">
+              {currentBanner.description}
+            </p>
+          </div>
+
+          <div className="md:hidden">
+            <Icon size={32} className="text-white/80" />
+          </div>
         </div>
-        
-        {/* Dots indicator */}
-        <div className="flex justify-center mt-4 gap-2">
-          {banners.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentBanner(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentBanner ? 'bg-white' : 'bg-white/50'
-              }`}
-            />
-          ))}
-        </div>
+
+        {/* Navigation Arrows */}
+        <button
+          onClick={prevSlide}
+          className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/20 hover:bg-black/40 rounded-full p-2 transition-colors"
+        >
+          <ChevronLeft size={20} className="text-white" />
+        </button>
+
+        <button
+          onClick={nextSlide}
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/20 hover:bg-black/40 rounded-full p-2 transition-colors"
+        >
+          <ChevronRight size={20} className="text-white" />
+        </button>
+      </Card>
+
+      {/* Dots Indicator */}
+      <div className="flex justify-center gap-2 mt-4">
+        {banners.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentIndex(index)}
+            className={`w-2 h-2 rounded-full transition-colors ${
+              index === currentIndex ? 'bg-netflix-red' : 'bg-gray-600'
+            }`}
+          />
+        ))}
       </div>
-    </Card>
+    </div>
   );
 };
 

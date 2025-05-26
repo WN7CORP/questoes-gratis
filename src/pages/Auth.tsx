@@ -3,21 +3,20 @@ import { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, BookOpen, ArrowLeft } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
+import { useToast } from "@/hooks/use-toast";
+import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,57 +24,41 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-
-        if (error) {
-          toast({
-            title: "Erro no login",
-            description: error.message,
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Login realizado com sucesso!",
-            description: "Bem-vindo de volta!"
-          });
-          navigate('/');
-        }
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Bem-vindo de volta!"
+        });
+        
+        navigate('/');
       } else {
-        if (password !== confirmPassword) {
-          toast({
-            title: "Erro",
-            description: "As senhas não coincidem",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              display_name: name,
+            }
+          }
         });
-
-        if (error) {
-          toast({
-            title: "Erro no cadastro",
-            description: error.message,
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Cadastro realizado com sucesso!",
-            description: "Verifique seu email para confirmar a conta"
-          });
-          setIsLogin(true);
-        }
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Verifique seu email para confirmar a conta."
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Erro",
-        description: "Ocorreu um erro inesperado",
+        description: error.message,
         variant: "destructive"
       });
     } finally {
@@ -84,102 +67,100 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-netflix-black flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-netflix-card border-netflix-border p-8">
         <div className="text-center mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="text-gray-400 hover:text-white mb-4"
-          >
-            <ArrowLeft size={20} className="mr-2" />
-            Voltar ao início
-          </Button>
-          
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <BookOpen className="text-red-500" size={32} />
-            <h1 className="text-2xl font-bold text-white">Questões Jurídicas</h1>
-          </div>
-          
-          <p className="text-gray-400">
+          <h1 className="text-3xl font-bold text-white mb-2">
+            OAB Questões
+          </h1>
+          <p className="text-netflix-text-secondary">
             {isLogin ? 'Entre na sua conta' : 'Crie sua conta gratuita'}
           </p>
         </div>
 
-        <Card className="bg-gray-900 border-gray-700 p-6">
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div>
-              <Label htmlFor="email" className="text-white">Email</Label>
+        <form onSubmit={handleAuth} className="space-y-6">
+          {!isLogin && (
+            <div className="space-y-2">
+              <label className="text-white text-sm font-medium">Nome</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <Input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="pl-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                  placeholder="Seu nome completo"
+                  required={!isLogin}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="text-white text-sm font-medium">Email</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <Input
-                id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
-                className="bg-gray-800 border-gray-600 text-white"
+                className="pl-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                 placeholder="seu@email.com"
+                required
               />
             </div>
-
-            <div>
-              <Label htmlFor="password" className="text-white">Senha</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="bg-gray-800 border-gray-600 text-white pr-10"
-                  placeholder="••••••••"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-white"
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </Button>
-              </div>
-            </div>
-
-            {!isLogin && (
-              <div>
-                <Label htmlFor="confirmPassword" className="text-white">Confirmar Senha</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  className="bg-gray-800 border-gray-600 text-white"
-                  placeholder="••••••••"
-                />
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-red-600 hover:bg-red-700 text-white"
-            >
-              {loading ? 'Carregando...' : (isLogin ? 'Entrar' : 'Cadastrar')}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <Button
-              variant="ghost"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-gray-400 hover:text-white"
-            >
-              {isLogin ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Entre'}
-            </Button>
           </div>
-        </Card>
-      </div>
+
+          <div className="space-y-2">
+            <label className="text-white text-sm font-medium">Senha</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pl-10 pr-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                placeholder="Sua senha"
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-netflix-red hover:bg-red-700 text-white py-3 text-lg font-semibold"
+          >
+            {loading ? 'Carregando...' : (isLogin ? 'Entrar' : 'Criar Conta')}
+          </Button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-netflix-red hover:text-red-400 transition-colors"
+          >
+            {isLogin ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Faça login'}
+          </button>
+        </div>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => navigate('/')}
+            className="text-gray-400 hover:text-white transition-colors text-sm"
+          >
+            ← Voltar ao app
+          </button>
+        </div>
+      </Card>
     </div>
   );
 };

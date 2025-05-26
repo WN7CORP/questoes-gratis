@@ -1,53 +1,42 @@
+
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Home, Search, BarChart3, User, BookOpen } from 'lucide-react';
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from 'react-router-dom';
 import WelcomeScreen from '@/components/WelcomeScreen';
 import HomeSection from '@/components/HomeSection';
 import StudyAreas from '@/components/StudyAreas';
 import SearchSection from '@/components/SearchSection';
 import PerformanceSection from '@/components/PerformanceSection';
 import ProfileSection from '@/components/ProfileSection';
-import AppBanner from '@/components/AppBanner';
+
 const Index = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const [user, setUser] = useState(null);
-  const navigate = useNavigate();
+
   useEffect(() => {
     // Check for existing session
-    supabase.auth.getSession().then(({
-      data: {
-        session
-      }
-    }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
 
     // Listen for auth changes
-    const {
-      data: {
-        subscription
-      }
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
     });
+
     return () => subscription.unsubscribe();
   }, []);
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-  };
+
   if (showWelcome) {
     return <WelcomeScreen onStart={() => setShowWelcome(false)} />;
   }
-  return <div className="min-h-screen bg-netflix-black text-white">
-      {/* Top Navigation */}
-      
 
+  return (
+    <div className="min-h-screen bg-netflix-black text-white">
       <Tabs defaultValue="home" className="h-screen flex flex-col">
         {/* Top Navigation Tabs */}
-        <TabsList className="bg-netflix-card border-b border-netflix-border rounded-none h-16 p-0 w-full grid grid-cols-5">
+        <TabsList className="bg-netflix-card border-b border-netflix-border rounded-none h-16 p-0 w-full grid grid-cols-5 fixed top-0 z-30">
           <TabsTrigger value="home" className="flex flex-col gap-1 h-full data-[state=active]:bg-netflix-red data-[state=active]:text-white">
             <Home size={20} />
             <span className="text-xs">Início</span>
@@ -74,14 +63,11 @@ const Index = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-hidden">
+        {/* Main Content with top padding for fixed header */}
+        <div className="flex-1 overflow-hidden pt-16">
           <TabsContent value="home" className="h-full mt-0">
             <div className="h-full overflow-y-auto">
-              <div className="p-4 mx-0 my-0 px-0 py-[7px]">
-                <AppBanner />
-                <HomeSection />
-              </div>
+              <HomeSection />
             </div>
           </TabsContent>
           
@@ -102,6 +88,8 @@ const Index = () => {
           </TabsContent>
         </div>
       </Tabs>
-    </div>;
+    </div>
+  );
 };
+
 export default Index;
