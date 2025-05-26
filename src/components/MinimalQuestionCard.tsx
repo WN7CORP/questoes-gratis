@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -137,8 +136,8 @@ const MinimalQuestionCard = ({
     if (!answered) return null;
     
     return (
-      <div className="mb-6 p-4 bg-gray-800/50 rounded-lg border border-gray-600/50">
-        <div className="space-y-2">
+      <div className="mb-6 p-3 bg-gray-900/30 rounded-lg border border-gray-700/30">
+        <div className="space-y-1">
           {alternatives.map((alternative) => {
             const isCorrect = alternative.key === question.resposta_correta;
             const itemNumber = getItemNumber(alternative.key);
@@ -146,10 +145,10 @@ const MinimalQuestionCard = ({
             return (
               <div 
                 key={alternative.key}
-                className={`text-sm font-medium ${
+                className={`text-xs font-normal ${
                   isCorrect 
-                    ? 'text-green-400/80' 
-                    : 'text-red-400/80'
+                    ? 'text-green-300/60' 
+                    : 'text-red-300/60'
                 }`}
               >
                 {itemNumber} Item: {isCorrect ? 'Correto' : 'Incorreto'}
