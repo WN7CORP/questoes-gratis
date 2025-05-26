@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, TrendingUp, Clock, Target, ChevronRight, User } from 'lucide-react';
+import { BookOpen, TrendingUp, Clock, Target, ChevronRight, User, Trophy, Award } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
 import QuestionsSection from './QuestionsSection';
@@ -23,14 +23,18 @@ interface Question {
   justificativa: string;
 }
 
-interface AreaStats {
+interface UserAreaStats {
   area: string;
-  total_questoes: number;
+  total_sessions: number;
+  total_questions: number;
+  total_correct: number;
+  accuracy_percentage: number;
+  avg_time_per_question: number;
 }
 
 const HomeSection = () => {
   const [recentQuestions, setRecentQuestions] = useState<Question[]>([]);
-  const [popularAreas, setPopularAreas] = useState<AreaStats[]>([]);
+  const [userAreaStats, setUserAreaStats] = useState<UserAreaStats[]>([]);
   const [selectedMode, setSelectedMode] = useState<string>('');
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [pendingMode, setPendingMode] = useState<string>('');
@@ -64,29 +68,58 @@ const HomeSection = () => {
         setRecentQuestions(questionsData || []);
       }
 
-      // Fetch popular areas
-      const { data: areasData, error: areasError } = await supabase
-        .from('Questoes_Comentadas')
-        .select('area')
+      // Fetch user performance statistics by area
+      const { data: statsData, error: statsError } = await supabase
+        .from('user_study_sessions')
+        .select('area, questions_answered, correct_answers, total_time')
         .not('area', 'is', null);
 
-      if (areasError) {
-        console.error('Error fetching areas:', areasError);
+      if (statsError) {
+        console.error('Error fetching user stats:', statsError);
       } else {
-        const areaCounts: Record<string, number> = {};
-        areasData?.forEach(item => {
-          if (item.area) {
-            areaCounts[item.area] = (areaCounts[item.area] || 0) + 1;
+        // Process stats by area
+        const areaStats: Record<string, {
+          total_sessions: number;
+          total_questions: number;
+          total_correct: number;
+          total_time: number;
+        }> = {};
+
+        statsData?.forEach(session => {
+          if (session.area) {
+            if (!areaStats[session.area]) {
+              areaStats[session.area] = {
+                total_sessions: 0,
+                total_questions: 0,
+                total_correct: 0,
+                total_time: 0
+              };
+            }
+            areaStats[session.area].total_sessions += 1;
+            areaStats[session.area].total_questions += session.questions_answered;
+            areaStats[session.area].total_correct += session.correct_answers;
+            areaStats[session.area].total_time += session.total_time;
           }
         });
-        const stats = Object.entries(areaCounts)
-          .map(([area, count]) => ({
+
+        const processedStats = Object.entries(areaStats)
+          .map(([area, stats]) => ({
             area,
-            total_questoes: count
+            total_sessions: stats.total_sessions,
+            total_questions: stats.total_questions,
+            total_correct: stats.total_correct,
+            accuracy_percentage: stats.total_questions > 0 
+              ? Math.round((stats.total_correct / stats.total_questions) * 100) 
+              : 0,
+            avg_time_per_question: stats.total_questions > 0 
+              ? Math.round(stats.total_time / stats.total_questions) 
+              : 0
           }))
-          .sort((a, b) => b.total_questoes - a.total_questoes)
+          .filter(stat => stat.total_questions >= 5) // Only show areas with at least 5 questions answered
+          .sort((a, b) => b.accuracy_percentage - a.accuracy_percentage)
           .slice(0, 6);
-        setPopularAreas(stats);
+
+        setUserAreaStats(processedStats);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -236,31 +269,90 @@ const HomeSection = () => {
         </div>
       </div>
 
-      {/* Popular Areas */}
+      {/* User Performance Statistics */}
       <div className="px-6 mb-8">
-        <h2 className="text-xl font-semibold text-white mb-4">Áreas Populares</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {popularAreas.map(area => (
-            <Card 
-              key={area.area} 
-              className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors"
-              onClick={() => handleAreaClick(area.area)}
-            >
-              <div className="flex items-center gap-3">
-                <BookOpen className="text-netflix-red flex-shrink-0" size={20} />
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-medium text-sm truncate">
-                    {area.area}
+        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+          <Trophy className="text-yellow-500" size={24} />
+          Estatísticas de Desempenho por Área
+        </h2>
+        {user ? (
+          userAreaStats.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {userAreaStats.map((stat, index) => (
+                <Card 
+                  key={stat.area} 
+                  className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors"
+                  onClick={() => handleAreaClick(stat.area)}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      {index === 0 && <Trophy className="text-yellow-500 flex-shrink-0" size={20} />}
+                      {index === 1 && <Award className="text-gray-400 flex-shrink-0" size={20} />}
+                      {index === 2 && <Award className="text-orange-500 flex-shrink-0" size={20} />}
+                      {index > 2 && <BookOpen className="text-netflix-red flex-shrink-0" size={20} />}
+                    </div>
+                    <Badge 
+                      className={`
+                        ${stat.accuracy_percentage >= 80 ? 'bg-green-600' : 
+                          stat.accuracy_percentage >= 60 ? 'bg-yellow-600' : 'bg-red-600'
+                        } text-white
+                      `}
+                    >
+                      {stat.accuracy_percentage}%
+                    </Badge>
+                  </div>
+                  
+                  <h3 className="text-white font-medium text-sm mb-2 truncate">
+                    {stat.area}
                   </h3>
-                  <p className="text-netflix-text-secondary text-xs">
-                    {area.total_questoes} questões
-                  </p>
-                </div>
-                <ChevronRight className="text-netflix-text-secondary flex-shrink-0" size={16} />
-              </div>
+                  
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between text-netflix-text-secondary">
+                      <span>Questões:</span>
+                      <span className="text-white">{stat.total_questions}</span>
+                    </div>
+                    <div className="flex justify-between text-netflix-text-secondary">
+                      <span>Acertos:</span>
+                      <span className="text-green-400">{stat.total_correct}</span>
+                    </div>
+                    <div className="flex justify-between text-netflix-text-secondary">
+                      <span>Tempo/Q:</span>
+                      <span className="text-blue-400">{stat.avg_time_per_question}s</span>
+                    </div>
+                    <div className="flex justify-between text-netflix-text-secondary">
+                      <span>Sessões:</span>
+                      <span className="text-purple-400">{stat.total_sessions}</span>
+                    </div>
+                  </div>
+                  
+                  <ChevronRight className="text-netflix-text-secondary mt-2 ml-auto" size={16} />
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="bg-netflix-card border-netflix-border p-6 text-center">
+              <Trophy className="mx-auto mb-4 text-gray-500" size={48} />
+              <h3 className="text-white text-lg font-semibold mb-2">Nenhuma estatística ainda</h3>
+              <p className="text-netflix-text-secondary">
+                Complete algumas sessões de estudo para ver suas estatísticas de desempenho
+              </p>
             </Card>
-          ))}
-        </div>
+          )
+        ) : (
+          <Card className="bg-netflix-card border-netflix-border p-6 text-center">
+            <User className="mx-auto mb-4 text-gray-500" size={48} />
+            <h3 className="text-white text-lg font-semibold mb-2">Faça login para ver estatísticas</h3>
+            <p className="text-netflix-text-secondary mb-4">
+              Entre na sua conta para acompanhar seu desempenho por área
+            </p>
+            <Button 
+              onClick={() => navigate('/auth')} 
+              className="bg-netflix-red hover:bg-red-700 text-white"
+            >
+              Fazer Login
+            </Button>
+          </Card>
+        )}
       </div>
 
       {/* Recent Questions Preview */}
