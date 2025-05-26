@@ -49,6 +49,7 @@ const QuestionsSection = ({
   const [streak, setStreak] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showStreakAnimation, setShowStreakAnimation] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const areaColorScheme = selectedAreaFilter ? getAreaColors(selectedAreaFilter) : null;
@@ -56,7 +57,94 @@ const QuestionsSection = ({
   useEffect(() => {
     fetchQuestions();
     fetchAreas();
+    createStudySession();
   }, [selectedAreaFilter, limit, studyMode]);
+
+  // Create a new study session when component mounts
+  const createStudySession = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: session, error } = await supabase
+        .from('user_study_sessions')
+        .insert({
+          user_id: user.id,
+          mode: studyMode,
+          area: selectedAreaFilter || null,
+          questions_answered: 0,
+          correct_answers: 0,
+          total_time: 0
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating study session:', error);
+      } else {
+        setCurrentSessionId(session.id);
+        console.log('Study session created:', session.id);
+      }
+    } catch (error) {
+      console.error('Error creating session:', error);
+    }
+  };
+
+  // Save progress to the current session
+  const saveSessionProgress = async () => {
+    if (!currentSessionId) return;
+
+    try {
+      const totalTime = Math.floor((Date.now() - sessionStats.startTime) / 1000);
+      
+      const { error } = await supabase
+        .from('user_study_sessions')
+        .update({
+          questions_answered: sessionStats.total,
+          correct_answers: sessionStats.correct,
+          total_time: totalTime,
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', currentSessionId);
+
+      if (error) {
+        console.error('Error saving session progress:', error);
+      } else {
+        console.log('Session progress saved:', {
+          questions: sessionStats.total,
+          correct: sessionStats.correct,
+          time: totalTime
+        });
+      }
+    } catch (error) {
+      console.error('Error saving progress:', error);
+    }
+  };
+
+  // Save individual question response
+  const saveQuestionResponse = async (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('user_questoes')
+        .insert({
+          user_id: user.id,
+          questao_id: questionId,
+          resposta_selecionada: selectedAnswer,
+          acertou: isCorrect
+        });
+
+      if (error) {
+        console.error('Error saving question response:', error);
+      } else {
+        console.log('Question response saved:', { questionId, selectedAnswer, isCorrect });
+      }
+    } catch (error) {
+      console.error('Error saving question response:', error);
+    }
+  };
 
   const fetchQuestions = async () => {
     setLoading(true);
@@ -83,6 +171,8 @@ const QuestionsSection = ({
         setAnswers({});
         setCurrentQuestionIndex(0);
         setStreak(0);
+        // Reset session stats when new questions are loaded
+        setSessionStats({ correct: 0, total: 0, startTime: Date.now() });
       }
     } catch (error) {
       console.error('Error:', error);
@@ -109,7 +199,7 @@ const QuestionsSection = ({
     }
   };
 
-  const handleAnswer = (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
+  const handleAnswer = async (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
     setAnswers(prev => ({
       ...prev,
       [questionId]: {
@@ -124,6 +214,14 @@ const QuestionsSection = ({
       total: prev.total + 1,
       correct: prev.correct + (isCorrect ? 1 : 0)
     }));
+
+    // Save individual question response
+    await saveQuestionResponse(questionId, selectedAnswer, isCorrect);
+
+    // Save session progress after each answer
+    setTimeout(() => {
+      saveSessionProgress();
+    }, 100); // Small delay to ensure sessionStats are updated
 
     // Update streak
     if (isCorrect) {
@@ -158,6 +256,9 @@ const QuestionsSection = ({
     const totalTime = Math.floor((Date.now() - sessionStats.startTime) / 1000);
     const percentage = Math.round((sessionStats.correct / sessionStats.total) * 100);
     
+    // Save final session data
+    await saveSessionProgress();
+    
     setShowCelebration(true);
     
     toast({
@@ -173,6 +274,8 @@ const QuestionsSection = ({
     setAnswers({});
     setSessionStats({ correct: 0, total: 0, startTime: Date.now() });
     setStreak(0);
+    // Create new session for shuffled questions
+    createStudySession();
   };
 
   const resetSession = () => {
@@ -180,6 +283,8 @@ const QuestionsSection = ({
     setAnswers({});
     setSessionStats({ correct: 0, total: 0, startTime: Date.now() });
     setStreak(0);
+    // Create new session for reset
+    createStudySession();
   };
 
   const getStats = () => {
@@ -188,6 +293,25 @@ const QuestionsSection = ({
     const percentage = answeredQuestions > 0 ? Math.round((correctAnswers / answeredQuestions) * 100) : 0;
     return { answeredQuestions, correctAnswers, percentage };
   };
+
+  // Save progress when component unmounts or user leaves
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (sessionStats.total > 0) {
+        saveSessionProgress();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Save progress when component unmounts
+      if (sessionStats.total > 0) {
+        saveSessionProgress();
+      }
+    };
+  }, [sessionStats, currentSessionId]);
 
   if (loading) {
     return (
