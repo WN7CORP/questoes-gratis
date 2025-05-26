@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -115,7 +114,7 @@ const MinimalQuestionCard = ({
   const getAlternativeStyle = (key: string) => {
     if (!answered) {
       return selectedAnswer === key 
-        ? `${areaColorScheme.primary} ${areaColorScheme.border} text-white shadow-lg transform scale-[1.02] transition-all duration-200 ring-2 ring-opacity-50 border-2`
+        ? 'bg-blue-600 border-blue-500 text-white shadow-lg transform scale-[1.02] transition-all duration-200 ring-2 ring-blue-300 border-2'
         : 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-700 hover:border-gray-500 transition-all duration-200 active:scale-95 border-2';
     }
     
@@ -197,11 +196,11 @@ const MinimalQuestionCard = ({
           </Button>
         ) : (
           <div className="space-y-4 sm:space-y-6">
-            {/* Comment Button with area colors */}
+            {/* Comment Button with blue colors */}
             {question.justificativa && (
               <Button
                 onClick={() => setShowJustification(true)}
-                className={`w-full ${areaColorScheme.secondary} ${areaColorScheme.hover} text-white py-4 sm:py-5 text-lg sm:text-xl font-semibold transition-all duration-200 rounded-xl shadow-lg min-h-[56px] sm:min-h-[64px] active:scale-95`}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 sm:py-5 text-lg sm:text-xl font-semibold transition-all duration-200 rounded-xl shadow-lg min-h-[56px] sm:min-h-[64px] active:scale-95"
               >
                 <MessageSquare size={24} className="mr-3" />
                 Ver Comentário
