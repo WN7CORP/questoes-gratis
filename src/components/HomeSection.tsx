@@ -1,12 +1,27 @@
+
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, TrendingUp, Clock, Target, ChevronRight, User, Trophy, Award, Zap, Brain, Flame, Star } from 'lucide-react';
+import { 
+  BookOpen, 
+  Target, 
+  Trophy, 
+  TrendingUp, 
+  Clock,
+  ChevronRight,
+  Play,
+  Zap,
+  Award,
+  Users,
+  FileText,
+  Info,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from 'react-router-dom';
 import QuestionsSection from './QuestionsSection';
-import StudyOptionsModal from './StudyOptionsModal';
+import { useToast } from "@/hooks/use-toast";
 
 interface Question {
   id: number;
@@ -24,412 +39,389 @@ interface Question {
   banca: string;
 }
 
-interface UserAreaStats {
-  area: string;
-  total_sessions: number;
-  total_questions: number;
-  total_correct: number;
-  accuracy_percentage: number;
-  avg_time_per_question: number;
-}
-
 const HomeSection = () => {
-  const [recentQuestions, setRecentQuestions] = useState<Question[]>([]);
-  const [userAreaStats, setUserAreaStats] = useState<UserAreaStats[]>([]);
-  const [selectedMode, setSelectedMode] = useState<string>('');
-  const [showOptionsModal, setShowOptionsModal] = useState(false);
-  const [pendingMode, setPendingMode] = useState<string>('');
-  const [studyOptions, setStudyOptions] = useState<{
-    mode: string;
-    questionCount: number;
-    areas: string[];
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const navigate = useNavigate();
+  const [showQuestions, setShowQuestions] = useState(false);
+  const [selectedArea, setSelectedArea] = useState<string>('');
+  const [showRandomQuestions, setShowRandomQuestions] = useState(false);
+  const [showSimulado, setShowSimulado] = useState(false);
+  const [stats, setStats] = useState({
+    totalQuestions: 0,
+    totalAreas: 0,
+    totalExams: 0
+  });
+  const [showOabInfo, setShowOabInfo] = useState(false);
+  const { toast } = useToast();
+
   useEffect(() => {
-    checkUser();
-    fetchHomeData();
+    fetchStats();
   }, []);
-  const checkUser = async () => {
-    const {
-      data: {
-        user
-      }
-    } = await supabase.auth.getUser();
-    setUser(user);
-    console.log('Current user:', user);
-  };
-  const fetchHomeData = async () => {
+
+  const fetchStats = async () => {
     try {
-      // Fetch recent questions ordenadas por ID (mais recentes primeiro)
-      const { data: questionsData, error: questionsError } = await supabase
+      const { data, error } = await supabase
         .from('Questoes_Comentadas')
-        .select('*')
-        .order('id', { ascending: false })
-        .limit(5);
+        .select('area, exame, ano');
 
-      if (questionsError) {
-        console.error('Error fetching questions:', questionsError);
+      if (error) {
+        console.error('Error fetching stats:', error);
       } else {
-        setRecentQuestions(questionsData || []);
-      }
-
-      // Fetch user performance statistics by area with better query
-      console.log('Fetching user area statistics...');
-      const {
-        data: statsData,
-        error: statsError
-      } = await supabase.from('user_study_sessions').select('*').not('area', 'is', null).order('created_at', {
-        ascending: false
-      });
-      console.log('Raw stats data:', statsData);
-      console.log('Stats error:', statsError);
-      if (statsError) {
-        console.error('Error fetching user stats:', statsError);
-      } else if (statsData && statsData.length > 0) {
-        // Process stats by area
-        const areaStats: Record<string, {
-          total_sessions: number;
-          total_questions: number;
-          total_correct: number;
-          total_time: number;
-        }> = {};
-        statsData.forEach(session => {
-          if (session.area && session.area.trim() !== '') {
-            if (!areaStats[session.area]) {
-              areaStats[session.area] = {
-                total_sessions: 0,
-                total_questions: 0,
-                total_correct: 0,
-                total_time: 0
-              };
-            }
-            areaStats[session.area].total_sessions += 1;
-            areaStats[session.area].total_questions += session.questions_answered || 0;
-            areaStats[session.area].total_correct += session.correct_answers || 0;
-            areaStats[session.area].total_time += session.total_time || 0;
-          }
+        const uniqueAreas = new Set(data?.map(item => item.area).filter(Boolean));
+        const uniqueExams = new Set(data?.map(item => `${item.exame}-${item.ano}`).filter(item => !item.includes('null')));
+        
+        setStats({
+          totalQuestions: data?.length || 0,
+          totalAreas: uniqueAreas.size,
+          totalExams: uniqueExams.size
         });
-        console.log('Processed area stats:', areaStats);
-        const processedStats = Object.entries(areaStats).map(([area, stats]) => ({
-          area,
-          total_sessions: stats.total_sessions,
-          total_questions: stats.total_questions,
-          total_correct: stats.total_correct,
-          accuracy_percentage: stats.total_questions > 0 ? Math.round(stats.total_correct / stats.total_questions * 100) : 0,
-          avg_time_per_question: stats.total_questions > 0 ? Math.round(stats.total_time / stats.total_questions) : 0
-        })).filter(stat => stat.total_questions >= 3) // Reduzindo para 3 questões mínimas
-        .sort((a, b) => b.accuracy_percentage - a.accuracy_percentage).slice(0, 6);
-        console.log('Final processed stats:', processedStats);
-        setUserAreaStats(processedStats);
-      } else {
-        console.log('No statistics data found');
-        setUserAreaStats([]);
       }
     } catch (error) {
-      console.error('Error in fetchHomeData:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error:', error);
     }
   };
-  const handleStartStudy = (mode: string) => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    setPendingMode(mode);
-    setShowOptionsModal(true);
+
+  const handleAreaSelect = (area: string) => {
+    setSelectedArea(area);
+    setShowQuestions(true);
+    setShowRandomQuestions(false);
+    setShowSimulado(false);
   };
-  const handleOptionsConfirm = (options: {
-    mode: string;
-    questionCount: number;
-    areas: string[];
-  }) => {
-    setStudyOptions(options);
-    setSelectedMode(options.mode);
-    setShowOptionsModal(false);
+
+  const handleRandomQuestions = () => {
+    setSelectedArea('');
+    setShowRandomQuestions(true);
+    setShowQuestions(true);
+    setShowSimulado(false);
   };
-  const handleAreaClick = (area: string) => {
-    // Navegar para a seção de estudos com a área específica
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    // Aqui você pode implementar a navegação para StudyAreas com filtro específico
-    console.log('Navegando para área:', area);
+
+  const handleSimuladoAccess = () => {
+    setShowSimulado(true);
+    setShowQuestions(false);
+    setShowRandomQuestions(false);
   };
-  if (selectedMode && studyOptions) {
-    return <div className="h-full overflow-y-auto bg-netflix-black">
-        <div className="p-6 px-[15px]">
-          <div className="flex items-center gap-4 mb-6">
-            <button onClick={() => {
-            setSelectedMode('');
-            setStudyOptions(null);
-          }} className="text-netflix-red hover:text-red-400 transition-colors">
-              ← Voltar
+
+  const popularAreas = [
+    'Direito Constitucional',
+    'Direito Civil',
+    'Direito Penal',
+    'Direito Processual Civil',
+    'Direito do Trabalho',
+    'Direito Administrativo'
+  ];
+
+  if (showQuestions && !showSimulado) {
+    return (
+      <div className="h-full overflow-y-auto bg-netflix-black">
+        <div className="p-6">
+          <div className="flex items-center gap-4 mb-6 p-4 rounded-lg bg-gray-800 border-l-4 border-netflix-red">
+            <button 
+              onClick={() => {
+                setShowQuestions(false);
+                setShowRandomQuestions(false);
+                setSelectedArea('');
+              }} 
+              className="text-netflix-red hover:text-red-400 transition-colors font-semibold"
+            >
+              ← Voltar ao Início
             </button>
             <h1 className="text-2xl font-bold text-white">
-              {selectedMode === 'random' ? 'Questões Aleatórias' : selectedMode === 'recent' ? 'Questões Recentes' : 'Simulado Rápido'}
+              {showRandomQuestions ? 'Questões Aleatórias' : `Estudando: ${selectedArea}`}
             </h1>
           </div>
           
-          <QuestionsSection limit={studyOptions.questionCount} showFilters={selectedMode !== 'simulado'} selectedArea={studyOptions.areas.length > 0 ? studyOptions.areas[0] : undefined} />
+          <QuestionsSection 
+            selectedArea={showRandomQuestions ? undefined : selectedArea}
+            limit={showRandomQuestions ? 10 : 20}
+          />
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="h-full overflow-y-auto bg-netflix-black">
-      {/* Header */}
-      <div className="p-6 pb-4">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-              <Flame className="text-netflix-red" size={36} />
-              Questões OAB Comentadas
+
+  return (
+    <div className="h-full overflow-y-auto bg-netflix-black">
+      {/* Hero Section */}
+      <div className="relative p-6 pb-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="bg-netflix-red rounded-full p-3">
+              <Award className="text-white" size={32} />
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-bold text-white">
+              OAB Questões
             </h1>
-            <p className="text-netflix-text-secondary text-lg">
-              Domine o exame da OAB com questões comentadas e simulados reais
-            </p>
           </div>
-          {!user && (
-            <Button onClick={() => navigate('/auth')} className="bg-netflix-red hover:bg-red-700 text-white">
-              <User className="mr-2" size={16} />
-              Entrar
-            </Button>
-          )}
+          <p className="text-xl text-netflix-text-secondary mb-8 max-w-2xl mx-auto">
+            Prepare-se para o Exame da OAB com questões comentadas, simulados reais e conteúdo atualizado
+          </p>
+          
+          {/* Quick Stats */}
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="bg-netflix-card border border-netflix-border rounded-lg p-4">
+              <div className="text-2xl font-bold text-netflix-red mb-1">
+                {stats.totalQuestions.toLocaleString()}
+              </div>
+              <div className="text-sm text-netflix-text-secondary">
+                Questões Disponíveis
+              </div>
+            </div>
+            <div className="bg-netflix-card border border-netflix-border rounded-lg p-4">
+              <div className="text-2xl font-bold text-green-400 mb-1">
+                {stats.totalAreas}
+              </div>
+              <div className="text-sm text-netflix-text-secondary">
+                Áreas do Direito
+              </div>
+            </div>
+            <div className="bg-netflix-card border border-netflix-border rounded-lg p-4">
+              <div className="text-2xl font-bold text-blue-400 mb-1">
+                {stats.totalExams}
+              </div>
+              <div className="text-sm text-netflix-text-secondary">
+                Exames Passados
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Sobre a OAB Section */}
       <div className="px-6 mb-8">
-        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-          <Star className="text-yellow-500" size={24} />
-          Modos de Estudo
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card 
-            className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
-            onClick={() => handleStartStudy('area')}
+        <Card className="bg-netflix-card border-netflix-border overflow-hidden">
+          <div 
+            className="p-6 cursor-pointer hover:bg-gray-800/50 transition-colors"
+            onClick={() => setShowOabInfo(!showOabInfo)}
           >
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-600 rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600 rounded-lg p-3">
+                  <Info className="text-white" size={24} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white mb-1">Sobre o Exame da OAB</h2>
+                  <p className="text-netflix-text-secondary">
+                    Entenda tudo sobre o exame e como se preparar
+                  </p>
+                </div>
+              </div>
+              {showOabInfo ? (
+                <ChevronUp className="text-netflix-text-secondary" size={24} />
+              ) : (
+                <ChevronDown className="text-netflix-text-secondary" size={24} />
+              )}
+            </div>
+          </div>
+          
+          {showOabInfo && (
+            <div className="px-6 pb-6 border-t border-netflix-border">
+              <div className="grid md:grid-cols-2 gap-6 mt-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3">📊 Estrutura do Exame</h3>
+                  <ul className="space-y-2 text-netflix-text-secondary">
+                    <li>• <strong>1ª Fase:</strong> 80 questões objetivas (4 alternativas)</li>
+                    <li>• <strong>2ª Fase:</strong> Prova prático-profissional</li>
+                    <li>• <strong>Duração:</strong> 5 horas (1ª fase) / 5 horas (2ª fase)</li>
+                    <li>• <strong>Aprovação:</strong> Mínimo de 50% de acertos em cada fase</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3">🎯 Benefícios de Praticar</h3>
+                  <ul className="space-y-2 text-netflix-text-secondary">
+                    <li>• <strong>Familiarização:</strong> Conheça o estilo das questões</li>
+                    <li>• <strong>Gestão do Tempo:</strong> Pratique o ritmo ideal</li>
+                    <li>• <strong>Identificação de Lacunas:</strong> Descubra pontos fracos</li>
+                    <li>• <strong>Confiança:</strong> Aumente sua segurança no exame</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3">📚 Principais Áreas</h3>
+                  <ul className="space-y-2 text-netflix-text-secondary">
+                    <li>• Ética Profissional (Estatuto da OAB)</li>
+                    <li>• Direito Constitucional</li>
+                    <li>• Direito Civil e Processual Civil</li>
+                    <li>• Direito Penal e Processual Penal</li>
+                    <li>• Direito Administrativo</li>
+                    <li>• Direito do Trabalho</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3">💡 Dicas de Estudo</h3>
+                  <ul className="space-y-2 text-netflix-text-secondary">
+                    <li>• <strong>Consistência:</strong> Estude um pouco todos os dias</li>
+                    <li>• <strong>Simulados:</strong> Pratique em condições reais</li>
+                    <li>• <strong>Revisão:</strong> Foque nas questões erradas</li>
+                    <li>• <strong>Legislação:</strong> Mantenha-se atualizado</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Main Study Options */}
+      <div className="px-6 mb-8">
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+          <Target className="text-netflix-red" size={28} />
+          Como você quer estudar hoje?
+        </h2>
+        
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Study by Area */}
+          <Card className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border-blue-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="bg-blue-600 rounded-lg p-3 group-hover:scale-110 transition-transform">
                 <BookOpen className="text-white" size={24} />
               </div>
-              <div className="flex-1">
-                <h3 className="text-white font-semibold mb-1">Estudar por Área</h3>
-                <p className="text-netflix-text-secondary text-sm">
-                  Foque em uma área específica do direito
-                </p>
+              <div>
+                <h3 className="text-xl font-bold text-white">Estudar por Área</h3>
+                <p className="text-blue-200">Foque em disciplinas específicas</p>
               </div>
-              <ChevronRight className="text-netflix-text-secondary" size={20} />
+            </div>
+            <p className="text-blue-100/80 text-sm mb-4">
+              Escolha uma área do direito e pratique questões específicas para fortalecer seus conhecimentos.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {popularAreas.slice(0, 3).map((area) => (
+                <button
+                  key={area}
+                  onClick={() => handleAreaSelect(area)}
+                  className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-200 px-3 py-1 rounded-full text-xs transition-colors"
+                >
+                  {area}
+                </button>
+              ))}
             </div>
           </Card>
 
-          <Card 
-            className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
-            onClick={() => handleStartStudy('quick')}
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-green-600 rounded-lg p-3">
+          {/* Random Questions */}
+          <Card className="bg-gradient-to-br from-green-900/30 to-green-800/20 border-green-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group"
+                onClick={handleRandomQuestions}>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="bg-green-600 rounded-lg p-3 group-hover:scale-110 transition-transform">
                 <Zap className="text-white" size={24} />
               </div>
-              <div className="flex-1">
-                <h3 className="text-white font-semibold mb-1">Questões Rápidas</h3>
-                <p className="text-netflix-text-secondary text-sm">
-                  10 questões aleatórias para praticar
-                </p>
+              <div>
+                <h3 className="text-xl font-bold text-white">Questões Rápidas</h3>
+                <p className="text-green-200">Prática mista e dinâmica</p>
               </div>
-              <ChevronRight className="text-netflix-text-secondary" size={20} />
+            </div>
+            <p className="text-green-100/80 text-sm mb-4">
+              Questões aleatórias de diferentes áreas para uma revisão completa e diversificada.
+            </p>
+            <div className="flex items-center gap-2 text-green-200">
+              <Play size={16} />
+              <span className="text-sm font-medium">Começar Agora</span>
             </div>
           </Card>
 
-          <Card 
-            className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
-            onClick={() => navigate('/auth')}
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-netflix-red rounded-lg p-3">
+          {/* Simulado */}
+          <Card className="bg-gradient-to-br from-red-900/30 to-red-800/20 border-red-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group"
+                onClick={handleSimuladoAccess}>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="bg-netflix-red rounded-lg p-3 group-hover:scale-110 transition-transform">
                 <Trophy className="text-white" size={24} />
               </div>
-              <div className="flex-1">
-                <h3 className="text-white font-semibold mb-1">Simulado Completo</h3>
-                <p className="text-netflix-text-secondary text-sm">
-                  Provas reais de exames anteriores
-                </p>
+              <div>
+                <h3 className="text-xl font-bold text-white">Simulado Completo</h3>
+                <p className="text-red-200">Provas reais de exames anteriores</p>
               </div>
-              <ChevronRight className="text-netflix-text-secondary" size={20} />
+            </div>
+            <p className="text-red-100/80 text-sm mb-4">
+              Pratique com exames reais da OAB, cronometrado e nas mesmas condições da prova oficial.
+            </p>
+            <div className="flex items-center gap-2 text-red-200">
+              <Clock size={16} />
+              <span className="text-sm font-medium">5h de duração</span>
             </div>
           </Card>
         </div>
       </div>
 
-      {/* Enhanced Categories Section */}
+      {/* Special Categories */}
       <div className="px-6 mb-8">
-        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-          <Brain className="text-purple-500" size={24} />
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <TrendingUp className="text-netflix-red" size={24} />
           Categorias Especiais
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card 
-            className="bg-gradient-to-br from-red-900 to-red-700 border-red-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
-            onClick={() => handleStartStudy('desafio')}
-          >
-            <div className="text-center">
-              <Flame className="text-white mx-auto mb-2" size={28} />
-              <h3 className="text-white font-semibold text-sm mb-1">Desafio Diário</h3>
-              <p className="text-red-100 text-xs">5 questões difíceis</p>
-            </div>
-          </Card>
-
-          <Card 
-            className="bg-gradient-to-br from-yellow-900 to-yellow-700 border-yellow-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
-            onClick={() => handleStartStudy('trending')}
-          >
-            <div className="text-center">
-              <TrendingUp className="text-white mx-auto mb-2" size={28} />
-              <h3 className="text-white font-semibold text-sm mb-1">Em Alta</h3>
-              <p className="text-yellow-100 text-xs">Questões populares</p>
-            </div>
-          </Card>
-
-          <Card 
-            className="bg-gradient-to-br from-green-900 to-green-700 border-green-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
-            onClick={() => handleStartStudy('recent')}
-          >
-            <div className="text-center">
-              <Clock className="text-white mx-auto mb-2" size={28} />
-              <h3 className="text-white font-semibold text-sm mb-1">Recentes</h3>
-              <p className="text-green-100 text-xs">Últimas adicionadas</p>
-            </div>
-          </Card>
-
-          <Card 
-            className="bg-gradient-to-br from-purple-900 to-purple-700 border-purple-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
-            onClick={() => handleStartStudy('revision')}
-          >
-            <div className="text-center">
-              <Target className="text-white mx-auto mb-2" size={28} />
-              <h3 className="text-white font-semibold text-sm mb-1">Revisão</h3>
-              <p className="text-purple-100 text-xs">Questões para revisar</p>
-            </div>
-          </Card>
-        </div>
-      </div>
-
-      {/* User Performance Statistics */}
-      <div className="px-6 mb-8">
-        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-          <Trophy className="text-yellow-500" size={24} />
-          Estatísticas de Desempenho por Área
-        </h2>
-        {user ? loading ? <Card className="bg-netflix-card border-netflix-border p-6 text-center">
-              <div className="text-netflix-text-secondary">
-                Carregando estatísticas...
+        
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group"
+                onClick={() => handleAreaSelect('Ética Profissional')}>
+            <div className="flex items-center gap-3">
+              <div className="bg-purple-600 rounded-lg p-2 group-hover:scale-110 transition-transform">
+                <Award size={20} />
               </div>
-            </Card> : userAreaStats.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userAreaStats.map((stat, index) => <Card key={stat.area} className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => handleAreaClick(stat.area)}>
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {index === 0 && <Trophy className="text-yellow-500 flex-shrink-0" size={20} />}
-                      {index === 1 && <Award className="text-gray-400 flex-shrink-0" size={20} />}
-                      {index === 2 && <Award className="text-orange-500 flex-shrink-0" size={20} />}
-                      {index > 2 && <BookOpen className="text-netflix-red flex-shrink-0" size={20} />}
-                    </div>
-                    <Badge className={`
-                        ${stat.accuracy_percentage >= 80 ? 'bg-green-600' : stat.accuracy_percentage >= 60 ? 'bg-yellow-600' : 'bg-red-600'} text-white
-                      `}>
-                      {stat.accuracy_percentage}%
-                    </Badge>
-                  </div>
-                  
-                  <h3 className="text-white font-medium text-sm mb-2 truncate">
-                    {stat.area}
-                  </h3>
-                  
-                  <div className="space-y-1 text-xs">
-                    <div className="flex justify-between text-netflix-text-secondary">
-                      <span>Questões:</span>
-                      <span className="text-white">{stat.total_questions}</span>
-                    </div>
-                    <div className="flex justify-between text-netflix-text-secondary">
-                      <span>Acertos:</span>
-                      <span className="text-green-400">{stat.total_correct}</span>
-                    </div>
-                    <div className="flex justify-between text-netflix-text-secondary">
-                      <span>Tempo/Q:</span>
-                      <span className="text-blue-400">{stat.avg_time_per_question}s</span>
-                    </div>
-                    <div className="flex justify-between text-netflix-text-secondary">
-                      <span>Sessões:</span>
-                      <span className="text-purple-400">{stat.total_sessions}</span>
-                    </div>
-                  </div>
-                  
-                  
-                </Card>)}
-            </div> : <Card className="bg-netflix-card border-netflix-border p-6 text-center">
-              <Trophy className="mx-auto mb-4 text-gray-500" size={48} />
-              <h3 className="text-white text-lg font-semibold mb-2">Nenhuma estatística ainda</h3>
-              <p className="text-netflix-text-secondary">
-                Complete algumas sessões de estudo para ver suas estatísticas de desempenho
-              </p>
-            </Card> : <Card className="bg-netflix-card border-netflix-border p-6 text-center">
-            <User className="mx-auto mb-4 text-gray-500" size={48} />
-            <h3 className="text-white text-lg font-semibold mb-2">Faça login para ver estatísticas</h3>
-            <p className="text-netflix-text-secondary mb-4">
-              Entre na sua conta para acompanhar seu desempenho por área
-            </p>
-            <Button onClick={() => navigate('/auth')} className="bg-netflix-red hover:bg-red-700 text-white">
-              Fazer Login
-            </Button>
-          </Card>}
-      </div>
-
-      {/* Recent Questions Preview */}
-      <div className="px-6 pb-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Questões Recentes</h2>
-        <div className="space-y-3">
-          {loading ? (
-            <div className="text-netflix-text-secondary text-center py-8">
-              Carregando questões...
+              <div>
+                <h3 className="text-white font-semibold">Ética Profissional</h3>
+                <p className="text-gray-400 text-xs">Estatuto da OAB</p>
+              </div>
             </div>
-          ) : (
-            recentQuestions.slice(0, 3).map(question => (
-              <Card key={question.id} className="bg-netflix-card border-netflix-border p-4">
-                <div className="flex items-start gap-3">
-                  <div className="bg-netflix-red rounded-lg p-2 mt-1">
-                    <BookOpen className="text-white" size={16} />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="secondary" className="bg-netflix-border text-netflix-text-secondary text-xs">
-                        {question.area}
-                      </Badge>
-                      <Badge variant="outline" className="border-netflix-border text-netflix-text-secondary text-xs">
-                        {question.exame} {question.ano}
-                      </Badge>
-                    </div>
-                    
-                    <p className="text-white text-sm leading-relaxed line-clamp-2">
-                      {question.enunciado}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            ))
-          )}
+          </Card>
+
+          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group"
+                onClick={() => handleAreaSelect('Direito Constitucional')}>
+            <div className="flex items-center gap-3">
+              <div className="bg-orange-600 rounded-lg p-2 group-hover:scale-110 transition-transform">
+                <FileText size={20} />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold">Constitucional</h3>
+                <p className="text-gray-400 text-xs">Base do ordenamento</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group"
+                onClick={() => handleAreaSelect('Direito Civil')}>
+            <div className="flex items-center gap-3">
+              <div className="bg-cyan-600 rounded-lg p-2 group-hover:scale-110 transition-transform">
+                <Users size={20} />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold">Direito Civil</h3>
+                <p className="text-gray-400 text-xs">Relações privadas</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group"
+                onClick={() => handleAreaSelect('Direito Penal')}>
+            <div className="flex items-center gap-3">
+              <div className="bg-red-600 rounded-lg p-2 group-hover:scale-110 transition-transform">
+                <Target size={20} />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold">Direito Penal</h3>
+                <p className="text-gray-400 text-xs">Crimes e penas</p>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
 
-      {/* Modal de Opções */}
-      <StudyOptionsModal 
-        isVisible={showOptionsModal}
-        onClose={() => setShowOptionsModal(false)}
-        onStart={handleOptionsConfirm}
-        mode={pendingMode}
-      />
-    </div>;
+      {/* Quick Access */}
+      <div className="px-6 pb-8">
+        <div className="bg-gradient-to-r from-netflix-red/20 to-red-800/20 border border-netflix-red/30 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-white font-bold text-lg mb-2">Pronto para começar?</h3>
+              <p className="text-netflix-text-secondary">
+                Escolha uma das opções acima e comece sua jornada rumo à aprovação na OAB!
+              </p>
+            </div>
+            <div className="hidden sm:block">
+              <div className="bg-netflix-red rounded-full p-4">
+                <ChevronRight className="text-white" size={24} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default HomeSection;

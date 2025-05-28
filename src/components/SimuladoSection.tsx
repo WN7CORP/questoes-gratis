@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Clock, BookOpen, Target, Play, TrendingUp } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from 'react-router-dom';
 import QuestionsSection from './QuestionsSection';
 
 interface ExamStats {
@@ -21,7 +20,6 @@ const SimuladoSection = () => {
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     checkUser();
@@ -66,7 +64,7 @@ const SimuladoSection = () => {
         });
 
         const stats = Object.values(examGroups)
-          .sort((a, b) => parseInt(b.ano) - parseInt(a.ano));
+          .sort((a, b) => parseInt(b.ano) - parseInt(a.ano)); // Ordenar por ano mais recente primeiro
         
         setExamStats(stats);
       }
@@ -79,11 +77,20 @@ const SimuladoSection = () => {
 
   const handleStartSimulado = (exame: string, ano: string) => {
     if (!user) {
-      navigate('/auth');
+      // Force refresh user state
+      checkUser();
       return;
     }
     setSelectedExam(exame);
     setSelectedYear(ano);
+  };
+
+  // Get the total number of questions for the selected exam
+  const getTotalQuestionsForExam = () => {
+    const selectedExamData = examStats.find(exam => 
+      exam.exame === selectedExam && exam.ano === selectedYear
+    );
+    return selectedExamData?.total_questoes || 50;
   };
 
   if (selectedExam && selectedYear) {
@@ -101,14 +108,14 @@ const SimuladoSection = () => {
               ← Voltar
             </button>
             <h1 className="text-2xl font-bold text-white">
-              Simulado {selectedExam}ª {selectedYear}
+              Simulado {selectedExam} - {selectedYear}
             </h1>
           </div>
           
           <QuestionsSection 
             selectedExam={selectedExam}
             selectedYear={selectedYear}
-            limit={50}
+            limit={getTotalQuestionsForExam()}
             showFilters={false}
             isSimulado={true}
           />
@@ -126,7 +133,7 @@ const SimuladoSection = () => {
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Simulados OAB</h1>
             <p className="text-netflix-text-secondary text-lg">
-              Pratique com provas reais dos exames anteriores
+              Pratique com provas reais dos exames anteriores da OAB
             </p>
           </div>
         </div>
@@ -200,7 +207,7 @@ const SimuladoSection = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <Badge variant="secondary" className="bg-netflix-red text-white text-xs">
-                        {exam.exame}ª Fase
+                        {exam.exame}
                       </Badge>
                       <Badge variant="outline" className="border-netflix-border text-netflix-text-secondary text-xs">
                         {exam.ano}
@@ -208,7 +215,7 @@ const SimuladoSection = () => {
                     </div>
                     
                     <h3 className="text-white font-semibold text-lg mb-2">
-                      Exame {exam.exame}ª - {exam.ano}
+                      Exame {exam.exame} - {exam.ano}
                     </h3>
                     
                     <div className="flex items-center gap-4 mb-3 text-sm">

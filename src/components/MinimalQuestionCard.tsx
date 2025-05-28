@@ -3,11 +3,7 @@ import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
-import AnswerFeedback from './AnswerFeedback';
-import QuestionJustification from './QuestionJustification';
-import { getAreaColors } from '../utils/areaColors';
+import { BookOpen, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 interface Question {
   id: number;
@@ -22,38 +18,25 @@ interface Question {
   alternativa_d: string;
   resposta_correta: string;
   justificativa: string;
+  banca: string;
 }
 
 interface MinimalQuestionCardProps {
   question: Question;
   onAnswer?: (questionId: number, selectedAnswer: string, isCorrect: boolean) => void;
   isAnswered?: boolean;
+  isAnnulled?: boolean;
 }
 
-const MinimalQuestionCard = ({
-  question,
-  onAnswer,
-  isAnswered = false
-}: MinimalQuestionCardProps) => {
+const MinimalQuestionCard = ({ question, onAnswer, isAnswered = false, isAnnulled = false }: MinimalQuestionCardProps) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [showResult, setShowResult] = useState(false);
   const [answered, setAnswered] = useState(isAnswered);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [showJustification, setShowJustification] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [answerResult, setAnswerResult] = useState<boolean | null>(null);
-  const { toast } = useToast();
-  
-  const areaColorScheme = getAreaColors(question.area);
 
-  // Reset state when question changes
   useEffect(() => {
     setSelectedAnswer('');
     setShowResult(false);
     setAnswered(isAnswered);
-    setShowFeedback(false);
-    setShowJustification(false);
-    setAnswerResult(null);
   }, [question.id, isAnswered]);
 
   const alternatives = [
@@ -64,163 +47,196 @@ const MinimalQuestionCard = ({
   ].filter(alt => alt.value && alt.value.trim() !== '');
 
   const handleAnswerSelect = (answer: string) => {
-    if (answered) return;
+    if (answered || isAnnulled) return;
     setSelectedAnswer(answer);
   };
 
   const handleSubmitAnswer = async () => {
-    if (!selectedAnswer || answered) return;
+    if (!selectedAnswer || answered || isAnnulled) return;
     
     const isCorrect = selectedAnswer === question.resposta_correta;
-    console.log('Selected answer:', selectedAnswer);
-    console.log('Correct answer:', question.resposta_correta);
-    console.log('Is correct:', isCorrect);
-    
     setAnswered(true);
     setShowResult(true);
-    setAnswerResult(isCorrect);
-
-    // Show toast notification
-    if (isCorrect) {
-      toast({
-        title: "🎉 Parabéns!",
-        description: "Você acertou a questão!",
-        className: "bg-green-600 text-white border-green-500"
-      });
-    } else {
-      toast({
-        title: "😔 Ops... Você errou",
-        description: "Não desanime, continue praticando!",
-        variant: "destructive"
-      });
-    }
-
-    // Show feedback animation
-    setShowFeedback(true);
-    setTimeout(() => setShowFeedback(false), 2000);
     
     if (onAnswer) {
       onAnswer(question.id, selectedAnswer, isCorrect);
     }
   };
 
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    toast({
-      title: isFavorite ? "Removido dos favoritos" : "Adicionado aos favoritos",
-      description: isFavorite ? "Questão removida da sua lista de favoritos" : "Questão salva na sua lista de favoritos"
-    });
-  };
-
   const getAlternativeStyle = (key: string) => {
+    if (isAnnulled) {
+      return 'bg-gray-800/50 border-gray-600/50 text-gray-500 cursor-not-allowed';
+    }
+
     if (!answered) {
       return selectedAnswer === key 
-        ? 'bg-blue-600 border-blue-500 text-white shadow-lg transform scale-[1.02] transition-all duration-200 ring-2 ring-blue-300 border-2'
-        : 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-700 hover:border-gray-500 transition-all duration-200 active:scale-95 border-2';
+        ? 'bg-netflix-red border-netflix-red text-white shadow-lg transform scale-[1.02] transition-all duration-200' 
+        : 'bg-netflix-card border-netflix-border text-gray-100 hover:bg-gray-700 hover:border-gray-500 transition-all duration-200 cursor-pointer';
     }
     
-    // After answering: show correct answer in green
     if (key === question.resposta_correta) {
-      return 'bg-green-600 border-green-500 text-white shadow-lg ring-2 ring-green-300 border-2';
+      return 'bg-green-600 border-green-500 text-white shadow-lg';
     }
     
-    // All other alternatives (wrong ones) in red with reduced opacity
-    return 'bg-red-600/70 border-red-500/70 text-white/80 shadow-lg ring-2 ring-red-300/50 border-2 opacity-70';
+    if (key === selectedAnswer && key !== question.resposta_correta) {
+      return 'bg-red-600 border-red-500 text-white shadow-lg';
+    }
+    
+    return 'bg-netflix-card border-netflix-border text-gray-400 opacity-60';
   };
 
-  return (
-    <>
-      <Card className="bg-netflix-card border-netflix-border p-4 sm:p-6 max-w-4xl mx-auto shadow-xl transition-all duration-300 hover:shadow-2xl">
-        {/* Question Info with area colors */}
-        <div className={`flex items-center justify-between flex-wrap gap-4 p-4 sm:p-5 bg-gray-800 rounded-xl mb-6 border-l-4 ${areaColorScheme.border}`}>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="outline" className={`${areaColorScheme.border} ${areaColorScheme.text} ${areaColorScheme.bg} text-sm sm:text-base px-3 py-1 border`}>
-              {question.exame}ª {question.ano}
-            </Badge>
-            <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-900 text-sm sm:text-base px-3 py-1">
-              Questão {question.numero}
-            </Badge>
-            <Badge variant="outline" className={`${areaColorScheme.primary} text-white text-sm sm:text-base px-3 py-1 font-semibold`}>
-              {question.area}
-            </Badge>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {answered && (
-              <div className="flex items-center gap-2">
-                {answerResult ? (
-                  <CheckCircle className="text-green-500" size={24} />
-                ) : (
-                  <XCircle className="text-red-500" size={24} />
-                )}
+  if (isAnnulled) {
+    return (
+      <Card className="bg-netflix-card border-netflix-border p-6 max-w-4xl mx-auto shadow-xl opacity-75">
+        {/* Header for annulled question */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="bg-gray-600 rounded-lg p-2">
+              <AlertTriangle className="text-gray-300" size={20} />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50">
+                  {question.exame} - {question.ano}
+                </Badge>
+                <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50">
+                  Questão {question.numero}
+                </Badge>
+                <Badge variant="outline" className="border-red-600 text-red-400 bg-red-900/20">
+                  ANULADA
+                </Badge>
               </div>
-            )}
+              <h3 className="text-gray-400 font-medium text-sm sm:text-base">{question.area}</h3>
+            </div>
           </div>
         </div>
 
-        {/* Question */}
-        <div className="mb-6 sm:mb-8">
-          <div className="text-gray-100 text-base sm:text-lg leading-relaxed whitespace-pre-wrap font-medium">
+        {/* Question text */}
+        <div className="mb-6">
+          <div className="text-gray-400 text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
             {question.questao}
           </div>
         </div>
 
-        {/* Alternatives - with enhanced visual feedback */}
-        <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+        {/* Alternatives - disabled */}
+        <div className="space-y-3 mb-6">
           {alternatives.map((alternative) => (
-            <button
+            <div
               key={alternative.key}
-              onClick={() => handleAnswerSelect(alternative.key)}
-              disabled={answered}
-              className={`w-full p-4 sm:p-5 rounded-xl text-left transition-all duration-200 min-h-[60px] sm:min-h-[70px] ${getAlternativeStyle(alternative.key)}`}
+              className="w-full p-3 sm:p-4 rounded-lg border-2 bg-gray-800/50 border-gray-600/50 text-gray-500 cursor-not-allowed"
             >
-              <div className="flex items-start gap-3 sm:gap-4">
-                <span className="font-bold text-xl sm:text-2xl min-w-[28px] sm:min-w-[32px] flex-shrink-0 mt-1">
+              <div className="flex items-start gap-3">
+                <span className="font-bold text-lg min-w-[24px] flex-shrink-0">
                   {alternative.key})
                 </span>
-                <span className="flex-1 text-base sm:text-lg whitespace-pre-wrap leading-relaxed">
+                <span className="flex-1 text-sm sm:text-base whitespace-pre-wrap">
                   {alternative.value}
                 </span>
               </div>
-            </button>
+            </div>
           ))}
         </div>
 
-        {/* Submit Button with area colors */}
-        {!answered ? (
-          <Button
-            onClick={handleSubmitAnswer}
-            disabled={!selectedAnswer}
-            className={`w-full ${areaColorScheme.primary} ${areaColorScheme.hover} text-white py-4 sm:py-5 text-lg sm:text-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 rounded-xl shadow-lg min-h-[56px] sm:min-h-[64px] active:scale-95`}
-          >
-            Responder
-          </Button>
-        ) : (
-          <div className="space-y-4 sm:space-y-6">
-            {/* Comment Button with blue colors */}
-            {question.justificativa && (
-              <Button
-                onClick={() => setShowJustification(true)}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 sm:py-5 text-lg sm:text-xl font-semibold transition-all duration-200 rounded-xl shadow-lg min-h-[56px] sm:min-h-[64px] active:scale-95"
-              >
-                <MessageSquare size={24} className="mr-3" />
-                Ver Comentário
-              </Button>
-            )}
+        {/* Annulled message */}
+        <div className="p-4 bg-red-900/20 rounded-lg border border-red-600/30">
+          <div className="flex items-center gap-2 text-red-400">
+            <AlertTriangle size={16} />
+            <span className="font-semibold">Questão Anulada</span>
           </div>
-        )}
+          <p className="text-red-300 text-sm mt-1">
+            Esta questão foi anulada no exame original e não conta para a pontuação.
+          </p>
+        </div>
       </Card>
+    );
+  }
 
-      {/* Feedback Animation */}
-      <AnswerFeedback isCorrect={answerResult || false} show={showFeedback} />
+  return (
+    <Card className="bg-netflix-card border-netflix-border p-6 max-w-4xl mx-auto shadow-xl">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <div className="bg-netflix-red rounded-lg p-2">
+            <BookOpen className="text-white" size={20} />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card">
+                {question.exame} - {question.ano}
+              </Badge>
+              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card">
+                Questão {question.numero}
+              </Badge>
+            </div>
+            <h3 className="text-white font-medium text-sm sm:text-base">{question.area}</h3>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {answered && (
+            <div className="flex items-center gap-2">
+              {selectedAnswer === question.resposta_correta ? (
+                <CheckCircle className="text-green-500" size={24} />
+              ) : (
+                <XCircle className="text-red-500" size={24} />
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
-      {/* Justification Panel */}
-      <QuestionJustification
-        justification={question.justificativa}
-        isVisible={showJustification}
-        onClose={() => setShowJustification(false)}
-      />
-    </>
+      {/* Question text */}
+      <div className="mb-6">
+        <div className="text-gray-100 text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
+          {question.questao}
+        </div>
+      </div>
+
+      {/* Alternatives */}
+      <div className="space-y-3 mb-6">
+        {alternatives.map((alternative) => (
+          <button
+            key={alternative.key}
+            onClick={() => handleAnswerSelect(alternative.key)}
+            disabled={answered}
+            className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-200 ${getAlternativeStyle(alternative.key)}`}
+          >
+            <div className="flex items-start gap-3">
+              <span className="font-bold text-lg min-w-[24px] flex-shrink-0">
+                {alternative.key})
+              </span>
+              <span className="flex-1 text-sm sm:text-base whitespace-pre-wrap">
+                {alternative.value}
+              </span>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Submit Button */}
+      {!answered && (
+        <Button
+          onClick={handleSubmitAnswer}
+          disabled={!selectedAnswer}
+          className="w-full bg-netflix-red hover:bg-red-700 text-white py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+        >
+          Responder
+        </Button>
+      )}
+
+      {/* Justification */}
+      {showResult && question.justificativa && (
+        <div className="mt-6 p-4 bg-netflix-card rounded-lg border border-netflix-border">
+          <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
+            <BookOpen size={16} className="text-netflix-red" />
+            Comentário da Questão
+          </h4>
+          <div className="text-gray-300 leading-relaxed text-sm sm:text-base whitespace-pre-wrap">
+            {question.justificativa}
+          </div>
+        </div>
+      )}
+    </Card>
   );
 };
 

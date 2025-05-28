@@ -7,7 +7,7 @@ import StreakCounter from './StreakCounter';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Target, Zap } from 'lucide-react';
+import { BookOpen, Target, Zap, Clock, Pause, Square } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { getAreaColors } from '../utils/areaColors';
 
@@ -56,6 +56,12 @@ const QuestionsSection = ({
   const [showCelebration, setShowCelebration] = useState(false);
   const [showStreakAnimation, setShowStreakAnimation] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  
+  // Simulado specific states
+  const [simuladoTime, setSimuladoTime] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [simuladoStartTime, setSimuladoStartTime] = useState<number | null>(null);
+  
   const { toast } = useToast();
 
   const areaColorScheme = selectedAreaFilter ? getAreaColors(selectedAreaFilter) : null;
@@ -64,9 +70,22 @@ const QuestionsSection = ({
     fetchQuestions();
     fetchAreas();
     createStudySession();
+    
+    if (isSimulado) {
+      setSimuladoStartTime(Date.now());
+    }
   }, [selectedAreaFilter, selectedExam, selectedYear, limit, studyMode]);
 
-  // Create a new study session when component mounts
+  // Timer for simulado
+  useEffect(() => {
+    if (isSimulado && !isPaused && simuladoStartTime) {
+      const timer = setInterval(() => {
+        setSimuladoTime(Math.floor((Date.now() - simuladoStartTime) / 1000));
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isSimulado, isPaused, simuladoStartTime]);
+
   const createStudySession = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -96,7 +115,6 @@ const QuestionsSection = ({
     }
   };
 
-  // Save progress to the current session
   const saveSessionProgress = async () => {
     if (!currentSessionId) return;
 
@@ -127,7 +145,6 @@ const QuestionsSection = ({
     }
   };
 
-  // Save individual question response
   const saveQuestionResponse = async (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -169,6 +186,11 @@ const QuestionsSection = ({
         query = query.eq('ano', selectedYear);
       }
       
+      // Order by question number for simulados
+      if (isSimulado && selectedExam) {
+        query = query.order('numero', { ascending: true });
+      }
+      
       query = query.limit(limit);
       
       const { data, error } = await query;
@@ -185,7 +207,6 @@ const QuestionsSection = ({
         setAnswers({});
         setCurrentQuestionIndex(0);
         setStreak(0);
-        // Reset session stats when new questions are loaded
         setSessionStats({ correct: 0, total: 0, startTime: Date.now() });
       }
     } catch (error) {
@@ -229,15 +250,12 @@ const QuestionsSection = ({
       correct: prev.correct + (isCorrect ? 1 : 0)
     }));
 
-    // Save individual question response
     await saveQuestionResponse(questionId, selectedAnswer, isCorrect);
 
-    // Save session progress after each answer
     setTimeout(() => {
       saveSessionProgress();
-    }, 100); // Small delay to ensure sessionStats are updated
+    }, 100);
 
-    // Update streak
     if (isCorrect) {
       setStreak(prev => {
         const newStreak = prev + 1;
@@ -253,6 +271,19 @@ const QuestionsSection = ({
   };
 
   const nextQuestion = () => {
+    const currentQuestion = questions[currentQuestionIndex];
+    
+    // If question is annulled, skip without requiring answer
+    if (currentQuestion?.resposta_correta === 'ANULADA') {
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(prev => prev + 1);
+      } else {
+        finishSession();
+      }
+      return;
+    }
+
+    // Normal flow for regular questions
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     } else {
@@ -266,19 +297,51 @@ const QuestionsSection = ({
     }
   };
 
-  const finishSession = async () => {
-    const totalTime = Math.floor((Date.now() - sessionStats.startTime) / 1000);
+  const pauseSimulado = () => {
+    setIsPaused(true);
+    toast({
+      title: "Simulado pausado",
+      description: "Você pode continuar de onde parou a qualquer momento"
+    });
+  };
+
+  const resumeSimulado = () => {
+    setIsPaused(false);
+    if (simuladoStartTime) {
+      setSimuladoStartTime(Date.now() - simuladoTime * 1000);
+    }
+  };
+
+  const finishSimulado = async () => {
+    const totalTime = Math.floor((Date.now() - (simuladoStartTime || Date.now())) / 1000);
     const percentage = Math.round((sessionStats.correct / sessionStats.total) * 100);
     
-    // Save final session data
     await saveSessionProgress();
     
     setShowCelebration(true);
     
     toast({
-      title: "Sessão finalizada!",
+      title: "Simulado finalizado!",
       description: `Você acertou ${sessionStats.correct} de ${sessionStats.total} questões (${percentage}%)`
     });
+  };
+
+  const finishSession = async () => {
+    if (isSimulado) {
+      finishSimulado();
+    } else {
+      const totalTime = Math.floor((Date.now() - sessionStats.startTime) / 1000);
+      const percentage = Math.round((sessionStats.correct / sessionStats.total) * 100);
+      
+      await saveSessionProgress();
+      
+      setShowCelebration(true);
+      
+      toast({
+        title: "Sessão finalizada!",
+        description: `Você acertou ${sessionStats.correct} de ${sessionStats.total} questões (${percentage}%)`
+      });
+    }
   };
 
   const shuffleQuestions = () => {
@@ -288,7 +351,6 @@ const QuestionsSection = ({
     setAnswers({});
     setSessionStats({ correct: 0, total: 0, startTime: Date.now() });
     setStreak(0);
-    // Create new session for shuffled questions
     createStudySession();
   };
 
@@ -297,7 +359,6 @@ const QuestionsSection = ({
     setAnswers({});
     setSessionStats({ correct: 0, total: 0, startTime: Date.now() });
     setStreak(0);
-    // Create new session for reset
     createStudySession();
   };
 
@@ -327,6 +388,17 @@ const QuestionsSection = ({
     };
   }, [sessionStats, currentSessionId]);
 
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -350,9 +422,61 @@ const QuestionsSection = ({
 
   const stats = getStats();
   const currentQuestion = questions[currentQuestionIndex];
+  const isQuestionAnnulled = currentQuestion?.resposta_correta === 'ANULADA';
 
   return (
     <div className="space-y-6 p-4 sm:p-0 px-0 py-0">
+      {/* Simulado Timer and Controls */}
+      {isSimulado && (
+        <Card className="bg-netflix-card border-netflix-border p-4 border-l-4 border-netflix-red">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Clock className="text-netflix-red" size={20} />
+                <span className="text-2xl font-bold text-white">
+                  {formatTime(simuladoTime)}
+                </span>
+              </div>
+              {isPaused && (
+                <Badge variant="outline" className="border-yellow-500 text-yellow-300 bg-yellow-900/20">
+                  PAUSADO
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {!isPaused ? (
+                <Button
+                  onClick={pauseSimulado}
+                  variant="outline"
+                  size="sm"
+                  className="border-yellow-600 text-yellow-300 hover:bg-yellow-900/20"
+                >
+                  <Pause size={16} className="mr-1" />
+                  Pausar
+                </Button>
+              ) : (
+                <Button
+                  onClick={resumeSimulado}
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Continuar
+                </Button>
+              )}
+              <Button
+                onClick={finishSimulado}
+                variant="outline"
+                size="sm"
+                className="border-netflix-red text-netflix-red hover:bg-red-900/20"
+              >
+                <Square size={16} className="mr-1" />
+                Finalizar
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Study Mode Selector - Hide for simulado */}
       {!isSimulado && (
         <StudyModeSelector
@@ -386,6 +510,11 @@ const QuestionsSection = ({
                 {streak} sequência!
               </Badge>
             )}
+            {isQuestionAnnulled && (
+              <Badge variant="outline" className="border-gray-500 text-gray-400 bg-gray-800/50">
+                QUESTÃO ANULADA
+              </Badge>
+            )}
           </div>
           
           {/* Streak Counter */}
@@ -393,15 +522,18 @@ const QuestionsSection = ({
         </div>
       </Card>
 
-      {/* Question */}
-      <MinimalQuestionCard
-        question={{
-          ...currentQuestion,
-          questao: currentQuestion.enunciado // Map enunciado to questao for compatibility
-        }}
-        onAnswer={handleAnswer}
-        isAnswered={!!answers[currentQuestion.id]}
-      />
+      {/* Question with annulled state */}
+      <div className={isQuestionAnnulled ? 'opacity-50 pointer-events-none' : ''}>
+        <MinimalQuestionCard
+          question={{
+            ...currentQuestion,
+            questao: currentQuestion.enunciado
+          }}
+          onAnswer={handleAnswer}
+          isAnswered={!!answers[currentQuestion.id]}
+          isAnnulled={isQuestionAnnulled}
+        />
+      </div>
 
       {/* Enhanced Navigation */}
       <div className="flex justify-between items-center gap-4">
@@ -428,7 +560,7 @@ const QuestionsSection = ({
         
         <Button
           onClick={nextQuestion}
-          disabled={currentQuestionIndex === questions.length - 1}
+          disabled={!isQuestionAnnulled && currentQuestionIndex === questions.length - 1 && !answers[currentQuestion.id]}
           className={`${areaColorScheme ? `${areaColorScheme.primary} ${areaColorScheme.hover}` : 'bg-netflix-red hover:bg-red-700'} text-white disabled:opacity-50 transition-all duration-200`}
         >
           {currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Próxima'}
