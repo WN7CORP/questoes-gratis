@@ -172,7 +172,7 @@ const HomeSection = ({
       </div>
 
       {/* OAB Tips Carousel */}
-      <div className="px-6 mb-8">
+      <div className="mb-8 px-[16px]">
         <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
           <Scale className="text-blue-500" size={28} />
           Dicas para o Sucesso na OAB
