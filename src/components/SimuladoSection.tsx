@@ -157,7 +157,7 @@ const SimuladoSection = () => {
       </div>
 
       {/* Exams Grid */}
-      <div className="px-6 pb-6">
+      <div className="pb-6 px-[18px]">
         <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
           <Target className="text-netflix-red" size={24} />
           Escolha seu Simulado
