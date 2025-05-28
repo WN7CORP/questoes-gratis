@@ -122,6 +122,45 @@ export type Database = {
           },
         ]
       }
+      article_text_annotations: {
+        Row: {
+          annotation_text: string | null
+          article_id: number
+          created_at: string
+          highlight_color: string | null
+          id: string
+          selected_text: string
+          text_position_end: number
+          text_position_start: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          annotation_text?: string | null
+          article_id: number
+          created_at?: string
+          highlight_color?: string | null
+          id?: string
+          selected_text: string
+          text_position_end: number
+          text_position_start: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          annotation_text?: string | null
+          article_id?: number
+          created_at?: string
+          highlight_color?: string | null
+          id?: string
+          selected_text?: string
+          text_position_end?: number
+          text_position_start?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       Artigo_comentado: {
         Row: {
           abreviacao: string | null
@@ -3983,11 +4022,12 @@ export type Database = {
           alternativa_d: string | null
           ano: string | null
           area: string | null
+          banca: string | null
+          enunciado: string | null
           exame: string | null
           id: number
           justificativa: string | null
           numero: string | null
-          questao: string | null
           resposta_correta: string | null
         }
         Insert: {
@@ -3997,11 +4037,12 @@ export type Database = {
           alternativa_d?: string | null
           ano?: string | null
           area?: string | null
+          banca?: string | null
+          enunciado?: string | null
           exame?: string | null
           id?: number
           justificativa?: string | null
           numero?: string | null
-          questao?: string | null
           resposta_correta?: string | null
         }
         Update: {
@@ -4011,11 +4052,12 @@ export type Database = {
           alternativa_d?: string | null
           ano?: string | null
           area?: string | null
+          banca?: string | null
+          enunciado?: string | null
           exame?: string | null
           id?: number
           justificativa?: string | null
           numero?: string | null
-          questao?: string | null
           resposta_correta?: string | null
         }
         Relationships: []
@@ -5013,6 +5055,36 @@ export type Database = {
           priority?: string | null
           tags?: string[] | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_article_favorites: {
+        Row: {
+          article_abbreviation: string | null
+          article_area: string | null
+          article_id: number
+          article_number: string | null
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          article_abbreviation?: string | null
+          article_area?: string | null
+          article_id: number
+          article_number?: string | null
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          article_abbreviation?: string | null
+          article_area?: string | null
+          article_id?: number
+          article_number?: string | null
+          created_at?: string
+          id?: string
           user_id?: string
         }
         Relationships: []

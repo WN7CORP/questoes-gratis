@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, TrendingUp, Clock, Target, ChevronRight, User, Trophy, Award, Zap, Brain } from 'lucide-react';
+import { BookOpen, TrendingUp, Clock, Target, ChevronRight, User, Trophy, Award, Zap, Brain, Flame, Star } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
 import QuestionsSection from './QuestionsSection';
@@ -180,9 +180,12 @@ const HomeSection = () => {
       <div className="p-6 pb-4">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Questões OAB Comentadas</h1>
+            <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+              <Flame className="text-netflix-red" size={36} />
+              Questões OAB Comentadas
+            </h1>
             <p className="text-netflix-text-secondary text-lg">
-              Estude com questões comentadas e prepare-se para o exame
+              Domine o exame da OAB com questões comentadas e simulados reais
             </p>
           </div>
           {!user && <Button onClick={() => navigate('/auth')} className="bg-netflix-red hover:bg-red-700 text-white">
@@ -194,26 +197,29 @@ const HomeSection = () => {
 
       {/* Quick Actions */}
       <div className="px-6 mb-8">
-        <h2 className="text-xl font-semibold text-white mb-4">Começar Estudos</h2>
+        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+          <Star className="text-yellow-500" size={24} />
+          Modos de Estudo
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => handleStartStudy('area')}>
+          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]" onClick={() => handleStartStudy('area')}>
             <div className="flex items-center gap-4">
-              <div className="bg-netflix-red rounded-lg p-3">
+              <div className="bg-blue-600 rounded-lg p-3">
                 <BookOpen className="text-white" size={24} />
               </div>
               <div className="flex-1">
                 <h3 className="text-white font-semibold mb-1">Estudar por Área</h3>
                 <p className="text-netflix-text-secondary text-sm">
-                  Escolha uma área específica para focar
+                  Foque em uma área específica do direito
                 </p>
               </div>
               <ChevronRight className="text-netflix-text-secondary" size={20} />
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => handleStartStudy('quick')}>
+          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]" onClick={() => handleStartStudy('quick')}>
             <div className="flex items-center gap-4">
-              <div className="bg-netflix-red rounded-lg p-3">
+              <div className="bg-green-600 rounded-lg p-3">
                 <Zap className="text-white" size={24} />
               </div>
               <div className="flex-1">
@@ -226,18 +232,59 @@ const HomeSection = () => {
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-colors" onClick={() => handleStartStudy('desafio')}>
+          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]" onClick={() => navigate('/auth')}>
             <div className="flex items-center gap-4">
               <div className="bg-netflix-red rounded-lg p-3">
-                <Brain className="text-white" size={24} />
+                <Trophy className="text-white" size={24} />
               </div>
               <div className="flex-1">
-                <h3 className="text-white font-semibold mb-1">Desafio Diário</h3>
+                <h3 className="text-white font-semibold mb-1">Simulado Completo</h3>
                 <p className="text-netflix-text-secondary text-sm">
-                  5 questões difíceis do dia
+                  Provas reais de exames anteriores
                 </p>
               </div>
               <ChevronRight className="text-netflix-text-secondary" size={20} />
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* Enhanced Categories Section */}
+      <div className="px-6 mb-8">
+        <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+          <Brain className="text-purple-500" size={24} />
+          Categorias Especiais
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="bg-gradient-to-br from-red-900 to-red-700 border-red-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]" onClick={() => handleStartStudy('desafio')}>
+            <div className="text-center">
+              <Flame className="text-white mx-auto mb-2" size={28} />
+              <h3 className="text-white font-semibold text-sm mb-1">Desafio Diário</h3>
+              <p className="text-red-100 text-xs">5 questões difíceis</p>
+            </div>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-yellow-900 to-yellow-700 border-yellow-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]" onClick={() => handleStartStudy('trending')}>
+            <div className="text-center">
+              <TrendingUp className="text-white mx-auto mb-2" size={28} />
+              <h3 className="text-white font-semibold text-sm mb-1">Em Alta</h3>
+              <p className="text-yellow-100 text-xs">Questões populares</p>
+            </div>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-green-900 to-green-700 border-green-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]" onClick={() => handleStartStudy('recent')}>
+            <div className="text-center">
+              <Clock className="text-white mx-auto mb-2" size={28} />
+              <h3 className="text-white font-semibold text-sm mb-1">Recentes</h3>
+              <p className="text-green-100 text-xs">Últimas adicionadas</p>
+            </div>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-900 to-purple-700 border-purple-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]" onClick={() => handleStartStudy('revision')}>
+            <div className="text-center">
+              <Target className="text-white mx-auto mb-2" size={28} />
+              <h3 className="text-white font-semibold text-sm mb-1">Revisão</h3>
+              <p className="text-purple-100 text-xs">Questões para revisar</p>
             </div>
           </Card>
         </div>
