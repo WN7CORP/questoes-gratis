@@ -223,7 +223,6 @@ const QuestionsSection = ({
           variant: "destructive"
         });
       } else {
-        // The data already has enunciado, no need to map to questao
         setQuestions(data || []);
         setAnswers({});
         setCurrentQuestionIndex(0);
