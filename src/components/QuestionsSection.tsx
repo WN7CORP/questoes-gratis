@@ -7,7 +7,7 @@ import StreakCounter from './StreakCounter';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Target, Zap, Clock, Pause, Square } from 'lucide-react';
+import { Scale, Target, Zap, Clock, Pause, Square } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { getAreaColors } from '../utils/areaColors';
 
@@ -34,6 +34,8 @@ interface QuestionsSectionProps {
   limit?: number;
   showFilters?: boolean;
   isSimulado?: boolean;
+  isDailyChallenge?: boolean;
+  onHideNavigation?: (hide: boolean) => void;
 }
 
 const QuestionsSection = ({
@@ -42,7 +44,9 @@ const QuestionsSection = ({
   selectedYear,
   limit = 10,
   showFilters = true,
-  isSimulado = false
+  isSimulado = false,
+  isDailyChallenge = false,
+  onHideNavigation
 }: QuestionsSectionProps) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,31 +75,44 @@ const QuestionsSection = ({
     fetchAreas();
     createStudySession();
     
-    if (isSimulado) {
+    if (isSimulado || isDailyChallenge) {
       setSimuladoStartTime(Date.now());
+      // Hide navigation on mobile when starting questions
+      if (onHideNavigation) {
+        onHideNavigation(true);
+      }
     }
+
+    // Cleanup function to show navigation again
+    return () => {
+      if (onHideNavigation) {
+        onHideNavigation(false);
+      }
+    };
   }, [selectedAreaFilter, selectedExam, selectedYear, limit, studyMode]);
 
   // Timer for simulado
   useEffect(() => {
-    if (isSimulado && !isPaused && simuladoStartTime) {
+    if ((isSimulado || isDailyChallenge) && !isPaused && simuladoStartTime) {
       const timer = setInterval(() => {
         setSimuladoTime(Math.floor((Date.now() - simuladoStartTime) / 1000));
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [isSimulado, isPaused, simuladoStartTime]);
+  }, [isSimulado, isDailyChallenge, isPaused, simuladoStartTime]);
 
   const createStudySession = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const sessionMode = isDailyChallenge ? 'daily_challenge' : studyMode;
+
       const { data: session, error } = await supabase
         .from('user_study_sessions')
         .insert({
           user_id: user.id,
-          mode: studyMode,
+          mode: sessionMode,
           area: selectedAreaFilter || null,
           questions_answered: 0,
           correct_answers: 0,
@@ -186,8 +203,11 @@ const QuestionsSection = ({
         query = query.eq('ano', selectedYear);
       }
       
-      // Order by question number for simulados
-      if (isSimulado && selectedExam) {
+      // For daily challenge, get random questions
+      if (isDailyChallenge) {
+        query = query.limit(20);
+        // Add some randomization logic here if needed
+      } else if (isSimulado && selectedExam) {
         query = query.order('numero', { ascending: true });
       }
       
@@ -203,7 +223,11 @@ const QuestionsSection = ({
           variant: "destructive"
         });
       } else {
-        setQuestions(data || []);
+        const formattedData = data?.map(item => ({
+          ...item,
+          questao: item.enunciado
+        })) || [];
+        setQuestions(formattedData);
         setAnswers({});
         setCurrentQuestionIndex(0);
         setStreak(0);
@@ -321,13 +345,13 @@ const QuestionsSection = ({
     setShowCelebration(true);
     
     toast({
-      title: "Simulado finalizado!",
+      title: isDailyChallenge ? "Desafio concluído!" : "Simulado finalizado!",
       description: `Você acertou ${sessionStats.correct} de ${sessionStats.total} questões (${percentage}%)`
     });
   };
 
   const finishSession = async () => {
-    if (isSimulado) {
+    if (isSimulado || isDailyChallenge) {
       finishSimulado();
     } else {
       const totalTime = Math.floor((Date.now() - sessionStats.startTime) / 1000);
@@ -411,7 +435,7 @@ const QuestionsSection = ({
   if (questions.length === 0) {
     return (
       <Card className="bg-netflix-card border-netflix-border p-8 text-center">
-        <BookOpen className="mx-auto mb-4 text-gray-500" size={48} />
+        <Scale className="mx-auto mb-4 text-gray-500" size={48} />
         <h3 className="text-white text-xl font-semibold mb-2">Nenhuma questão encontrada</h3>
         <p className="text-gray-400">
           Não há questões disponíveis para os filtros selecionados.
@@ -427,8 +451,8 @@ const QuestionsSection = ({
   return (
     <div className="space-y-6 p-4 sm:p-0 px-0 py-0">
       {/* Simulado Timer and Controls */}
-      {isSimulado && (
-        <Card className="bg-netflix-card border-netflix-border p-4 border-l-4 border-netflix-red">
+      {(isSimulado || isDailyChallenge) && (
+        <Card className="bg-netflix-card border-netflix-border p-4 border-l-4 border-netflix-red sticky top-0 z-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
@@ -440,6 +464,11 @@ const QuestionsSection = ({
               {isPaused && (
                 <Badge variant="outline" className="border-yellow-500 text-yellow-300 bg-yellow-900/20">
                   PAUSADO
+                </Badge>
+              )}
+              {isDailyChallenge && (
+                <Badge variant="outline" className="border-orange-500 text-orange-300 bg-orange-900/20">
+                  DESAFIO DIÁRIO
                 </Badge>
               )}
             </div>
@@ -477,8 +506,8 @@ const QuestionsSection = ({
         </Card>
       )}
 
-      {/* Study Mode Selector - Hide for simulado */}
-      {!isSimulado && (
+      {/* Study Mode Selector - Hide for simulado and daily challenge */}
+      {!isSimulado && !isDailyChallenge && (
         <StudyModeSelector
           studyMode={studyMode}
           setStudyMode={setStudyMode}
@@ -494,7 +523,7 @@ const QuestionsSection = ({
       <Card className={`bg-netflix-card border-netflix-border p-4 ${areaColorScheme ? `border-l-4 ${areaColorScheme.border}` : ''}`}>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4 flex-wrap">
-            <Badge variant="outline" className={`border-gray-600 text-gray-300 ${areaColorScheme ? areaColorScheme.bg : 'bg-gray-800'}`}>
+            <Badge variant="outline" className={`border-gray-600 text-gray-300 text-lg font-bold px-4 py-2 ${areaColorScheme ? areaColorScheme.bg : 'bg-gray-800'}`}>
               Questão {currentQuestionIndex + 1} de {questions.length}
             </Badge>
             <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-800">
@@ -525,10 +554,7 @@ const QuestionsSection = ({
       {/* Question with annulled state */}
       <div className={isQuestionAnnulled ? 'opacity-50 pointer-events-none' : ''}>
         <MinimalQuestionCard
-          question={{
-            ...currentQuestion,
-            questao: currentQuestion.enunciado
-          }}
+          question={currentQuestion}
           onAnswer={handleAnswer}
           isAnswered={!!answers[currentQuestion.id]}
           isAnnulled={isQuestionAnnulled}
@@ -561,7 +587,7 @@ const QuestionsSection = ({
         <Button
           onClick={nextQuestion}
           disabled={!isQuestionAnnulled && currentQuestionIndex === questions.length - 1 && !answers[currentQuestion.id]}
-          className={`${areaColorScheme ? `${areaColorScheme.primary} ${areaColorScheme.hover}` : 'bg-netflix-red hover:bg-red-700'} text-white disabled:opacity-50 transition-all duration-200`}
+          className={`${areaColorScheme ? `${areaColorScheme.primary} ${areaColorScheme.hover}` : 'bg-netflix-red hover:bg-red-700'} text-white disabled:opacity-50 transition-all duration-200 hover:scale-[1.02]`}
         >
           {currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Próxima'}
         </Button>

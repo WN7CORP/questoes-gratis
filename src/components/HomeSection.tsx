@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  BookOpen, 
+  Scale, 
   Target, 
   Trophy, 
   TrendingUp, 
@@ -14,13 +14,12 @@ import {
   Zap,
   Award,
   Users,
-  FileText,
-  Info,
-  ChevronDown,
-  ChevronUp
+  FileText
 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import QuestionsSection from './QuestionsSection';
+import DailyChallenge from './DailyChallenge';
+import OabTipsCarousel from './OabTipsCarousel';
 import { useToast } from "@/hooks/use-toast";
 
 interface Question {
@@ -39,17 +38,21 @@ interface Question {
   banca: string;
 }
 
-const HomeSection = () => {
+interface HomeSectionProps {
+  onHideNavigation?: (hide: boolean) => void;
+}
+
+const HomeSection = ({ onHideNavigation }: HomeSectionProps) => {
   const [showQuestions, setShowQuestions] = useState(false);
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [showRandomQuestions, setShowRandomQuestions] = useState(false);
   const [showSimulado, setShowSimulado] = useState(false);
+  const [showDailyChallenge, setShowDailyChallenge] = useState(false);
   const [stats, setStats] = useState({
     totalQuestions: 0,
     totalAreas: 0,
     totalExams: 0
   });
-  const [showOabInfo, setShowOabInfo] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -84,6 +87,7 @@ const HomeSection = () => {
     setShowQuestions(true);
     setShowRandomQuestions(false);
     setShowSimulado(false);
+    setShowDailyChallenge(false);
   };
 
   const handleRandomQuestions = () => {
@@ -91,12 +95,29 @@ const HomeSection = () => {
     setShowRandomQuestions(true);
     setShowQuestions(true);
     setShowSimulado(false);
+    setShowDailyChallenge(false);
   };
 
   const handleSimuladoAccess = () => {
     setShowSimulado(true);
     setShowQuestions(false);
     setShowRandomQuestions(false);
+    setShowDailyChallenge(false);
+  };
+
+  const handleDailyChallenge = () => {
+    setShowDailyChallenge(true);
+    setShowQuestions(true);
+    setShowRandomQuestions(false);
+    setShowSimulado(false);
+    setSelectedArea('');
+  };
+
+  const handleBackToHome = () => {
+    setShowQuestions(false);
+    setShowRandomQuestions(false);
+    setSelectedArea('');
+    setShowDailyChallenge(false);
   };
 
   const popularAreas = [
@@ -114,23 +135,26 @@ const HomeSection = () => {
         <div className="p-6">
           <div className="flex items-center gap-4 mb-6 p-4 rounded-lg bg-gray-800 border-l-4 border-netflix-red">
             <button 
-              onClick={() => {
-                setShowQuestions(false);
-                setShowRandomQuestions(false);
-                setSelectedArea('');
-              }} 
+              onClick={handleBackToHome}
               className="text-netflix-red hover:text-red-400 transition-colors font-semibold"
             >
               ← Voltar ao Início
             </button>
             <h1 className="text-2xl font-bold text-white">
-              {showRandomQuestions ? 'Questões Aleatórias' : `Estudando: ${selectedArea}`}
+              {showDailyChallenge 
+                ? 'Desafio Diário - 20 Questões' 
+                : showRandomQuestions 
+                  ? 'Questões Aleatórias' 
+                  : `Estudando: ${selectedArea}`
+              }
             </h1>
           </div>
           
           <QuestionsSection 
             selectedArea={showRandomQuestions ? undefined : selectedArea}
-            limit={showRandomQuestions ? 10 : 20}
+            limit={showDailyChallenge ? 20 : showRandomQuestions ? 10 : 20}
+            isDailyChallenge={showDailyChallenge}
+            onHideNavigation={onHideNavigation}
           />
         </div>
       </div>
@@ -184,81 +208,22 @@ const HomeSection = () => {
         </div>
       </div>
 
-      {/* Sobre a OAB Section */}
+      {/* Daily Challenge Section */}
       <div className="px-6 mb-8">
-        <Card className="bg-netflix-card border-netflix-border overflow-hidden">
-          <div 
-            className="p-6 cursor-pointer hover:bg-gray-800/50 transition-colors"
-            onClick={() => setShowOabInfo(!showOabInfo)}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-600 rounded-lg p-3">
-                  <Info className="text-white" size={24} />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white mb-1">Sobre o Exame da OAB</h2>
-                  <p className="text-netflix-text-secondary">
-                    Entenda tudo sobre o exame e como se preparar
-                  </p>
-                </div>
-              </div>
-              {showOabInfo ? (
-                <ChevronUp className="text-netflix-text-secondary" size={24} />
-              ) : (
-                <ChevronDown className="text-netflix-text-secondary" size={24} />
-              )}
-            </div>
-          </div>
-          
-          {showOabInfo && (
-            <div className="px-6 pb-6 border-t border-netflix-border">
-              <div className="grid md:grid-cols-2 gap-6 mt-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-3">📊 Estrutura do Exame</h3>
-                  <ul className="space-y-2 text-netflix-text-secondary">
-                    <li>• <strong>1ª Fase:</strong> 80 questões objetivas (4 alternativas)</li>
-                    <li>• <strong>2ª Fase:</strong> Prova prático-profissional</li>
-                    <li>• <strong>Duração:</strong> 5 horas (1ª fase) / 5 horas (2ª fase)</li>
-                    <li>• <strong>Aprovação:</strong> Mínimo de 50% de acertos em cada fase</li>
-                  </ul>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-3">🎯 Benefícios de Praticar</h3>
-                  <ul className="space-y-2 text-netflix-text-secondary">
-                    <li>• <strong>Familiarização:</strong> Conheça o estilo das questões</li>
-                    <li>• <strong>Gestão do Tempo:</strong> Pratique o ritmo ideal</li>
-                    <li>• <strong>Identificação de Lacunas:</strong> Descubra pontos fracos</li>
-                    <li>• <strong>Confiança:</strong> Aumente sua segurança no exame</li>
-                  </ul>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-3">📚 Principais Áreas</h3>
-                  <ul className="space-y-2 text-netflix-text-secondary">
-                    <li>• Ética Profissional (Estatuto da OAB)</li>
-                    <li>• Direito Constitucional</li>
-                    <li>• Direito Civil e Processual Civil</li>
-                    <li>• Direito Penal e Processual Penal</li>
-                    <li>• Direito Administrativo</li>
-                    <li>• Direito do Trabalho</li>
-                  </ul>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-3">💡 Dicas de Estudo</h3>
-                  <ul className="space-y-2 text-netflix-text-secondary">
-                    <li>• <strong>Consistência:</strong> Estude um pouco todos os dias</li>
-                    <li>• <strong>Simulados:</strong> Pratique em condições reais</li>
-                    <li>• <strong>Revisão:</strong> Foque nas questões erradas</li>
-                    <li>• <strong>Legislação:</strong> Mantenha-se atualizado</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-        </Card>
+        <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <Zap className="text-orange-500" size={28} />
+          Desafio Diário
+        </h2>
+        <DailyChallenge onStartChallenge={handleDailyChallenge} />
+      </div>
+
+      {/* OAB Tips Carousel */}
+      <div className="px-6 mb-8">
+        <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <Scale className="text-blue-500" size={28} />
+          Dicas para o Sucesso na OAB
+        </h2>
+        <OabTipsCarousel />
       </div>
 
       {/* Main Study Options */}
@@ -273,7 +238,7 @@ const HomeSection = () => {
           <Card className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border-blue-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group">
             <div className="flex items-center gap-4 mb-4">
               <div className="bg-blue-600 rounded-lg p-3 group-hover:scale-110 transition-transform">
-                <BookOpen className="text-white" size={24} />
+                <Scale className="text-white" size={24} />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">Estudar por Área</h3>
@@ -413,7 +378,7 @@ const HomeSection = () => {
               </p>
             </div>
             <div className="hidden sm:block">
-              <div className="bg-netflix-red rounded-full p-4">
+              <div className="bg-netflix-red rounded-full p-4 animate-pulse">
                 <ChevronRight className="text-white" size={24} />
               </div>
             </div>
