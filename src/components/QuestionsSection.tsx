@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import MinimalQuestionCard from './MinimalQuestionCard';
@@ -18,25 +17,32 @@ interface Question {
   exame: string;
   area: string;
   numero: string;
-  questao: string;
+  enunciado: string;
   alternativa_a: string;
   alternativa_b: string;
   alternativa_c: string;
   alternativa_d: string;
   resposta_correta: string;
   justificativa: string;
+  banca: string;
 }
 
 interface QuestionsSectionProps {
   selectedArea?: string;
+  selectedExam?: string;
+  selectedYear?: string;
   limit?: number;
   showFilters?: boolean;
+  isSimulado?: boolean;
 }
 
 const QuestionsSection = ({
   selectedArea,
+  selectedExam,
+  selectedYear,
   limit = 10,
-  showFilters = true
+  showFilters = true,
+  isSimulado = false
 }: QuestionsSectionProps) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +64,7 @@ const QuestionsSection = ({
     fetchQuestions();
     fetchAreas();
     createStudySession();
-  }, [selectedAreaFilter, limit, studyMode]);
+  }, [selectedAreaFilter, selectedExam, selectedYear, limit, studyMode]);
 
   // Create a new study session when component mounts
   const createStudySession = async () => {
@@ -153,6 +159,14 @@ const QuestionsSection = ({
       
       if (selectedAreaFilter) {
         query = query.eq('area', selectedAreaFilter);
+      }
+      
+      if (selectedExam) {
+        query = query.eq('exame', selectedExam);
+      }
+      
+      if (selectedYear) {
+        query = query.eq('ano', selectedYear);
       }
       
       query = query.limit(limit);
@@ -339,16 +353,18 @@ const QuestionsSection = ({
 
   return (
     <div className="space-y-6 p-4 sm:p-0 px-0 py-0">
-      {/* Study Mode Selector */}
-      <StudyModeSelector
-        studyMode={studyMode}
-        setStudyMode={setStudyMode}
-        selectedAreaFilter={selectedAreaFilter}
-        setSelectedAreaFilter={setSelectedAreaFilter}
-        areas={areas}
-        onShuffle={shuffleQuestions}
-        onReset={resetSession}
-      />
+      {/* Study Mode Selector - Hide for simulado */}
+      {!isSimulado && (
+        <StudyModeSelector
+          studyMode={studyMode}
+          setStudyMode={setStudyMode}
+          selectedAreaFilter={selectedAreaFilter}
+          setSelectedAreaFilter={setSelectedAreaFilter}
+          areas={areas}
+          onShuffle={shuffleQuestions}
+          onReset={resetSession}
+        />
+      )}
 
       {/* Enhanced Stats with area colors and streak */}
       <Card className={`bg-netflix-card border-netflix-border p-4 ${areaColorScheme ? `border-l-4 ${areaColorScheme.border}` : ''}`}>
@@ -379,7 +395,10 @@ const QuestionsSection = ({
 
       {/* Question */}
       <MinimalQuestionCard
-        question={currentQuestion}
+        question={{
+          ...currentQuestion,
+          questao: currentQuestion.enunciado // Map enunciado to questao for compatibility
+        }}
         onAnswer={handleAnswer}
         isAnswered={!!answers[currentQuestion.id]}
       />

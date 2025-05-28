@@ -14,14 +14,16 @@ interface Question {
   exame: string;
   area: string;
   numero: string;
-  questao: string;
+  enunciado: string;
   alternativa_a: string;
   alternativa_b: string;
   alternativa_c: string;
   alternativa_d: string;
   resposta_correta: string;
   justificativa: string;
+  banca: string;
 }
+
 interface UserAreaStats {
   area: string;
   total_sessions: number;
@@ -30,6 +32,7 @@ interface UserAreaStats {
   accuracy_percentage: number;
   avg_time_per_question: number;
 }
+
 const HomeSection = () => {
   const [recentQuestions, setRecentQuestions] = useState<Question[]>([]);
   const [userAreaStats, setUserAreaStats] = useState<UserAreaStats[]>([]);
@@ -60,12 +63,12 @@ const HomeSection = () => {
   const fetchHomeData = async () => {
     try {
       // Fetch recent questions ordenadas por ID (mais recentes primeiro)
-      const {
-        data: questionsData,
-        error: questionsError
-      } = await supabase.from('Questoes_Comentadas').select('*').order('id', {
-        ascending: false
-      }).limit(5);
+      const { data: questionsData, error: questionsError } = await supabase
+        .from('Questoes_Comentadas')
+        .select('*')
+        .order('id', { ascending: false })
+        .limit(5);
+
       if (questionsError) {
         console.error('Error fetching questions:', questionsError);
       } else {
@@ -188,10 +191,12 @@ const HomeSection = () => {
               Domine o exame da OAB com questões comentadas e simulados reais
             </p>
           </div>
-          {!user && <Button onClick={() => navigate('/auth')} className="bg-netflix-red hover:bg-red-700 text-white">
+          {!user && (
+            <Button onClick={() => navigate('/auth')} className="bg-netflix-red hover:bg-red-700 text-white">
               <User className="mr-2" size={16} />
               Entrar
-            </Button>}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -202,7 +207,10 @@ const HomeSection = () => {
           Modos de Estudo
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]" onClick={() => handleStartStudy('area')}>
+          <Card 
+            className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+            onClick={() => handleStartStudy('area')}
+          >
             <div className="flex items-center gap-4">
               <div className="bg-blue-600 rounded-lg p-3">
                 <BookOpen className="text-white" size={24} />
@@ -217,7 +225,10 @@ const HomeSection = () => {
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]" onClick={() => handleStartStudy('quick')}>
+          <Card 
+            className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+            onClick={() => handleStartStudy('quick')}
+          >
             <div className="flex items-center gap-4">
               <div className="bg-green-600 rounded-lg p-3">
                 <Zap className="text-white" size={24} />
@@ -232,7 +243,10 @@ const HomeSection = () => {
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]" onClick={() => navigate('/auth')}>
+          <Card 
+            className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+            onClick={() => navigate('/auth')}
+          >
             <div className="flex items-center gap-4">
               <div className="bg-netflix-red rounded-lg p-3">
                 <Trophy className="text-white" size={24} />
@@ -256,7 +270,10 @@ const HomeSection = () => {
           Categorias Especiais
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-red-900 to-red-700 border-red-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]" onClick={() => handleStartStudy('desafio')}>
+          <Card 
+            className="bg-gradient-to-br from-red-900 to-red-700 border-red-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+            onClick={() => handleStartStudy('desafio')}
+          >
             <div className="text-center">
               <Flame className="text-white mx-auto mb-2" size={28} />
               <h3 className="text-white font-semibold text-sm mb-1">Desafio Diário</h3>
@@ -264,7 +281,10 @@ const HomeSection = () => {
             </div>
           </Card>
 
-          <Card className="bg-gradient-to-br from-yellow-900 to-yellow-700 border-yellow-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]" onClick={() => handleStartStudy('trending')}>
+          <Card 
+            className="bg-gradient-to-br from-yellow-900 to-yellow-700 border-yellow-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+            onClick={() => handleStartStudy('trending')}
+          >
             <div className="text-center">
               <TrendingUp className="text-white mx-auto mb-2" size={28} />
               <h3 className="text-white font-semibold text-sm mb-1">Em Alta</h3>
@@ -272,7 +292,10 @@ const HomeSection = () => {
             </div>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-900 to-green-700 border-green-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]" onClick={() => handleStartStudy('recent')}>
+          <Card 
+            className="bg-gradient-to-br from-green-900 to-green-700 border-green-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+            onClick={() => handleStartStudy('recent')}
+          >
             <div className="text-center">
               <Clock className="text-white mx-auto mb-2" size={28} />
               <h3 className="text-white font-semibold text-sm mb-1">Recentes</h3>
@@ -280,7 +303,10 @@ const HomeSection = () => {
             </div>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-900 to-purple-700 border-purple-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]" onClick={() => handleStartStudy('revision')}>
+          <Card 
+            className="bg-gradient-to-br from-purple-900 to-purple-700 border-purple-500 p-4 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+            onClick={() => handleStartStudy('revision')}
+          >
             <div className="text-center">
               <Target className="text-white mx-auto mb-2" size={28} />
               <h3 className="text-white font-semibold text-sm mb-1">Revisão</h3>
@@ -363,9 +389,13 @@ const HomeSection = () => {
       <div className="px-6 pb-6">
         <h2 className="text-xl font-semibold text-white mb-4">Questões Recentes</h2>
         <div className="space-y-3">
-          {loading ? <div className="text-netflix-text-secondary text-center py-8">
+          {loading ? (
+            <div className="text-netflix-text-secondary text-center py-8">
               Carregando questões...
-            </div> : recentQuestions.slice(0, 3).map(question => <Card key={question.id} className="bg-netflix-card border-netflix-border p-4">
+            </div>
+          ) : (
+            recentQuestions.slice(0, 3).map(question => (
+              <Card key={question.id} className="bg-netflix-card border-netflix-border p-4">
                 <div className="flex items-start gap-3">
                   <div className="bg-netflix-red rounded-lg p-2 mt-1">
                     <BookOpen className="text-white" size={16} />
@@ -377,21 +407,29 @@ const HomeSection = () => {
                         {question.area}
                       </Badge>
                       <Badge variant="outline" className="border-netflix-border text-netflix-text-secondary text-xs">
-                        {question.exame}ª {question.ano}
+                        {question.exame} {question.ano}
                       </Badge>
                     </div>
                     
                     <p className="text-white text-sm leading-relaxed line-clamp-2">
-                      {question.questao}
+                      {question.enunciado}
                     </p>
                   </div>
                 </div>
-              </Card>)}
+              </Card>
+            ))
+          )}
         </div>
       </div>
 
       {/* Modal de Opções */}
-      <StudyOptionsModal isVisible={showOptionsModal} onClose={() => setShowOptionsModal(false)} onStart={handleOptionsConfirm} mode={pendingMode} />
+      <StudyOptionsModal 
+        isVisible={showOptionsModal}
+        onClose={() => setShowOptionsModal(false)}
+        onStart={handleOptionsConfirm}
+        mode={pendingMode}
+      />
     </div>;
 };
+
 export default HomeSection;
