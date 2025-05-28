@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,45 +5,41 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Clock, BookOpen, Target, Play, TrendingUp } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import QuestionsSection from './QuestionsSection';
-
 interface ExamStats {
   exame: string;
   ano: string;
   total_questoes: number;
   areas: string[];
 }
-
 const SimuladoSection = () => {
   const [examStats, setExamStats] = useState<ExamStats[]>([]);
   const [selectedExam, setSelectedExam] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
-
   useEffect(() => {
     checkUser();
     fetchExamStats();
   }, []);
-
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     setUser(user);
   };
-
   const fetchExamStats = async () => {
     try {
-      const { data, error } = await supabase
-        .from('Questoes_Comentadas')
-        .select('exame, ano, area')
-        .not('exame', 'is', null)
-        .not('ano', 'is', null);
-
+      const {
+        data,
+        error
+      } = await supabase.from('Questoes_Comentadas').select('exame, ano, area').not('exame', 'is', null).not('ano', 'is', null);
       if (error) {
         console.error('Error fetching exam stats:', error);
       } else {
         // Group by exam and year
         const examGroups: Record<string, ExamStats> = {};
-        
         data?.forEach(item => {
           if (item.exame && item.ano) {
             const key = `${item.exame}-${item.ano}`;
@@ -62,10 +57,8 @@ const SimuladoSection = () => {
             }
           }
         });
+        const stats = Object.values(examGroups).sort((a, b) => parseInt(b.ano) - parseInt(a.ano)); // Ordenar por ano mais recente primeiro
 
-        const stats = Object.values(examGroups)
-          .sort((a, b) => parseInt(b.ano) - parseInt(a.ano)); // Ordenar por ano mais recente primeiro
-        
         setExamStats(stats);
       }
     } catch (error) {
@@ -74,7 +67,6 @@ const SimuladoSection = () => {
       setLoading(false);
     }
   };
-
   const handleStartSimulado = (exame: string, ano: string) => {
     if (!user) {
       // Force refresh user state
@@ -87,24 +79,17 @@ const SimuladoSection = () => {
 
   // Get the total number of questions for the selected exam
   const getTotalQuestionsForExam = () => {
-    const selectedExamData = examStats.find(exam => 
-      exam.exame === selectedExam && exam.ano === selectedYear
-    );
+    const selectedExamData = examStats.find(exam => exam.exame === selectedExam && exam.ano === selectedYear);
     return selectedExamData?.total_questoes || 50;
   };
-
   if (selectedExam && selectedYear) {
-    return (
-      <div className="h-full overflow-y-auto bg-netflix-black">
-        <div className="p-6 px-[15px]">
+    return <div className="h-full overflow-y-auto bg-netflix-black">
+        <div className="p-6 px-[7px]">
           <div className="flex items-center gap-4 mb-6 px-[12px] p-4 rounded-lg bg-gray-800 border-l-4 border-netflix-red">
-            <button 
-              onClick={() => {
-                setSelectedExam('');
-                setSelectedYear('');
-              }} 
-              className="text-netflix-red hover:text-red-400 transition-colors font-semibold"
-            >
+            <button onClick={() => {
+            setSelectedExam('');
+            setSelectedYear('');
+          }} className="text-netflix-red hover:text-red-400 transition-colors font-semibold">
               ← Voltar
             </button>
             <h1 className="text-2xl font-bold text-white">
@@ -112,20 +97,11 @@ const SimuladoSection = () => {
             </h1>
           </div>
           
-          <QuestionsSection 
-            selectedExam={selectedExam}
-            selectedYear={selectedYear}
-            limit={getTotalQuestionsForExam()}
-            showFilters={false}
-            isSimulado={true}
-          />
+          <QuestionsSection selectedExam={selectedExam} selectedYear={selectedYear} limit={getTotalQuestionsForExam()} showFilters={false} isSimulado={true} />
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="h-full overflow-y-auto bg-netflix-black">
+  return <div className="h-full overflow-y-auto bg-netflix-black">
       {/* Header */}
       <div className="p-6 pb-4">
         <div className="flex items-center gap-3 mb-4">
@@ -187,18 +163,10 @@ const SimuladoSection = () => {
           Escolha seu Simulado
         </h2>
         
-        {loading ? (
-          <div className="text-netflix-text-secondary text-center py-8">
+        {loading ? <div className="text-netflix-text-secondary text-center py-8">
             Carregando simulados...
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {examStats.map((exam, index) => (
-              <Card 
-                key={`${exam.exame}-${exam.ano}`}
-                className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border-l-4 border-netflix-red"
-                onClick={() => handleStartSimulado(exam.exame, exam.ano)}
-              >
+          </div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {examStats.map((exam, index) => <Card key={`${exam.exame}-${exam.ano}`} className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border-l-4 border-netflix-red" onClick={() => handleStartSimulado(exam.exame, exam.ano)}>
                 <div className="flex items-start gap-4">
                   <div className="bg-netflix-red rounded-lg p-3 mt-1">
                     <Trophy className="text-white" size={24} />
@@ -235,20 +203,15 @@ const SimuladoSection = () => {
                         <span>~{Math.ceil(exam.total_questoes * 3)} min</span>
                       </div>
                       
-                      <Button 
-                        size="sm" 
-                        className="bg-netflix-red hover:bg-red-700 text-white text-xs px-3 py-1"
-                      >
+                      <Button size="sm" className="bg-netflix-red hover:bg-red-700 text-white text-xs px-3 py-1">
                         <Play size={12} className="mr-1" />
                         Iniciar
                       </Button>
                     </div>
                   </div>
                 </div>
-              </Card>
-            ))}
-          </div>
-        )}
+              </Card>)}
+          </div>}
       </div>
 
       {/* Info Section */}
@@ -273,8 +236,6 @@ const SimuladoSection = () => {
           </div>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default SimuladoSection;
