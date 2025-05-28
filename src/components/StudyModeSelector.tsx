@@ -108,9 +108,7 @@ const StudyModeSelector = ({
       {/* Desktop version (existing) */}
       <div className="hidden sm:block">
         {!isOpen ? <div className="fixed top-20 right-4 z-50">
-            <Button onClick={() => setIsOpen(true)} className="bg-netflix-red hover:bg-red-700 text-white rounded-full p-3 shadow-lg" size="sm">
-              <Settings size={20} />
-            </Button>
+            
           </div> : <>
             {/* Backdrop */}
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setIsOpen(false)} />
