@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,42 +5,38 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Calendar, Target, Flame, CheckCircle } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
 interface DailyChallengeProps {
   onStartChallenge: () => void;
 }
-
-const DailyChallenge = ({ onStartChallenge }: DailyChallengeProps) => {
+const DailyChallenge = ({
+  onStartChallenge
+}: DailyChallengeProps) => {
   const [todayCompleted, setTodayCompleted] = useState(false);
   const [streak, setStreak] = useState(0);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     checkTodayProgress();
   }, []);
-
   const checkTodayProgress = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);
         return;
       }
-
       const today = new Date().toISOString().split('T')[0];
-      
-      // Check if today's challenge is completed
-      const { data: todayData } = await supabase
-        .from('user_study_sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('created_at', `${today}T00:00:00.000Z`)
-        .lt('created_at', `${today}T23:59:59.999Z`)
-        .eq('mode', 'daily_challenge')
-        .gte('questions_answered', 20)
-        .single();
 
+      // Check if today's challenge is completed
+      const {
+        data: todayData
+      } = await supabase.from('user_study_sessions').select('*').eq('user_id', user.id).gte('created_at', `${today}T00:00:00.000Z`).lt('created_at', `${today}T23:59:59.999Z`).eq('mode', 'daily_challenge').gte('questions_answered', 20).single();
       setTodayCompleted(!!todayData);
 
       // Calculate streak (mock for now)
@@ -52,7 +47,6 @@ const DailyChallenge = ({ onStartChallenge }: DailyChallengeProps) => {
       setLoading(false);
     }
   };
-
   const handleStartChallenge = () => {
     if (todayCompleted) {
       toast({
@@ -64,13 +58,10 @@ const DailyChallenge = ({ onStartChallenge }: DailyChallengeProps) => {
     }
     onStartChallenge();
   };
-
   if (loading) {
     return <div className="animate-pulse h-32 bg-gray-800 rounded-lg"></div>;
   }
-
-  return (
-    <Card className="bg-gradient-to-r from-orange-900/30 to-orange-800/20 border-orange-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden">
+  return <Card className="bg-gradient-to-r from-orange-900/30 to-orange-800/20 border-orange-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden px-[11px]">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full -translate-y-16 translate-x-16"></div>
       
@@ -89,12 +80,10 @@ const DailyChallenge = ({ onStartChallenge }: DailyChallengeProps) => {
             </div>
           </div>
           
-          {streak > 0 && (
-            <div className="flex items-center gap-1 bg-orange-600/20 px-3 py-1 rounded-full">
+          {streak > 0 && <div className="flex items-center gap-1 bg-orange-600/20 px-3 py-1 rounded-full">
               <Trophy className="text-orange-300" size={16} />
               <span className="text-orange-200 font-bold">{streak} dias</span>
-            </div>
-          )}
+            </div>}
         </div>
 
         <div className="flex items-center justify-between">
@@ -109,36 +98,20 @@ const DailyChallenge = ({ onStartChallenge }: DailyChallengeProps) => {
             </div>
           </div>
           
-          <Button
-            onClick={handleStartChallenge}
-            disabled={todayCompleted}
-            className={`${
-              todayCompleted 
-                ? 'bg-green-600 hover:bg-green-700 text-white' 
-                : 'bg-orange-600 hover:bg-orange-700 text-white'
-            } transition-all duration-200`}
-          >
-            {todayCompleted ? (
-              <>
+          <Button onClick={handleStartChallenge} disabled={todayCompleted} className={`${todayCompleted ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-orange-600 hover:bg-orange-700 text-white'} transition-all duration-200`}>
+            {todayCompleted ? <>
                 <CheckCircle size={16} className="mr-2" />
                 Concluído
-              </>
-            ) : (
-              'Começar Desafio'
-            )}
+              </> : 'Começar Desafio'}
           </Button>
         </div>
 
-        {todayCompleted && (
-          <div className="mt-4 p-3 bg-green-900/20 rounded-lg border border-green-600/30">
+        {todayCompleted && <div className="mt-4 p-3 bg-green-900/20 rounded-lg border border-green-600/30">
             <p className="text-green-300 text-sm">
               🎉 Parabéns! Você completou o desafio de hoje. Continue assim!
             </p>
-          </div>
-        )}
+          </div>}
       </div>
-    </Card>
-  );
+    </Card>;
 };
-
 export default DailyChallenge;
