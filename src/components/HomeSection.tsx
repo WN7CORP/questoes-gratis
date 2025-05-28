@@ -1,27 +1,13 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Scale, 
-  Target, 
-  Trophy, 
-  TrendingUp, 
-  Clock,
-  ChevronRight,
-  Play,
-  Zap,
-  Award,
-  Users,
-  FileText
-} from 'lucide-react';
+import { Scale, Target, Trophy, TrendingUp, Clock, ChevronRight, Play, Zap, Award, Users, FileText } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import QuestionsSection from './QuestionsSection';
 import DailyChallenge from './DailyChallenge';
 import OabTipsCarousel from './OabTipsCarousel';
 import { useToast } from "@/hooks/use-toast";
-
 interface Question {
   id: number;
   ano: string;
@@ -37,12 +23,12 @@ interface Question {
   justificativa: string;
   banca: string;
 }
-
 interface HomeSectionProps {
   onHideNavigation?: (hide: boolean) => void;
 }
-
-const HomeSection = ({ onHideNavigation }: HomeSectionProps) => {
+const HomeSection = ({
+  onHideNavigation
+}: HomeSectionProps) => {
   const [showQuestions, setShowQuestions] = useState(false);
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [showRandomQuestions, setShowRandomQuestions] = useState(false);
@@ -53,24 +39,23 @@ const HomeSection = ({ onHideNavigation }: HomeSectionProps) => {
     totalAreas: 0,
     totalExams: 0
   });
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     fetchStats();
   }, []);
-
   const fetchStats = async () => {
     try {
-      const { data, error } = await supabase
-        .from('Questoes_Comentadas')
-        .select('area, exame, ano');
-
+      const {
+        data,
+        error
+      } = await supabase.from('Questoes_Comentadas').select('area, exame, ano');
       if (error) {
         console.error('Error fetching stats:', error);
       } else {
         const uniqueAreas = new Set(data?.map(item => item.area).filter(Boolean));
         const uniqueExams = new Set(data?.map(item => `${item.exame}-${item.ano}`).filter(item => !item.includes('null')));
-        
         setStats({
           totalQuestions: data?.length || 0,
           totalAreas: uniqueAreas.size,
@@ -81,7 +66,6 @@ const HomeSection = ({ onHideNavigation }: HomeSectionProps) => {
       console.error('Error:', error);
     }
   };
-
   const handleAreaSelect = (area: string) => {
     setSelectedArea(area);
     setShowQuestions(true);
@@ -89,7 +73,6 @@ const HomeSection = ({ onHideNavigation }: HomeSectionProps) => {
     setShowSimulado(false);
     setShowDailyChallenge(false);
   };
-
   const handleRandomQuestions = () => {
     setSelectedArea('');
     setShowRandomQuestions(true);
@@ -97,14 +80,12 @@ const HomeSection = ({ onHideNavigation }: HomeSectionProps) => {
     setShowSimulado(false);
     setShowDailyChallenge(false);
   };
-
   const handleSimuladoAccess = () => {
     setShowSimulado(true);
     setShowQuestions(false);
     setShowRandomQuestions(false);
     setShowDailyChallenge(false);
   };
-
   const handleDailyChallenge = () => {
     setShowDailyChallenge(true);
     setShowQuestions(true);
@@ -112,57 +93,30 @@ const HomeSection = ({ onHideNavigation }: HomeSectionProps) => {
     setShowSimulado(false);
     setSelectedArea('');
   };
-
   const handleBackToHome = () => {
     setShowQuestions(false);
     setShowRandomQuestions(false);
     setSelectedArea('');
     setShowDailyChallenge(false);
   };
-
-  const popularAreas = [
-    'Direito Constitucional',
-    'Direito Civil',
-    'Direito Penal',
-    'Direito Processual Civil',
-    'Direito do Trabalho',
-    'Direito Administrativo'
-  ];
-
+  const popularAreas = ['Direito Constitucional', 'Direito Civil', 'Direito Penal', 'Direito Processual Civil', 'Direito do Trabalho', 'Direito Administrativo'];
   if (showQuestions && !showSimulado) {
-    return (
-      <div className="h-full overflow-y-auto bg-netflix-black">
-        <div className="p-6">
+    return <div className="h-full overflow-y-auto bg-netflix-black">
+        <div className="p-6 px-[6px]">
           <div className="flex items-center gap-4 mb-6 p-4 rounded-lg bg-gray-800 border-l-4 border-netflix-red">
-            <button 
-              onClick={handleBackToHome}
-              className="text-netflix-red hover:text-red-400 transition-colors font-semibold"
-            >
+            <button onClick={handleBackToHome} className="text-netflix-red hover:text-red-400 transition-colors font-semibold">
               ← Voltar ao Início
             </button>
             <h1 className="text-2xl font-bold text-white">
-              {showDailyChallenge 
-                ? 'Desafio Diário - 20 Questões' 
-                : showRandomQuestions 
-                  ? 'Questões Aleatórias' 
-                  : `Estudando: ${selectedArea}`
-              }
+              {showDailyChallenge ? 'Desafio Diário - 20 Questões' : showRandomQuestions ? 'Questões Aleatórias' : `Estudando: ${selectedArea}`}
             </h1>
           </div>
           
-          <QuestionsSection 
-            selectedArea={showRandomQuestions ? undefined : selectedArea}
-            limit={showDailyChallenge ? 20 : showRandomQuestions ? 10 : 20}
-            isDailyChallenge={showDailyChallenge}
-            onHideNavigation={onHideNavigation}
-          />
+          <QuestionsSection selectedArea={showRandomQuestions ? undefined : selectedArea} limit={showDailyChallenge ? 20 : showRandomQuestions ? 10 : 20} isDailyChallenge={showDailyChallenge} onHideNavigation={onHideNavigation} />
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="h-full overflow-y-auto bg-netflix-black">
+  return <div className="h-full overflow-y-auto bg-netflix-black">
       {/* Hero Section */}
       <div className="relative p-6 pb-8">
         <div className="max-w-4xl mx-auto text-center">
@@ -249,21 +203,14 @@ const HomeSection = ({ onHideNavigation }: HomeSectionProps) => {
               Escolha uma área do direito e pratique questões específicas para fortalecer seus conhecimentos.
             </p>
             <div className="flex flex-wrap gap-2">
-              {popularAreas.slice(0, 3).map((area) => (
-                <button
-                  key={area}
-                  onClick={() => handleAreaSelect(area)}
-                  className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-200 px-3 py-1 rounded-full text-xs transition-colors"
-                >
+              {popularAreas.slice(0, 3).map(area => <button key={area} onClick={() => handleAreaSelect(area)} className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-200 px-3 py-1 rounded-full text-xs transition-colors">
                   {area}
-                </button>
-              ))}
+                </button>)}
             </div>
           </Card>
 
           {/* Random Questions */}
-          <Card className="bg-gradient-to-br from-green-900/30 to-green-800/20 border-green-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group"
-                onClick={handleRandomQuestions}>
+          <Card className="bg-gradient-to-br from-green-900/30 to-green-800/20 border-green-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group" onClick={handleRandomQuestions}>
             <div className="flex items-center gap-4 mb-4">
               <div className="bg-green-600 rounded-lg p-3 group-hover:scale-110 transition-transform">
                 <Zap className="text-white" size={24} />
@@ -283,8 +230,7 @@ const HomeSection = ({ onHideNavigation }: HomeSectionProps) => {
           </Card>
 
           {/* Simulado */}
-          <Card className="bg-gradient-to-br from-red-900/30 to-red-800/20 border-red-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group"
-                onClick={handleSimuladoAccess}>
+          <Card className="bg-gradient-to-br from-red-900/30 to-red-800/20 border-red-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group" onClick={handleSimuladoAccess}>
             <div className="flex items-center gap-4 mb-4">
               <div className="bg-netflix-red rounded-lg p-3 group-hover:scale-110 transition-transform">
                 <Trophy className="text-white" size={24} />
@@ -313,8 +259,7 @@ const HomeSection = ({ onHideNavigation }: HomeSectionProps) => {
         </h2>
         
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group"
-                onClick={() => handleAreaSelect('Ética Profissional')}>
+          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group" onClick={() => handleAreaSelect('Ética Profissional')}>
             <div className="flex items-center gap-3">
               <div className="bg-purple-600 rounded-lg p-2 group-hover:scale-110 transition-transform">
                 <Award size={20} />
@@ -326,8 +271,7 @@ const HomeSection = ({ onHideNavigation }: HomeSectionProps) => {
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group"
-                onClick={() => handleAreaSelect('Direito Constitucional')}>
+          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group" onClick={() => handleAreaSelect('Direito Constitucional')}>
             <div className="flex items-center gap-3">
               <div className="bg-orange-600 rounded-lg p-2 group-hover:scale-110 transition-transform">
                 <FileText size={20} />
@@ -339,8 +283,7 @@ const HomeSection = ({ onHideNavigation }: HomeSectionProps) => {
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group"
-                onClick={() => handleAreaSelect('Direito Civil')}>
+          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group" onClick={() => handleAreaSelect('Direito Civil')}>
             <div className="flex items-center gap-3">
               <div className="bg-cyan-600 rounded-lg p-2 group-hover:scale-110 transition-transform">
                 <Users size={20} />
@@ -352,8 +295,7 @@ const HomeSection = ({ onHideNavigation }: HomeSectionProps) => {
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group"
-                onClick={() => handleAreaSelect('Direito Penal')}>
+          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group" onClick={() => handleAreaSelect('Direito Penal')}>
             <div className="flex items-center gap-3">
               <div className="bg-red-600 rounded-lg p-2 group-hover:scale-110 transition-transform">
                 <Target size={20} />
@@ -385,8 +327,6 @@ const HomeSection = ({ onHideNavigation }: HomeSectionProps) => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default HomeSection;
