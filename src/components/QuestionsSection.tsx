@@ -4,10 +4,12 @@ import MinimalQuestionCard from './MinimalQuestionCard';
 import StudyModeSelector from './StudyModeSelector';
 import CelebrationModal from './CelebrationModal';
 import StreakCounter from './StreakCounter';
+import QuestionJustification from './QuestionJustification';
+import SimuladoResults from './SimuladoResults';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Scale, Target, Zap, Clock, Pause, Square } from 'lucide-react';
+import { Scale, Target, Zap, Clock, Pause, Square, GraduationCap } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { getAreaColors } from '../utils/areaColors';
 
@@ -38,6 +40,13 @@ interface QuestionsSectionProps {
   onHideNavigation?: (hide: boolean) => void;
 }
 
+interface AreaStats {
+  area: string;
+  correct: number;
+  total: number;
+  percentage: number;
+}
+
 const QuestionsSection = ({
   selectedArea,
   selectedExam,
@@ -66,6 +75,13 @@ const QuestionsSection = ({
   const [isPaused, setIsPaused] = useState(false);
   const [simuladoStartTime, setSimuladoStartTime] = useState<number | null>(null);
   
+  // New states for improvements
+  const [showJustification, setShowJustification] = useState(false);
+  const [currentJustification, setCurrentJustification] = useState('');
+  const [showResults, setShowResults] = useState(false);
+  const [areaStats, setAreaStats] = useState<AreaStats[]>([]);
+  const [previousAttempts, setPreviousAttempts] = useState<any[]>([]);
+  
   const { toast } = useToast();
 
   const areaColorScheme = selectedAreaFilter ? getAreaColors(selectedAreaFilter) : null;
@@ -77,13 +93,12 @@ const QuestionsSection = ({
     
     if (isSimulado || isDailyChallenge) {
       setSimuladoStartTime(Date.now());
-      // Hide navigation on mobile when starting questions
+      fetchPreviousAttempts();
       if (onHideNavigation) {
         onHideNavigation(true);
       }
     }
 
-    // Cleanup function to show navigation again
     return () => {
       if (onHideNavigation) {
         onHideNavigation(false);
@@ -101,12 +116,65 @@ const QuestionsSection = ({
     }
   }, [isSimulado, isDailyChallenge, isPaused, simuladoStartTime]);
 
+  const fetchPreviousAttempts = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('user_study_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('mode', 'simulado')
+        .not('completed_at', 'is', null)
+        .order('completed_at', { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error('Error fetching previous attempts:', error);
+      } else {
+        setPreviousAttempts(data || []);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const calculateAreaStats = () => {
+    const stats: Record<string, { correct: number; total: number }> = {};
+    
+    questions.forEach(question => {
+      const answer = answers[question.id];
+      if (answer) {
+        if (!stats[question.area]) {
+          stats[question.area] = { correct: 0, total: 0 };
+        }
+        stats[question.area].total++;
+        if (answer.correct) {
+          stats[question.area].correct++;
+        }
+      }
+    });
+
+    const areaStatsArray: AreaStats[] = Object.entries(stats).map(([area, data]) => ({
+      area,
+      correct: data.correct,
+      total: data.total,
+      percentage: Math.round((data.correct / data.total) * 100)
+    }));
+
+    areaStatsArray.sort((a, b) => b.percentage - a.percentage);
+    setAreaStats(areaStatsArray);
+    
+    return areaStatsArray;
+  };
+
   const createStudySession = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const sessionMode = isDailyChallenge ? 'daily_challenge' : studyMode;
+      const sessionMode = isDailyChallenge ? 'daily_challenge' : (isSimulado ? 'simulado' : studyMode);
 
       const { data: session, error } = await supabase
         .from('user_study_sessions')
@@ -203,10 +271,8 @@ const QuestionsSection = ({
         query = query.eq('ano', selectedYear);
       }
       
-      // For daily challenge, get random questions
       if (isDailyChallenge) {
         query = query.limit(20);
-        // Add some randomization logic here if needed
       } else if (isSimulado && selectedExam) {
         query = query.order('numero', { ascending: true });
       }
@@ -290,10 +356,17 @@ const QuestionsSection = ({
     }
   };
 
+  const handleShowJustification = () => {
+    const currentQuestion = questions[currentQuestionIndex];
+    if (currentQuestion?.justificativa) {
+      setCurrentJustification(currentQuestion.justificativa);
+      setShowJustification(true);
+    }
+  };
+
   const nextQuestion = () => {
     const currentQuestion = questions[currentQuestionIndex];
     
-    // If question is annulled, skip without requiring answer
     if (currentQuestion?.resposta_correta === 'ANULADA') {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
@@ -303,7 +376,6 @@ const QuestionsSection = ({
       return;
     }
 
-    // Normal flow for regular questions
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     } else {
@@ -335,13 +407,20 @@ const QuestionsSection = ({
   const finishSimulado = async () => {
     const totalTime = Math.floor((Date.now() - (simuladoStartTime || Date.now())) / 1000);
     const percentage = Math.round((sessionStats.correct / sessionStats.total) * 100);
+    const passed = sessionStats.correct >= 40;
     
     await saveSessionProgress();
     
-    setShowCelebration(true);
+    const finalAreaStats = calculateAreaStats();
+    
+    setShowResults(true);
+    
+    const passMessage = passed 
+      ? "🎉 Parabéns! Você foi aprovado!" 
+      : "📚 Continue estudando, você está no caminho certo!";
     
     toast({
-      title: isDailyChallenge ? "Desafio concluído!" : "Simulado finalizado!",
+      title: isDailyChallenge ? "Desafio concluído!" : passMessage,
       description: `Você acertou ${sessionStats.correct} de ${sessionStats.total} questões (${percentage}%)`
     });
   };
@@ -389,7 +468,6 @@ const QuestionsSection = ({
     return { answeredQuestions, correctAnswers, percentage };
   };
 
-  // Save progress when component unmounts or user leaves
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (sessionStats.total > 0) {
@@ -401,7 +479,6 @@ const QuestionsSection = ({
     
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      // Save progress when component unmounts
       if (sessionStats.total > 0) {
         saveSessionProgress();
       }
@@ -418,6 +495,23 @@ const QuestionsSection = ({
     }
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
+
+  if (showResults && (isSimulado || isDailyChallenge)) {
+    return (
+      <SimuladoResults
+        sessionStats={sessionStats}
+        areaStats={areaStats}
+        previousAttempts={previousAttempts}
+        examInfo={{ exame: selectedExam, ano: selectedYear }}
+        totalTime={simuladoTime}
+        onClose={() => {
+          setShowResults(false);
+          // Reset simulado state to go back to exam selection
+          window.location.reload();
+        }}
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -443,27 +537,28 @@ const QuestionsSection = ({
   const stats = getStats();
   const currentQuestion = questions[currentQuestionIndex];
   const isQuestionAnnulled = currentQuestion?.resposta_correta === 'ANULADA';
+  const isQuestionAnswered = !!answers[currentQuestion.id];
 
   return (
-    <div className="space-y-6 p-4 sm:p-0 px-0 py-0">
-      {/* Simulado Timer and Controls */}
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-0">
+      {/* Simulado Timer and Controls - More discreet */}
       {(isSimulado || isDailyChallenge) && (
-        <Card className="bg-netflix-card border-netflix-border p-4 border-l-4 border-netflix-red sticky top-0 z-50">
+        <Card className="bg-netflix-card border-netflix-border p-3 border-l-4 border-netflix-red sticky top-0 z-50">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <Clock className="text-netflix-red" size={20} />
-                <span className="text-2xl font-bold text-white">
+                <Clock className="text-netflix-red" size={16} />
+                <span className="text-lg font-bold text-white">
                   {formatTime(simuladoTime)}
                 </span>
               </div>
               {isPaused && (
-                <Badge variant="outline" className="border-yellow-500 text-yellow-300 bg-yellow-900/20">
+                <Badge variant="outline" className="border-yellow-500 text-yellow-300 bg-yellow-900/20 text-xs">
                   PAUSADO
                 </Badge>
               )}
               {isDailyChallenge && (
-                <Badge variant="outline" className="border-orange-500 text-orange-300 bg-orange-900/20">
+                <Badge variant="outline" className="border-orange-500 text-orange-300 bg-orange-900/20 text-xs">
                   DESAFIO DIÁRIO
                 </Badge>
               )}
@@ -474,16 +569,16 @@ const QuestionsSection = ({
                   onClick={pauseSimulado}
                   variant="outline"
                   size="sm"
-                  className="border-yellow-600 text-yellow-300 hover:bg-yellow-900/20"
+                  className="border-yellow-600 text-yellow-300 hover:bg-yellow-900/20 text-xs px-2 py-1"
                 >
-                  <Pause size={16} className="mr-1" />
+                  <Pause size={12} className="mr-1" />
                   Pausar
                 </Button>
               ) : (
                 <Button
                   onClick={resumeSimulado}
                   size="sm"
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1"
                 >
                   Continuar
                 </Button>
@@ -492,9 +587,9 @@ const QuestionsSection = ({
                 onClick={finishSimulado}
                 variant="outline"
                 size="sm"
-                className="border-netflix-red text-netflix-red hover:bg-red-900/20"
+                className="border-netflix-red text-netflix-red hover:bg-red-900/20 text-xs px-2 py-1"
               >
-                <Square size={16} className="mr-1" />
+                <Square size={12} className="mr-1" />
                 Finalizar
               </Button>
             </div>
@@ -516,27 +611,27 @@ const QuestionsSection = ({
       )}
 
       {/* Enhanced Stats with area colors and streak */}
-      <Card className={`bg-netflix-card border-netflix-border p-4 ${areaColorScheme ? `border-l-4 ${areaColorScheme.border}` : ''}`}>
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-4 flex-wrap">
-            <Badge variant="outline" className={`border-gray-600 text-gray-300 text-lg font-bold px-4 py-2 ${areaColorScheme ? areaColorScheme.bg : 'bg-gray-800'}`}>
+      <Card className={`bg-netflix-card border-netflix-border p-3 sm:p-4 ${areaColorScheme ? `border-l-4 ${areaColorScheme.border}` : ''}`}>
+        <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+            <Badge variant="outline" className={`border-gray-600 text-gray-300 text-sm sm:text-lg font-bold px-2 sm:px-4 py-1 sm:py-2 ${areaColorScheme ? areaColorScheme.bg : 'bg-gray-800'}`}>
               Questão {currentQuestionIndex + 1} de {questions.length}
             </Badge>
-            <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-800">
+            <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-800 text-xs sm:text-sm">
               Respondidas: {stats.answeredQuestions}
             </Badge>
-            <Badge variant="outline" className={`border-gray-600 ${stats.percentage >= 70 ? 'text-green-400 bg-green-900/20' : 'text-gray-300 bg-gray-800'}`}>
-              <Target size={14} className="mr-1" />
+            <Badge variant="outline" className={`border-gray-600 text-xs sm:text-sm ${stats.percentage >= 70 ? 'text-green-400 bg-green-900/20' : 'text-gray-300 bg-gray-800'}`}>
+              <Target size={12} className="mr-1" />
               Acertos: {stats.percentage}%
             </Badge>
             {streak >= 3 && (
-              <Badge variant="outline" className="border-orange-500 text-orange-300 bg-orange-900/20 animate-pulse">
-                <Zap size={14} className="mr-1" />
+              <Badge variant="outline" className="border-orange-500 text-orange-300 bg-orange-900/20 animate-pulse text-xs sm:text-sm">
+                <Zap size={12} className="mr-1" />
                 {streak} sequência!
               </Badge>
             )}
             {isQuestionAnnulled && (
-              <Badge variant="outline" className="border-gray-500 text-gray-400 bg-gray-800/50">
+              <Badge variant="outline" className="border-gray-500 text-gray-400 bg-gray-800/50 text-xs">
                 QUESTÃO ANULADA
               </Badge>
             )}
@@ -552,10 +647,23 @@ const QuestionsSection = ({
         <MinimalQuestionCard
           question={currentQuestion}
           onAnswer={handleAnswer}
-          isAnswered={!!answers[currentQuestion.id]}
+          isAnswered={isQuestionAnswered}
           isAnnulled={isQuestionAnnulled}
         />
       </div>
+
+      {/* Ver Comentário Button */}
+      {isQuestionAnswered && !isQuestionAnnulled && currentQuestion?.justificativa && (
+        <div className="flex justify-center">
+          <Button
+            onClick={handleShowJustification}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg hover:scale-105 transition-all duration-200"
+          >
+            <GraduationCap size={20} />
+            Ver Comentário
+          </Button>
+        </div>
+      )}
 
       {/* Enhanced Navigation */}
       <div className="flex justify-between items-center gap-4">
@@ -563,16 +671,16 @@ const QuestionsSection = ({
           onClick={previousQuestion}
           disabled={currentQuestionIndex === 0}
           variant="outline"
-          className={`border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 ${areaColorScheme ? `${areaColorScheme.hover} ${areaColorScheme.border} border` : 'bg-gray-800'} transition-all duration-200`}
+          className={`border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 ${areaColorScheme ? `${areaColorScheme.hover} ${areaColorScheme.border} border` : 'bg-gray-800'} transition-all duration-200 text-sm px-3 py-2`}
         >
           Anterior
         </Button>
         
-        <div className="text-center">
-          <div className="text-gray-400 text-sm mb-1">
+        <div className="text-center flex-1">
+          <div className="text-gray-400 text-xs sm:text-sm mb-1">
             Progresso: {Math.round(((currentQuestionIndex + 1) / questions.length) * 100)}%
           </div>
-          <div className="w-32 sm:w-48 bg-gray-800 rounded-full h-2">
+          <div className="w-full bg-gray-800 rounded-full h-2">
             <div 
               className={`h-2 rounded-full transition-all duration-300 ${areaColorScheme ? areaColorScheme.primary : 'bg-netflix-red'}`}
               style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
@@ -583,11 +691,18 @@ const QuestionsSection = ({
         <Button
           onClick={nextQuestion}
           disabled={!isQuestionAnnulled && currentQuestionIndex === questions.length - 1 && !answers[currentQuestion.id]}
-          className={`${areaColorScheme ? `${areaColorScheme.primary} ${areaColorScheme.hover}` : 'bg-netflix-red hover:bg-red-700'} text-white disabled:opacity-50 transition-all duration-200 hover:scale-[1.02]`}
+          className={`${areaColorScheme ? `${areaColorScheme.primary} ${areaColorScheme.hover}` : 'bg-netflix-red hover:bg-red-700'} text-white disabled:opacity-50 transition-all duration-200 hover:scale-[1.02] text-sm px-3 py-2`}
         >
           {currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Próxima'}
         </Button>
       </div>
+
+      {/* Question Justification Modal */}
+      <QuestionJustification
+        justification={currentJustification}
+        isVisible={showJustification}
+        onClose={() => setShowJustification(false)}
+      />
 
       {/* Celebration Modal */}
       <CelebrationModal
