@@ -223,11 +223,8 @@ const QuestionsSection = ({
           variant: "destructive"
         });
       } else {
-        const formattedData = data?.map(item => ({
-          ...item,
-          questao: item.enunciado
-        })) || [];
-        setQuestions(formattedData);
+        // The data already has enunciado, no need to map to questao
+        setQuestions(data || []);
         setAnswers({});
         setCurrentQuestionIndex(0);
         setStreak(0);
