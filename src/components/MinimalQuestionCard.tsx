@@ -141,7 +141,7 @@ const MinimalQuestionCard = ({
 
         {/* Question text */}
         <div className="mb-4 sm:mb-6">
-          <div className="text-gray-400 text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
+          <div className="text-gray-400 text-base sm:text-xl leading-relaxed whitespace-pre-wrap">
             {question.enunciado}
           </div>
         </div>
@@ -151,10 +151,10 @@ const MinimalQuestionCard = ({
           {alternatives.map(alternative => (
             <div key={alternative.key} className="w-full p-3 sm:p-4 rounded-lg border-2 bg-gray-800/50 border-gray-600/50 text-gray-500 cursor-not-allowed">
               <div className="flex items-start gap-2 sm:gap-3">
-                <span className="font-bold text-xs min-w-[20px] flex-shrink-0">
+                <span className="font-bold text-sm min-w-[20px] flex-shrink-0">
                   {alternative.key})
                 </span>
-                <span className="flex-1 text-xs whitespace-pre-wrap">
+                <span className="flex-1 text-sm whitespace-pre-wrap">
                   {alternative.value}
                 </span>
               </div>
@@ -210,14 +210,14 @@ const MinimalQuestionCard = ({
         </div>
       </div>
 
-      {/* Question text - fonte ajustada para mobile */}
+      {/* Question text - fonte aumentada */}
       <div className="mb-4 sm:mb-6">
-        <div className="text-gray-100 text-sm sm:text-lg leading-relaxed whitespace-pre-wrap">
+        <div className="text-gray-100 text-base sm:text-xl leading-relaxed whitespace-pre-wrap">
           {question.enunciado}
         </div>
       </div>
 
-      {/* Alternatives - fonte ajustada para mobile */}
+      {/* Alternatives - fonte aumentada */}
       <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
         {alternatives.map((alternative, index) => (
           <button
@@ -228,10 +228,10 @@ const MinimalQuestionCard = ({
             style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className="flex items-start gap-2 sm:gap-3">
-              <span className="font-bold text-xs min-w-[18px] flex-shrink-0 bg-black/20 rounded-full w-5 h-5 sm:w-7 sm:h-7 flex items-center justify-center transition-transform duration-200">
+              <span className="font-bold text-sm min-w-[18px] flex-shrink-0 bg-black/20 rounded-full w-5 h-5 sm:w-7 sm:h-7 flex items-center justify-center transition-transform duration-200">
                 {alternative.key}
               </span>
-              <span className="flex-1 text-xs sm:text-base whitespace-pre-wrap">
+              <span className="flex-1 text-sm sm:text-lg whitespace-pre-wrap">
                 {alternative.value}
               </span>
             </div>

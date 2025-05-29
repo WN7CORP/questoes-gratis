@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Scale, Target, Zap, Clock, Pause, Square, GraduationCap } from 'lucide-react';
 import { getAreaColors } from '../utils/areaColors';
+
 interface Question {
   id: number;
   ano: string;
@@ -619,24 +620,24 @@ const QuestionsSection = ({
           </Button>
         </div>}
 
-      {/* Enhanced Navigation */}
-      <div className="flex justify-between items-center gap-4 animate-fade-in">
+      {/* Enhanced Navigation - Movida um pouco mais para cima */}
+      <div className="flex justify-between items-center gap-4 animate-fade-in mt-6">
         <Button 
           onClick={previousQuestion} 
           disabled={currentQuestionIndex === 0} 
           variant="outline" 
-          className={`border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 transition-all duration-200 hover:scale-105 ${areaColorScheme ? `${areaColorScheme.hover} ${areaColorScheme.border} border` : 'bg-gray-800'} text-sm px-3 py-2`}
+          className={`border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 transition-all duration-200 hover:scale-105 ${areaColorScheme ? `${areaColorScheme.hover} ${areaColorScheme.border} border` : 'bg-gray-800'} text-sm px-4 py-3`}
         >
           Anterior
         </Button>
         
         <div className="text-center flex-1">
-          <div className="text-gray-400 text-xs sm:text-sm mb-1">
+          <div className="text-gray-400 text-xs sm:text-sm mb-2">
             Progresso: {Math.round((currentQuestionIndex + 1) / questions.length * 100)}%
           </div>
-          <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
             <div 
-              className={`h-2 rounded-full transition-all duration-500 ${areaColorScheme ? areaColorScheme.primary : 'bg-netflix-red'}`} 
+              className={`h-3 rounded-full transition-all duration-500 ${areaColorScheme ? areaColorScheme.primary : 'bg-netflix-red'}`} 
               style={{
                 width: `${(currentQuestionIndex + 1) / questions.length * 100}%`
               }} 
@@ -647,7 +648,7 @@ const QuestionsSection = ({
         <Button 
           onClick={nextQuestion} 
           disabled={!isQuestionAnnulled && currentQuestionIndex === questions.length - 1 && !answers[currentQuestion.id]} 
-          className={`${areaColorScheme ? `${areaColorScheme.primary} ${areaColorScheme.hover}` : 'bg-netflix-red hover:bg-red-700'} text-white disabled:opacity-50 transition-all duration-200 hover:scale-105 text-sm px-3 py-2`}
+          className={`${areaColorScheme ? `${areaColorScheme.primary} ${areaColorScheme.hover}` : 'bg-netflix-red hover:bg-red-700'} text-white disabled:opacity-50 transition-all duration-200 hover:scale-105 text-sm px-4 py-3`}
         >
           {currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Próxima'}
         </Button>
