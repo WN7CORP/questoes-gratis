@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,6 +65,10 @@ const StudyAreas = ({ onHideNavigation }: StudyAreasProps) => {
   const handleBackToAreas = () => {
     setShowQuestions(false);
     setSelectedArea('');
+    // Mostrar o menu novamente quando voltar para a lista de áreas
+    if (onHideNavigation) {
+      onHideNavigation(false);
+    }
   };
 
   if (showQuestions) {
