@@ -1,9 +1,9 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Scale, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import AnswerFeedback from './AnswerFeedback';
 
 interface Question {
   id: number;
@@ -38,12 +38,15 @@ const MinimalQuestionCard = ({
   const [showResult, setShowResult] = useState(false);
   const [answered, setAnswered] = useState(isAnswered);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [isCorrectAnswer, setIsCorrectAnswer] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setSelectedAnswer('');
     setShowResult(false);
     setAnswered(isAnswered);
+    setShowFeedback(false);
   }, [question.id, isAnswered]);
 
   const alternatives = [
@@ -77,6 +80,10 @@ const MinimalQuestionCard = ({
       }, 500);
     }
 
+    // Mostrar feedback estratégico
+    setIsCorrectAnswer(isCorrect);
+    setShowFeedback(true);
+
     setTimeout(() => {
       setAnswered(true);
       setShowResult(true);
@@ -85,6 +92,11 @@ const MinimalQuestionCard = ({
       if (onAnswer) {
         onAnswer(question.id, selectedAnswer, isCorrect);
       }
+
+      // Ocultar feedback após 2 segundos
+      setTimeout(() => {
+        setShowFeedback(false);
+      }, 2000);
     }, 300);
   };
 
@@ -177,86 +189,94 @@ const MinimalQuestionCard = ({
   }
 
   return (
-    <Card ref={cardRef} className="bg-netflix-card border-netflix-border p-4 sm:p-6 max-w-4xl mx-auto shadow-xl transition-all duration-300">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="bg-netflix-red rounded-lg p-2 sm:p-3 transition-transform duration-200 hover:scale-110">
-            <Scale className="text-white" size={16} />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs transition-colors duration-200">
-                {question.exame} - {question.ano}
-              </Badge>
-              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs font-bold px-2 py-1 transition-colors duration-200">
-                Questão {question.numero}
-              </Badge>
+    <>
+      <Card ref={cardRef} className="bg-netflix-card border-netflix-border p-4 sm:p-6 max-w-4xl mx-auto shadow-xl transition-all duration-300">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="bg-netflix-red rounded-lg p-2 sm:p-3 transition-transform duration-200 hover:scale-110">
+              <Scale className="text-white" size={16} />
             </div>
-            <h3 className="text-white font-medium text-xs sm:text-sm">{question.area}</h3>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs transition-colors duration-200">
+                  {question.exame} - {question.ano}
+                </Badge>
+                <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs font-bold px-2 py-1 transition-colors duration-200">
+                  Questão {question.numero}
+                </Badge>
+              </div>
+              <h3 className="text-white font-medium text-xs sm:text-sm">{question.area}</h3>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {answered && (
+              <div className="flex items-center gap-2">
+                {selectedAnswer === question.resposta_correta ? (
+                  <CheckCircle className="text-green-500 animate-bounce" size={20} />
+                ) : (
+                  <XCircle className="text-red-500 animate-pulse" size={20} />
+                )}
+              </div>
+            )}
           </div>
         </div>
-        
-        <div className="flex items-center gap-2">
-          {answered && (
-            <div className="flex items-center gap-2">
-              {selectedAnswer === question.resposta_correta ? (
-                <CheckCircle className="text-green-500 animate-bounce" size={20} />
-              ) : (
-                <XCircle className="text-red-500 animate-pulse" size={20} />
-              )}
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* Question text - fonte aumentada */}
-      <div className="mb-4 sm:mb-6">
-        <div className="text-gray-100 text-base sm:text-xl leading-relaxed whitespace-pre-wrap">
-          {question.enunciado}
+        {/* Question text - fonte aumentada */}
+        <div className="mb-4 sm:mb-6">
+          <div className="text-gray-100 text-base sm:text-xl leading-relaxed whitespace-pre-wrap">
+            {question.enunciado}
+          </div>
         </div>
-      </div>
 
-      {/* Alternatives - fonte aumentada */}
-      <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-        {alternatives.map((alternative, index) => (
-          <button
-            key={alternative.key}
-            onClick={() => handleAnswerSelect(alternative.key)}
-            disabled={answered || isSubmitting}
-            className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] ${getAlternativeStyle(alternative.key)}`}
-            style={{ animationDelay: `${index * 50}ms` }}
+        {/* Alternatives - fonte aumentada */}
+        <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+          {alternatives.map((alternative, index) => (
+            <button
+              key={alternative.key}
+              onClick={() => handleAnswerSelect(alternative.key)}
+              disabled={answered || isSubmitting}
+              className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] ${getAlternativeStyle(alternative.key)}`}
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="font-bold text-sm min-w-[18px] flex-shrink-0 bg-black/20 rounded-full w-5 h-5 sm:w-7 sm:h-7 flex items-center justify-center transition-transform duration-200">
+                  {alternative.key}
+                </span>
+                <span className="flex-1 text-sm sm:text-lg whitespace-pre-wrap">
+                  {alternative.value}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Submit Button */}
+        {!answered && (
+          <Button
+            onClick={handleSubmitAnswer}
+            disabled={!selectedAnswer || isSubmitting}
+            className="w-full bg-netflix-red hover:bg-red-700 text-white py-3 sm:py-4 text-base sm:text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg"
           >
-            <div className="flex items-start gap-2 sm:gap-3">
-              <span className="font-bold text-sm min-w-[18px] flex-shrink-0 bg-black/20 rounded-full w-5 h-5 sm:w-7 sm:h-7 flex items-center justify-center transition-transform duration-200">
-                {alternative.key}
-              </span>
-              <span className="flex-1 text-sm sm:text-lg whitespace-pre-wrap">
-                {alternative.value}
-              </span>
-            </div>
-          </button>
-        ))}
-      </div>
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Processando...
+              </div>
+            ) : (
+              'Responder'
+            )}
+          </Button>
+        )}
+      </Card>
 
-      {/* Submit Button */}
-      {!answered && (
-        <Button
-          onClick={handleSubmitAnswer}
-          disabled={!selectedAnswer || isSubmitting}
-          className="w-full bg-netflix-red hover:bg-red-700 text-white py-3 sm:py-4 text-base sm:text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg"
-        >
-          {isSubmitting ? (
-            <div className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              Processando...
-            </div>
-          ) : (
-            'Responder'
-          )}
-        </Button>
-      )}
-    </Card>
+      {/* Strategic Feedback Message */}
+      <AnswerFeedback 
+        isCorrect={isCorrectAnswer} 
+        show={showFeedback} 
+      />
+    </>
   );
 };
 
