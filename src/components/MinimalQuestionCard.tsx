@@ -46,19 +46,12 @@ const MinimalQuestionCard = ({
     setAnswered(isAnswered);
   }, [question.id, isAnswered]);
 
-  const alternatives = [{
-    key: 'A',
-    value: question.alternativa_a
-  }, {
-    key: 'B',
-    value: question.alternativa_b
-  }, {
-    key: 'C',
-    value: question.alternativa_c
-  }, {
-    key: 'D',
-    value: question.alternativa_d
-  }].filter(alt => alt.value && alt.value.trim() !== '');
+  const alternatives = [
+    { key: 'A', value: question.alternativa_a },
+    { key: 'B', value: question.alternativa_b },
+    { key: 'C', value: question.alternativa_c },
+    { key: 'D', value: question.alternativa_d },
+  ].filter(alt => alt.value && alt.value.trim() !== '');
 
   const handleAnswerSelect = (answer: string) => {
     if (answered || isAnnulled) return;
@@ -71,15 +64,6 @@ const MinimalQuestionCard = ({
     const isCorrect = selectedAnswer === question.resposta_correta;
     setAnswered(true);
     setShowResult(true);
-
-    // Show toast notification
-    toast({
-      title: isCorrect ? "🎉 Correto!" : "❌ Incorreto",
-      description: isCorrect 
-        ? "Parabéns! Você acertou a questão." 
-        : "Não foi dessa vez. Veja o comentário para entender melhor.",
-      variant: isCorrect ? "default" : "destructive"
-    });
 
     if (onAnswer) {
       onAnswer(question.id, selectedAnswer, isCorrect);
@@ -118,24 +102,24 @@ const MinimalQuestionCard = ({
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50 text-xs sm:text-sm">
+                <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50 text-xs">
                   {question.exame} - {question.ano}
                 </Badge>
-                <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50 text-sm sm:text-lg font-bold">
+                <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50 text-xs sm:text-sm font-bold">
                   Questão {question.numero}
                 </Badge>
                 <Badge variant="outline" className="border-red-600 text-red-400 bg-red-900/20 text-xs">
                   ANULADA
                 </Badge>
               </div>
-              <h3 className="text-gray-400 font-medium text-xs sm:text-base">{question.area}</h3>
+              <h3 className="text-gray-400 font-medium text-xs sm:text-sm">{question.area}</h3>
             </div>
           </div>
         </div>
 
         {/* Question text */}
         <div className="mb-4 sm:mb-6">
-          <div className="text-gray-400 text-sm sm:text-lg leading-relaxed whitespace-pre-wrap">
+          <div className="text-gray-400 text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
             {question.enunciado}
           </div>
         </div>
@@ -145,10 +129,10 @@ const MinimalQuestionCard = ({
           {alternatives.map(alternative => (
             <div key={alternative.key} className="w-full p-2 sm:p-4 rounded-lg border-2 bg-gray-800/50 border-gray-600/50 text-gray-500 cursor-not-allowed">
               <div className="flex items-start gap-2 sm:gap-3">
-                <span className="font-bold text-sm sm:text-lg min-w-[20px] sm:min-w-[24px] flex-shrink-0">
+                <span className="font-bold text-sm sm:text-base min-w-[20px] sm:min-w-[24px] flex-shrink-0">
                   {alternative.key})
                 </span>
-                <span className="flex-1 text-xs sm:text-base whitespace-pre-wrap">
+                <span className="flex-1 text-sm sm:text-base whitespace-pre-wrap">
                   {alternative.value}
                 </span>
               </div>
@@ -180,14 +164,14 @@ const MinimalQuestionCard = ({
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs sm:text-sm">
+              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs">
                 {question.exame} - {question.ano}
               </Badge>
-              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-sm sm:text-lg font-bold px-2 sm:px-3 py-1">
+              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs sm:text-sm font-bold px-2 sm:px-3 py-1">
                 Questão {question.numero}
               </Badge>
             </div>
-            <h3 className="text-white font-medium text-xs sm:text-base">{question.area}</h3>
+            <h3 className="text-white font-medium text-xs sm:text-sm">{question.area}</h3>
           </div>
         </div>
         
@@ -204,27 +188,27 @@ const MinimalQuestionCard = ({
         </div>
       </div>
 
-      {/* Question text */}
+      {/* Question text - fonte aumentada no mobile */}
       <div className="mb-4 sm:mb-6">
-        <div className="text-gray-100 text-sm sm:text-lg leading-relaxed whitespace-pre-wrap">
+        <div className="text-gray-100 text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
           {question.enunciado}
         </div>
       </div>
 
-      {/* Alternatives */}
+      {/* Alternatives - fonte aumentada no mobile */}
       <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
         {alternatives.map(alternative => (
           <button
             key={alternative.key}
             onClick={() => handleAnswerSelect(alternative.key)}
             disabled={answered}
-            className={`w-full p-2 sm:p-4 rounded-lg border-2 text-left transition-all duration-200 hover:scale-[1.01] ${getAlternativeStyle(alternative.key)}`}
+            className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-200 hover:scale-[1.01] ${getAlternativeStyle(alternative.key)}`}
           >
             <div className="flex items-start gap-2 sm:gap-3">
-              <span className="font-bold text-sm sm:text-lg min-w-[20px] sm:min-w-[24px] flex-shrink-0 bg-black/20 rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center">
+              <span className="font-bold text-sm sm:text-base min-w-[20px] sm:min-w-[24px] flex-shrink-0 bg-black/20 rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center">
                 {alternative.key}
               </span>
-              <span className="flex-1 text-xs sm:text-base whitespace-pre-wrap">
+              <span className="flex-1 text-sm sm:text-base whitespace-pre-wrap">
                 {alternative.value}
               </span>
             </div>
@@ -237,7 +221,7 @@ const MinimalQuestionCard = ({
         <Button
           onClick={handleSubmitAnswer}
           disabled={!selectedAnswer}
-          className="w-full bg-netflix-red hover:bg-red-700 text-white py-2 sm:py-3 text-sm sm:text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.02]"
+          className="w-full bg-netflix-red hover:bg-red-700 text-white py-2 sm:py-3 text-sm sm:text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.02]"
         >
           Responder
         </Button>
