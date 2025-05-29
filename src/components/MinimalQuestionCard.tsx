@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Scale, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
 
 interface Question {
   id: number;
@@ -40,7 +39,6 @@ const MinimalQuestionCard = ({
   const [answered, setAnswered] = useState(isAnswered);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     setSelectedAnswer('');
@@ -84,17 +82,6 @@ const MinimalQuestionCard = ({
       setShowResult(true);
       setIsSubmitting(false);
 
-      // Notificação discreta
-      toast({
-        description: isCorrect ? "✅" : "❌",
-        duration: 1500,
-        className: `fixed top-4 right-4 w-auto min-w-0 p-2 text-center border-none shadow-lg ${
-          isCorrect 
-            ? 'bg-green-600/90 text-white' 
-            : 'bg-red-600/90 text-white'
-        }`,
-      });
-
       if (onAnswer) {
         onAnswer(question.id, selectedAnswer, isCorrect);
       }
@@ -108,7 +95,7 @@ const MinimalQuestionCard = ({
     
     if (!answered) {
       if (selectedAnswer === key) {
-        return 'bg-netflix-red border-netflix-red text-white shadow-lg transform scale-[1.02] transition-all duration-300 animate-pulse';
+        return 'bg-netflix-red border-netflix-red text-white shadow-lg transform scale-[1.02] transition-all duration-300';
       }
       return 'bg-netflix-card border-netflix-border text-gray-100 hover:bg-gray-700 hover:border-gray-500 hover:scale-[1.01] transition-all duration-200 cursor-pointer';
     }
@@ -154,7 +141,7 @@ const MinimalQuestionCard = ({
 
         {/* Question text */}
         <div className="mb-4 sm:mb-6">
-          <div className="text-gray-400 text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
+          <div className="text-gray-400 text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
             {question.enunciado}
           </div>
         </div>
@@ -164,10 +151,10 @@ const MinimalQuestionCard = ({
           {alternatives.map(alternative => (
             <div key={alternative.key} className="w-full p-3 sm:p-4 rounded-lg border-2 bg-gray-800/50 border-gray-600/50 text-gray-500 cursor-not-allowed">
               <div className="flex items-start gap-2 sm:gap-3">
-                <span className="font-bold text-sm sm:text-base min-w-[20px] sm:min-w-[24px] flex-shrink-0">
+                <span className="font-bold text-sm min-w-[20px] sm:min-w-[24px] flex-shrink-0">
                   {alternative.key})
                 </span>
-                <span className="flex-1 text-sm sm:text-base whitespace-pre-wrap">
+                <span className="flex-1 text-sm whitespace-pre-wrap">
                   {alternative.value}
                 </span>
               </div>
@@ -223,14 +210,14 @@ const MinimalQuestionCard = ({
         </div>
       </div>
 
-      {/* Question text - fonte ajustada para mobile */}
+      {/* Question text - fonte menor no mobile */}
       <div className="mb-4 sm:mb-6">
-        <div className="text-gray-100 text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
+        <div className="text-gray-100 text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
           {question.enunciado}
         </div>
       </div>
 
-      {/* Alternatives - fonte ajustada para mobile */}
+      {/* Alternatives - fonte menor no mobile */}
       <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
         {alternatives.map((alternative, index) => (
           <button
@@ -241,10 +228,10 @@ const MinimalQuestionCard = ({
             style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className="flex items-start gap-2 sm:gap-3">
-              <span className="font-bold text-sm sm:text-base min-w-[20px] sm:min-w-[24px] flex-shrink-0 bg-black/20 rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center transition-transform duration-200">
+              <span className="font-bold text-sm min-w-[20px] sm:min-w-[24px] flex-shrink-0 bg-black/20 rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center transition-transform duration-200">
                 {alternative.key}
               </span>
-              <span className="flex-1 text-sm sm:text-base whitespace-pre-wrap">
+              <span className="flex-1 text-sm whitespace-pre-wrap">
                 {alternative.value}
               </span>
             </div>
