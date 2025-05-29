@@ -326,17 +326,11 @@ const QuestionsSection = ({
     }
   };
   const scrollToQuestion = () => {
-    if (questionCardRef.current) {
-      // Scroll melhorado para mobile com offset mais preciso para o início do enunciado
-      const rect = questionCardRef.current.getBoundingClientRect();
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const targetPosition = rect.top + scrollTop - 60; // Offset reduzido para posicionar melhor no enunciado
-      
-      window.scrollTo({
-        top: Math.max(0, targetPosition), // Garantir que não seja negativo
-        behavior: 'smooth'
-      });
-    }
+    // Scroll para o topo da página
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
   const handleAnswer = async (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
     setAnswers(prev => ({
