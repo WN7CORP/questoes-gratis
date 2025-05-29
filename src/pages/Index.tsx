@@ -132,7 +132,7 @@ const Index = () => {
         <div className={`flex-1 overflow-hidden ${!isMobile ? 'pt-20' : hideNavigation ? 'pt-0' : 'pt-16 sm:pt-20'}`}>
           <TabsContent value="home" className="h-full mt-0">
             <div className="h-full overflow-y-auto">
-              <HomeSection />
+              <HomeSection onHideNavigation={setHideNavigation} />
             </div>
           </TabsContent>
           
@@ -141,7 +141,7 @@ const Index = () => {
           </TabsContent>
           
           <TabsContent value="areas" className="h-full mt-0">
-            <StudyAreas />
+            <StudyAreas onHideNavigation={setHideNavigation} />
           </TabsContent>
           
           <TabsContent value="performance" className="h-full mt-0">

@@ -98,6 +98,10 @@ const HomeSection = ({
     setShowRandomQuestions(false);
     setSelectedArea('');
     setShowDailyChallenge(false);
+    // Mostrar menu novamente quando voltar para o início
+    if (onHideNavigation) {
+      onHideNavigation(false);
+    }
   };
   const popularAreas = ['Direito Constitucional', 'Direito Civil', 'Direito Penal', 'Direito Processual Civil', 'Direito do Trabalho', 'Direito Administrativo'];
   if (showQuestions && !showSimulado) {

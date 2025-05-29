@@ -90,16 +90,19 @@ const QuestionsSection = ({
     if (isSimulado || isDailyChallenge) {
       setSimuladoStartTime(Date.now());
       fetchPreviousAttempts();
-      if (onHideNavigation) {
-        onHideNavigation(true);
-      }
     }
+    
+    // Sempre ocultar navegação quando estiver respondendo questões
+    if (onHideNavigation) {
+      onHideNavigation(true);
+    }
+    
     return () => {
       if (onHideNavigation) {
         onHideNavigation(false);
       }
     };
-  }, [selectedAreaFilter, selectedExam, selectedYear, limit, studyMode]);
+  }, [selectedAreaFilter, selectedExam, selectedYear, limit, studyMode, onHideNavigation]);
 
   // Ocultar navegação para todas as seções quando estiver respondendo questões
   useEffect(() => {
@@ -324,10 +327,13 @@ const QuestionsSection = ({
   };
   const scrollToQuestion = () => {
     if (questionCardRef.current) {
-      // Scroll com offset para mobile (menu oculto)
-      const offsetTop = questionCardRef.current.offsetTop - 20;
+      // Scroll melhorado para mobile com offset mais preciso
+      const rect = questionCardRef.current.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const targetPosition = rect.top + scrollTop - 80; // Offset para não colar no topo
+      
       window.scrollTo({
-        top: offsetTop,
+        top: targetPosition,
         behavior: 'smooth'
       });
     }
@@ -375,7 +381,7 @@ const QuestionsSection = ({
     if (currentQuestion?.resposta_correta === 'ANULADA') {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
-        setTimeout(scrollToQuestion, 200);
+        setTimeout(scrollToQuestion, 100);
       } else {
         finishSession();
       }
@@ -383,7 +389,7 @@ const QuestionsSection = ({
     }
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
-      setTimeout(scrollToQuestion, 200);
+      setTimeout(scrollToQuestion, 100);
     } else {
       finishSession();
     }
@@ -391,7 +397,7 @@ const QuestionsSection = ({
   const previousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
-      setTimeout(scrollToQuestion, 200);
+      setTimeout(scrollToQuestion, 100);
     }
   };
   const pauseSimulado = () => {
