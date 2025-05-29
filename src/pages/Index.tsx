@@ -15,6 +15,7 @@ import SimuladoSection from '@/components/SimuladoSection';
 const Index = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const [user, setUser] = useState(null);
+  const [hideNavigation, setHideNavigation] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -96,37 +97,39 @@ const Index = () => {
             </div>
           </div>
         ) : (
-          /* Mobile Navigation - Top Tabs */
-          <TabsList className="bg-netflix-card border-b border-netflix-border rounded-none h-16 sm:h-20 lg:h-16 p-0 w-full grid grid-cols-5 fixed top-0 z-30">
-            <TabsTrigger value="home" className="flex flex-col gap-1 h-full data-[state=active]:bg-netflix-red data-[state=active]:text-white transition-all duration-200 active:scale-95">
-              <Home size={22} className="sm:size-24" />
-              <span className="text-xs sm:text-sm font-medium">Início</span>
-            </TabsTrigger>
-            
-            <TabsTrigger value="simulado" className="flex flex-col gap-1 h-full data-[state=active]:bg-netflix-red data-[state=active]:text-white transition-all duration-200 active:scale-95">
-              <Trophy size={22} className="sm:size-24" />
-              <span className="text-xs sm:text-sm font-medium">Simulado</span>
-            </TabsTrigger>
-            
-            <TabsTrigger value="areas" className="flex flex-col gap-1 h-full data-[state=active]:bg-netflix-red data-[state=active]:text-white transition-all duration-200 active:scale-95">
-              <BookOpen size={22} className="sm:size-24" />
-              <span className="text-xs sm:text-sm font-medium">Áreas</span>
-            </TabsTrigger>
-            
-            <TabsTrigger value="performance" className="flex flex-col gap-1 h-full data-[state=active]:bg-netflix-red data-[state=active]:text-white transition-all duration-200 active:scale-95">
-              <BarChart3 size={22} className="sm:size-24" />
-              <span className="text-xs sm:text-sm font-medium">Progresso</span>
-            </TabsTrigger>
-            
-            <TabsTrigger value="profile" className="flex flex-col gap-1 h-full data-[state=active]:bg-netflix-red data-[state=active]:text-white transition-all duration-200 active:scale-95">
-              <User size={22} className="sm:size-24" />
-              <span className="text-xs sm:text-sm font-medium">Perfil</span>
-            </TabsTrigger>
-          </TabsList>
+          /* Mobile Navigation - Top Tabs - Hidden when hideNavigation is true */
+          !hideNavigation && (
+            <TabsList className="bg-netflix-card border-b border-netflix-border rounded-none h-16 sm:h-20 lg:h-16 p-0 w-full grid grid-cols-5 fixed top-0 z-30">
+              <TabsTrigger value="home" className="flex flex-col gap-1 h-full data-[state=active]:bg-netflix-red data-[state=active]:text-white transition-all duration-200 active:scale-95">
+                <Home size={22} className="sm:size-24" />
+                <span className="text-xs sm:text-sm font-medium">Início</span>
+              </TabsTrigger>
+              
+              <TabsTrigger value="simulado" className="flex flex-col gap-1 h-full data-[state=active]:bg-netflix-red data-[state=active]:text-white transition-all duration-200 active:scale-95">
+                <Trophy size={22} className="sm:size-24" />
+                <span className="text-xs sm:text-sm font-medium">Simulado</span>
+              </TabsTrigger>
+              
+              <TabsTrigger value="areas" className="flex flex-col gap-1 h-full data-[state=active]:bg-netflix-red data-[state=active]:text-white transition-all duration-200 active:scale-95">
+                <BookOpen size={22} className="sm:size-24" />
+                <span className="text-xs sm:text-sm font-medium">Áreas</span>
+              </TabsTrigger>
+              
+              <TabsTrigger value="performance" className="flex flex-col gap-1 h-full data-[state=active]:bg-netflix-red data-[state=active]:text-white transition-all duration-200 active:scale-95">
+                <BarChart3 size={22} className="sm:size-24" />
+                <span className="text-xs sm:text-sm font-medium">Progresso</span>
+              </TabsTrigger>
+              
+              <TabsTrigger value="profile" className="flex flex-col gap-1 h-full data-[state=active]:bg-netflix-red data-[state=active]:text-white transition-all duration-200 active:scale-95">
+                <User size={22} className="sm:size-24" />
+                <span className="text-xs sm:text-sm font-medium">Perfil</span>
+              </TabsTrigger>
+            </TabsList>
+          )
         )}
 
         {/* Main Content with responsive padding */}
-        <div className={`flex-1 overflow-hidden ${isMobile ? 'pt-16 sm:pt-20' : 'pt-20'}`}>
+        <div className={`flex-1 overflow-hidden ${!isMobile ? 'pt-20' : hideNavigation ? 'pt-0' : 'pt-16 sm:pt-20'}`}>
           <TabsContent value="home" className="h-full mt-0">
             <div className="h-full overflow-y-auto">
               <HomeSection />
@@ -134,7 +137,7 @@ const Index = () => {
           </TabsContent>
           
           <TabsContent value="simulado" className="h-full mt-0">
-            <SimuladoSection />
+            <SimuladoSection onHideNavigation={setHideNavigation} />
           </TabsContent>
           
           <TabsContent value="areas" className="h-full mt-0">

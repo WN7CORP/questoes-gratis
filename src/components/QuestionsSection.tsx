@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import MinimalQuestionCard from './MinimalQuestionCard';
 import StudyModeSelector from './StudyModeSelector';
@@ -9,8 +10,8 @@ import SimuladoResults from './SimuladoResults';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Scale, Target, Zap, Clock, Pause, Square, GraduationCap } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
 import { getAreaColors } from '../utils/areaColors';
 
 interface Question {
@@ -86,7 +87,7 @@ const QuestionsSection = ({
   const [areaStats, setAreaStats] = useState<AreaStats[]>([]);
   const [previousAttempts, setPreviousAttempts] = useState<any[]>([]);
 
-  const { toast } = useToast();
+  const questionCardRef = useRef<HTMLDivElement>(null);
   const areaColorScheme = selectedAreaFilter ? getAreaColors(selectedAreaFilter) : null;
 
   useEffect(() => {
@@ -273,7 +274,7 @@ const QuestionsSection = ({
       if (isDailyChallenge) {
         query = query.not('resposta_correta', 'eq', 'ANULADA').limit(20);
       } else if (isSimulado && selectedExam) {
-        // Para simulados, ordenar por número da questão
+        // Para simulados, ordenar por número da questão e excluir anuladas se necessário
         query = query.order('numero', { ascending: true });
       }
 
@@ -283,12 +284,6 @@ const QuestionsSection = ({
 
       if (error) {
         console.error('Error fetching questions:', error);
-        toast({
-          title: "❌",
-          description: "Erro ao carregar questões",
-          variant: "destructive",
-          duration: 2000
-        });
       } else {
         setQuestions(data || []);
         setAnswers({});
@@ -325,6 +320,16 @@ const QuestionsSection = ({
     }
   };
 
+  const scrollToQuestion = () => {
+    if (questionCardRef.current) {
+      questionCardRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start',
+        inline: 'nearest'
+      });
+    }
+  };
+
   const handleAnswer = async (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
     setAnswers(prev => ({
       ...prev,
@@ -346,13 +351,6 @@ const QuestionsSection = ({
     setTimeout(() => {
       saveSessionProgress();
     }, 100);
-
-    // Toast estratégico com emoji
-    toast({
-      title: isCorrect ? "🎉" : "❌",
-      description: "",
-      duration: 1500
-    });
 
     if (isCorrect) {
       setStreak(prev => {
@@ -381,6 +379,7 @@ const QuestionsSection = ({
     if (currentQuestion?.resposta_correta === 'ANULADA') {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
+        setTimeout(scrollToQuestion, 100);
       } else {
         finishSession();
       }
@@ -389,6 +388,7 @@ const QuestionsSection = ({
 
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
+      setTimeout(scrollToQuestion, 100);
     } else {
       finishSession();
     }
@@ -397,16 +397,12 @@ const QuestionsSection = ({
   const previousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
+      setTimeout(scrollToQuestion, 100);
     }
   };
 
   const pauseSimulado = () => {
     setIsPaused(true);
-    toast({
-      title: "⏸️",
-      description: "Simulado pausado",
-      duration: 2000
-    });
   };
 
   const resumeSimulado = () => {
@@ -419,19 +415,11 @@ const QuestionsSection = ({
   const finishSimulado = async () => {
     const totalTime = Math.floor((Date.now() - (simuladoStartTime || Date.now())) / 1000);
     const percentage = Math.round((sessionStats.correct / sessionStats.total) * 100);
-    const passed = sessionStats.correct >= 40;
 
     await saveSessionProgress();
 
     const finalAreaStats = calculateAreaStats();
     setShowResults(true);
-
-    const passMessage = passed ? "🎉 Aprovado!" : "📚 Continue estudando!";
-    toast({
-      title: passMessage,
-      description: `${sessionStats.correct}/${sessionStats.total} (${percentage}%)`,
-      duration: 3000
-    });
   };
 
   const finishSession = async () => {
@@ -439,16 +427,9 @@ const QuestionsSection = ({
       finishSimulado();
     } else {
       const totalTime = Math.floor((Date.now() - sessionStats.startTime) / 1000);
-      const percentage = Math.round((sessionStats.correct / sessionStats.total) * 100);
 
       await saveSessionProgress();
       setShowCelebration(true);
-
-      toast({
-        title: "✅",
-        description: `${sessionStats.correct}/${sessionStats.total} (${percentage}%)`,
-        duration: 2000
-      });
     }
   };
 
@@ -530,6 +511,9 @@ const QuestionsSection = ({
         totalTime={simuladoTime}
         onClose={() => {
           setShowResults(false);
+          if (onHideNavigation) {
+            onHideNavigation(false);
+          }
           window.location.reload();
         }}
       />
@@ -564,13 +548,67 @@ const QuestionsSection = ({
 
   return (
     <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-0 px-[5px] py-0">
-      {/* Simulado Timer - mais discreto */}
+      {/* Simulado Controls - Timer and Pause/Finish buttons */}
       {(isSimulado || isDailyChallenge) && (
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
           <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50 text-xs">
             <Clock size={12} className="mr-1" />
             {formatTime(simuladoTime)}
           </Badge>
+          
+          <div className="flex gap-2">
+            {isPaused ? (
+              <Button
+                onClick={resumeSimulado}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1"
+              >
+                Retomar
+              </Button>
+            ) : (
+              <Button
+                onClick={pauseSimulado}
+                size="sm"
+                variant="outline"
+                className="border-gray-600 text-gray-300 hover:bg-gray-800 text-xs px-3 py-1"
+              >
+                <Pause size={12} className="mr-1" />
+                Pausar
+              </Button>
+            )}
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-red-600 text-red-400 hover:bg-red-900/20 text-xs px-3 py-1"
+                >
+                  <Square size={12} className="mr-1" />
+                  Encerrar
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-netflix-card border-netflix-border">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-white">Encerrar Simulado?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-gray-400">
+                    Tem certeza que deseja encerrar o simulado? Suas respostas serão salvas.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600">
+                    Cancelar
+                  </AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={finishSimulado}
+                    className="bg-netflix-red hover:bg-red-700 text-white"
+                  >
+                    Sim, Encerrar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       )}
 
@@ -619,7 +657,7 @@ const QuestionsSection = ({
       </Card>
 
       {/* Question */}
-      <div className={isQuestionAnnulled ? 'opacity-50 pointer-events-none' : ''}>
+      <div ref={questionCardRef} className={isQuestionAnnulled ? 'opacity-50 pointer-events-none' : ''}>
         <MinimalQuestionCard
           question={currentQuestion}
           onAnswer={handleAnswer}

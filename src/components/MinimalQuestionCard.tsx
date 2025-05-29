@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Scale, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
 
 interface Question {
   id: number;
@@ -38,7 +37,6 @@ const MinimalQuestionCard = ({
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [showResult, setShowResult] = useState(false);
   const [answered, setAnswered] = useState(isAnswered);
-  const { toast } = useToast();
 
   useEffect(() => {
     setSelectedAnswer('');
@@ -80,12 +78,13 @@ const MinimalQuestionCard = ({
         : 'bg-netflix-card border-netflix-border text-gray-100 hover:bg-gray-700 hover:border-gray-500 transition-all duration-200 cursor-pointer';
     }
     
+    // Questão já respondida - mostrar cores
     if (key === question.resposta_correta) {
       return 'bg-green-600 border-green-500 text-white shadow-lg';
     }
     
     if (key === selectedAnswer && key !== question.resposta_correta) {
-      return 'bg-red-600/80 border-red-500 text-white shadow-lg';
+      return 'bg-red-600 border-red-500 text-white shadow-lg';
     }
     
     return 'bg-netflix-card border-netflix-border text-gray-400 opacity-60';
@@ -119,7 +118,7 @@ const MinimalQuestionCard = ({
 
         {/* Question text */}
         <div className="mb-4 sm:mb-6">
-          <div className="text-gray-400 text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
+          <div className="text-gray-400 text-lg sm:text-xl leading-relaxed whitespace-pre-wrap">
             {question.enunciado}
           </div>
         </div>
@@ -127,12 +126,12 @@ const MinimalQuestionCard = ({
         {/* Alternatives - disabled */}
         <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
           {alternatives.map(alternative => (
-            <div key={alternative.key} className="w-full p-2 sm:p-4 rounded-lg border-2 bg-gray-800/50 border-gray-600/50 text-gray-500 cursor-not-allowed">
+            <div key={alternative.key} className="w-full p-3 sm:p-4 rounded-lg border-2 bg-gray-800/50 border-gray-600/50 text-gray-500 cursor-not-allowed">
               <div className="flex items-start gap-2 sm:gap-3">
-                <span className="font-bold text-sm sm:text-base min-w-[20px] sm:min-w-[24px] flex-shrink-0">
+                <span className="font-bold text-base sm:text-lg min-w-[24px] sm:min-w-[28px] flex-shrink-0">
                   {alternative.key})
                 </span>
-                <span className="flex-1 text-sm sm:text-base whitespace-pre-wrap">
+                <span className="flex-1 text-base sm:text-lg whitespace-pre-wrap">
                   {alternative.value}
                 </span>
               </div>
@@ -188,14 +187,14 @@ const MinimalQuestionCard = ({
         </div>
       </div>
 
-      {/* Question text - fonte aumentada no mobile */}
+      {/* Question text - increased font size for mobile */}
       <div className="mb-4 sm:mb-6">
-        <div className="text-gray-100 text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
+        <div className="text-gray-100 text-lg sm:text-xl leading-relaxed whitespace-pre-wrap">
           {question.enunciado}
         </div>
       </div>
 
-      {/* Alternatives - fonte aumentada no mobile */}
+      {/* Alternatives - increased font size for mobile */}
       <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
         {alternatives.map(alternative => (
           <button
@@ -205,10 +204,10 @@ const MinimalQuestionCard = ({
             className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-200 hover:scale-[1.01] ${getAlternativeStyle(alternative.key)}`}
           >
             <div className="flex items-start gap-2 sm:gap-3">
-              <span className="font-bold text-sm sm:text-base min-w-[20px] sm:min-w-[24px] flex-shrink-0 bg-black/20 rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center">
+              <span className="font-bold text-base sm:text-lg min-w-[24px] sm:min-w-[28px] flex-shrink-0 bg-black/20 rounded-full w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center">
                 {alternative.key}
               </span>
-              <span className="flex-1 text-sm sm:text-base whitespace-pre-wrap">
+              <span className="flex-1 text-base sm:text-lg whitespace-pre-wrap">
                 {alternative.value}
               </span>
             </div>
@@ -221,7 +220,7 @@ const MinimalQuestionCard = ({
         <Button
           onClick={handleSubmitAnswer}
           disabled={!selectedAnswer}
-          className="w-full bg-netflix-red hover:bg-red-700 text-white py-2 sm:py-3 text-sm sm:text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.02]"
+          className="w-full bg-netflix-red hover:bg-red-700 text-white py-3 sm:py-4 text-base sm:text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.02]"
         >
           Responder
         </Button>
