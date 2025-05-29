@@ -90,13 +90,10 @@ const QuestionsSection = ({
     if (isSimulado || isDailyChallenge) {
       setSimuladoStartTime(Date.now());
       fetchPreviousAttempts();
+      if (onHideNavigation) {
+        onHideNavigation(true);
+      }
     }
-    
-    // Sempre ocultar navegação quando estiver respondendo questões
-    if (onHideNavigation) {
-      onHideNavigation(true);
-    }
-    
     return () => {
       if (onHideNavigation) {
         onHideNavigation(false);
@@ -327,7 +324,7 @@ const QuestionsSection = ({
   };
   const scrollToQuestion = () => {
     if (questionCardRef.current) {
-      // Scroll suave para o início do enunciado com offset para mobile
+      // Scroll com offset para mobile (menu oculto)
       const offsetTop = questionCardRef.current.offsetTop - 20;
       window.scrollTo({
         top: offsetTop,
@@ -378,7 +375,7 @@ const QuestionsSection = ({
     if (currentQuestion?.resposta_correta === 'ANULADA') {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
-        setTimeout(scrollToQuestion, 300);
+        setTimeout(scrollToQuestion, 200);
       } else {
         finishSession();
       }
@@ -386,7 +383,7 @@ const QuestionsSection = ({
     }
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
-      setTimeout(scrollToQuestion, 300);
+      setTimeout(scrollToQuestion, 200);
     } else {
       finishSession();
     }
@@ -394,7 +391,7 @@ const QuestionsSection = ({
   const previousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
-      setTimeout(scrollToQuestion, 300);
+      setTimeout(scrollToQuestion, 200);
     }
   };
   const pauseSimulado = () => {

@@ -60,10 +60,6 @@ const StudyAreas = ({ onHideNavigation }: StudyAreasProps) => {
   const handleAreaSelect = (area: string) => {
     setSelectedArea(area);
     setShowQuestions(true);
-    // Ocultar menu quando entrar nas questões
-    if (onHideNavigation) {
-      onHideNavigation(true);
-    }
   };
 
   const handleBackToAreas = () => {
