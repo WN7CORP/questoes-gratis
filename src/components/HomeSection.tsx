@@ -1,12 +1,32 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Scale, BookOpen, Target, TrendingUp, Zap } from 'lucide-react';
+import { Scale, BookOpen, Target, TrendingUp, Zap, ArrowRight } from 'lucide-react';
 import UserStatsCard from "./UserStatsCard";
 import OabTipsCarousel from "./OabTipsCarousel";
 import DailyChallenge from "./DailyChallenge";
 
 const HomeSection = () => {
+  const handleNavigateToAreas = () => {
+    const areasTab = document.querySelector('[value="areas"]') as HTMLElement;
+    if (areasTab) {
+      areasTab.click();
+    }
+  };
+
+  const handleNavigateToSimulado = () => {
+    const simuladoTab = document.querySelector('[value="simulado"]') as HTMLElement;
+    if (simuladoTab) {
+      simuladoTab.click();
+    }
+  };
+
+  const handleStartChallenge = () => {
+    // Logic for starting daily challenge
+    console.log('Starting daily challenge...');
+  };
+
   return (
     <div className="h-full overflow-y-auto bg-netflix-black p-6">
       {/* Header */}
@@ -56,12 +76,12 @@ const HomeSection = () => {
             </div>
           </div>
           
-          <DailyChallenge />
+          <DailyChallenge onStartChallenge={handleStartChallenge} />
         </Card>
 
         {/* Study by Areas Card */}
         <Card className="bg-gradient-to-br from-blue-600 to-purple-600 border-blue-500 p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group"
-              onClick={() => document.querySelector('[value="areas"]')?.click()}>
+              onClick={handleNavigateToAreas}>
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <h3 className="text-white font-bold text-lg mb-2 group-hover:text-gray-100 transition-colors">
@@ -93,7 +113,7 @@ const HomeSection = () => {
 
         {/* Simulado Card */}
         <Card className="bg-gradient-to-br from-green-600 to-teal-600 border-green-500 p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group"
-              onClick={() => document.querySelector('[value="simulado"]')?.click()}>
+              onClick={handleNavigateToSimulado}>
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <h3 className="text-white font-bold text-lg mb-2 group-hover:text-gray-100 transition-colors">
