@@ -131,14 +131,21 @@ const QuestionsSection = ({
   // Scroll para topo quando a questão atual muda
   useEffect(() => {
     const scrollToTop = () => {
-      // Múltiplas tentativas para garantir que funcione
-      window.scrollTo(0, 0);
+      // Scroll imediato
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
       
-      // Força com requestAnimationFrame
+      // Garantir que funcione após atualização do DOM
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }, 50);
+      
+      // Backup com requestAnimationFrame
       requestAnimationFrame(() => {
-        window.scrollTo(0, 0);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
       });
@@ -399,6 +406,8 @@ const QuestionsSection = ({
     if (currentQuestion?.resposta_correta === 'ANULADA') {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
+        // Scroll após mudança de questão
+        setTimeout(() => scrollToTop(), 10);
       } else {
         finishSession();
       }
@@ -406,6 +415,8 @@ const QuestionsSection = ({
     }
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
+      // Scroll após mudança de questão
+      setTimeout(() => scrollToTop(), 10);
     } else {
       finishSession();
     }
@@ -414,6 +425,8 @@ const QuestionsSection = ({
   const previousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
+      // Scroll após mudança de questão
+      setTimeout(() => scrollToTop(), 10);
     }
   };
 
