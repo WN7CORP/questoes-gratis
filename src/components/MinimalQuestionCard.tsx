@@ -38,6 +38,7 @@ const MinimalQuestionCard = ({
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [showResult, setShowResult] = useState(false);
   const [answered, setAnswered] = useState(isAnswered);
+  const { toast } = useToast();
 
   useEffect(() => {
     setSelectedAnswer('');
@@ -79,14 +80,12 @@ const MinimalQuestionCard = ({
         : 'bg-netflix-card border-netflix-border text-gray-100 hover:bg-gray-700 hover:border-gray-500 transition-all duration-200 cursor-pointer';
     }
     
-    // Mostrar resposta correta em verde
     if (key === question.resposta_correta) {
       return 'bg-green-600 border-green-500 text-white shadow-lg';
     }
     
-    // Mostrar resposta errada selecionada em vermelho
     if (key === selectedAnswer && key !== question.resposta_correta) {
-      return 'bg-red-600 border-red-500 text-white shadow-lg';
+      return 'bg-red-600/80 border-red-500 text-white shadow-lg';
     }
     
     return 'bg-netflix-card border-netflix-border text-gray-400 opacity-60';
@@ -191,7 +190,7 @@ const MinimalQuestionCard = ({
 
       {/* Question text - fonte aumentada no mobile */}
       <div className="mb-4 sm:mb-6">
-        <div className="text-gray-100 text-lg sm:text-lg leading-relaxed whitespace-pre-wrap">
+        <div className="text-gray-100 text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
           {question.enunciado}
         </div>
       </div>
@@ -206,10 +205,10 @@ const MinimalQuestionCard = ({
             className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-200 hover:scale-[1.01] ${getAlternativeStyle(alternative.key)}`}
           >
             <div className="flex items-start gap-2 sm:gap-3">
-              <span className="font-bold text-base sm:text-base min-w-[20px] sm:min-w-[24px] flex-shrink-0 bg-black/20 rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center">
+              <span className="font-bold text-sm sm:text-base min-w-[20px] sm:min-w-[24px] flex-shrink-0 bg-black/20 rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center">
                 {alternative.key}
               </span>
-              <span className="flex-1 text-base sm:text-base whitespace-pre-wrap">
+              <span className="flex-1 text-sm sm:text-base whitespace-pre-wrap">
                 {alternative.value}
               </span>
             </div>
