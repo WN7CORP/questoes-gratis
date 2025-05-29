@@ -101,6 +101,18 @@ const QuestionsSection = ({
     };
   }, [selectedAreaFilter, selectedExam, selectedYear, limit, studyMode]);
 
+  // Ocultar navegação para todas as seções quando estiver respondendo questões
+  useEffect(() => {
+    if (onHideNavigation) {
+      onHideNavigation(true);
+    }
+    return () => {
+      if (onHideNavigation) {
+        onHideNavigation(false);
+      }
+    };
+  }, [onHideNavigation]);
+
   // Timer for simulado
   useEffect(() => {
     if ((isSimulado || isDailyChallenge) && !isPaused && simuladoStartTime) {
@@ -312,10 +324,11 @@ const QuestionsSection = ({
   };
   const scrollToQuestion = () => {
     if (questionCardRef.current) {
-      questionCardRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-        inline: 'nearest'
+      // Scroll com offset para mobile (menu oculto)
+      const offsetTop = questionCardRef.current.offsetTop - 20;
+      window.scrollTo({
+        top: offsetTop,
+        behavior: 'smooth'
       });
     }
   };
@@ -362,7 +375,7 @@ const QuestionsSection = ({
     if (currentQuestion?.resposta_correta === 'ANULADA') {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
-        setTimeout(scrollToQuestion, 100);
+        setTimeout(scrollToQuestion, 200);
       } else {
         finishSession();
       }
@@ -370,7 +383,7 @@ const QuestionsSection = ({
     }
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
-      setTimeout(scrollToQuestion, 100);
+      setTimeout(scrollToQuestion, 200);
     } else {
       finishSession();
     }
@@ -378,7 +391,7 @@ const QuestionsSection = ({
   const previousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
-      setTimeout(scrollToQuestion, 100);
+      setTimeout(scrollToQuestion, 200);
     }
   };
   const pauseSimulado = () => {
@@ -464,16 +477,23 @@ const QuestionsSection = ({
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
   if (showResults && (isSimulado || isDailyChallenge)) {
-    return <SimuladoResults sessionStats={sessionStats} areaStats={areaStats} previousAttempts={previousAttempts} examInfo={{
-      exame: selectedExam,
-      ano: selectedYear
-    }} totalTime={simuladoTime} onClose={() => {
-      setShowResults(false);
-      if (onHideNavigation) {
-        onHideNavigation(false);
-      }
-      window.location.reload();
-    }} />;
+    return <SimuladoResults 
+      sessionStats={sessionStats} 
+      areaStats={areaStats} 
+      previousAttempts={previousAttempts} 
+      examInfo={{
+        exame: selectedExam,
+        ano: selectedYear
+      }} 
+      totalTime={simuladoTime} 
+      onClose={() => {
+        setShowResults(false);
+        if (onHideNavigation) {
+          onHideNavigation(false);
+        }
+        window.location.reload();
+      }} 
+    />;
   }
   if (loading) {
     return <div className="flex items-center justify-center py-12">
@@ -496,23 +516,23 @@ const QuestionsSection = ({
   const isQuestionAnswered = !!answers[currentQuestion.id];
   return <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-0 py-0 px-0">
       {/* Simulado Controls - Timer and Pause/Finish buttons */}
-      {(isSimulado || isDailyChallenge) && <div className="flex justify-between items-center">
+      {(isSimulado || isDailyChallenge) && <div className="flex justify-between items-center animate-fade-in">
           <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50 text-xs">
             <Clock size={12} className="mr-1" />
             {formatTime(simuladoTime)}
           </Badge>
           
           <div className="flex gap-2">
-            {isPaused ? <Button onClick={resumeSimulado} size="sm" className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1">
+            {isPaused ? <Button onClick={resumeSimulado} size="sm" className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 transition-all duration-200 hover:scale-105">
                 Retomar
-              </Button> : <Button onClick={pauseSimulado} size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 text-xs px-3 py-1">
+              </Button> : <Button onClick={pauseSimulado} size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 text-xs px-3 py-1 transition-all duration-200 hover:scale-105">
                 <Pause size={12} className="mr-1" />
                 Pausar
               </Button>}
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button size="sm" variant="outline" className="border-red-600 text-red-400 hover:bg-red-900/20 text-xs px-3 py-1">
+                <Button size="sm" variant="outline" className="border-red-600 text-red-400 hover:bg-red-900/20 text-xs px-3 py-1 transition-all duration-200 hover:scale-105">
                   <Square size={12} className="mr-1" />
                   Encerrar
                 </Button>
@@ -538,19 +558,29 @@ const QuestionsSection = ({
         </div>}
 
       {/* Study Mode Selector */}
-      {!isSimulado && !isDailyChallenge && <StudyModeSelector studyMode={studyMode} setStudyMode={setStudyMode} selectedAreaFilter={selectedAreaFilter} setSelectedAreaFilter={setSelectedAreaFilter} areas={areas} onShuffle={shuffleQuestions} onReset={resetSession} />}
+      {!isSimulado && !isDailyChallenge && <div className="animate-fade-in">
+          <StudyModeSelector 
+            studyMode={studyMode} 
+            setStudyMode={setStudyMode} 
+            selectedAreaFilter={selectedAreaFilter} 
+            setSelectedAreaFilter={setSelectedAreaFilter} 
+            areas={areas} 
+            onShuffle={shuffleQuestions} 
+            onReset={resetSession} 
+          />
+        </div>}
 
       {/* Enhanced Stats */}
-      <Card className={`bg-netflix-card border-netflix-border p-3 sm:p-4 ${areaColorScheme ? `border-l-4 ${areaColorScheme.border}` : ''}`}>
+      <Card className={`bg-netflix-card border-netflix-border p-3 sm:p-4 transition-all duration-300 hover:shadow-lg animate-fade-in ${areaColorScheme ? `border-l-4 ${areaColorScheme.border}` : ''}`}>
         <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-            <Badge variant="outline" className={`border-gray-600 text-gray-300 text-sm sm:text-lg font-bold px-2 sm:px-4 py-1 sm:py-2 ${areaColorScheme ? areaColorScheme.bg : 'bg-gray-800'}`}>
+            <Badge variant="outline" className={`border-gray-600 text-gray-300 text-sm sm:text-lg font-bold px-2 sm:px-4 py-1 sm:py-2 transition-all duration-200 hover:scale-105 ${areaColorScheme ? areaColorScheme.bg : 'bg-gray-800'}`}>
               Questão {currentQuestionIndex + 1} de {questions.length}
             </Badge>
-            <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-800 text-xs sm:text-sm">
+            <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-800 text-xs sm:text-sm transition-all duration-200 hover:scale-105">
               Respondidas: {stats.answeredQuestions}
             </Badge>
-            <Badge variant="outline" className={`border-gray-600 text-xs sm:text-sm ${stats.percentage >= 70 ? 'text-green-400 bg-green-900/20' : 'text-gray-300 bg-gray-800'}`}>
+            <Badge variant="outline" className={`border-gray-600 text-xs sm:text-sm transition-all duration-200 hover:scale-105 ${stats.percentage >= 70 ? 'text-green-400 bg-green-900/20' : 'text-gray-300 bg-gray-800'}`}>
               <Target size={12} className="mr-1" />
               Acertos: {stats.percentage}%
             </Badge>
@@ -568,21 +598,34 @@ const QuestionsSection = ({
       </Card>
 
       {/* Question */}
-      <div ref={questionCardRef} className={isQuestionAnnulled ? 'opacity-50 pointer-events-none' : ''}>
-        <MinimalQuestionCard question={currentQuestion} onAnswer={handleAnswer} isAnswered={isQuestionAnswered} isAnnulled={isQuestionAnnulled} />
+      <div ref={questionCardRef} className={`transition-all duration-500 animate-fade-in ${isQuestionAnnulled ? 'opacity-50 pointer-events-none' : ''}`}>
+        <MinimalQuestionCard 
+          question={currentQuestion} 
+          onAnswer={handleAnswer} 
+          isAnswered={isQuestionAnswered} 
+          isAnnulled={isQuestionAnnulled} 
+        />
       </div>
 
       {/* Ver Comentário Button */}
-      {isQuestionAnswered && !isQuestionAnnulled && currentQuestion?.justificativa && <div className="flex justify-center">
-          <Button onClick={handleShowJustification} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg hover:scale-105 transition-all duration-200">
+      {isQuestionAnswered && !isQuestionAnnulled && currentQuestion?.justificativa && <div className="flex justify-center animate-fade-in">
+          <Button 
+            onClick={handleShowJustification} 
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg hover:scale-105 transition-all duration-200"
+          >
             <GraduationCap size={20} />
             Ver Comentário
           </Button>
         </div>}
 
       {/* Enhanced Navigation */}
-      <div className="flex justify-between items-center gap-4">
-        <Button onClick={previousQuestion} disabled={currentQuestionIndex === 0} variant="outline" className={`border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 ${areaColorScheme ? `${areaColorScheme.hover} ${areaColorScheme.border} border` : 'bg-gray-800'} transition-all duration-200 text-sm px-3 py-2`}>
+      <div className="flex justify-between items-center gap-4 animate-fade-in">
+        <Button 
+          onClick={previousQuestion} 
+          disabled={currentQuestionIndex === 0} 
+          variant="outline" 
+          className={`border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 transition-all duration-200 hover:scale-105 ${areaColorScheme ? `${areaColorScheme.hover} ${areaColorScheme.border} border` : 'bg-gray-800'} text-sm px-3 py-2`}
+        >
           Anterior
         </Button>
         
@@ -590,23 +633,40 @@ const QuestionsSection = ({
           <div className="text-gray-400 text-xs sm:text-sm mb-1">
             Progresso: {Math.round((currentQuestionIndex + 1) / questions.length * 100)}%
           </div>
-          <div className="w-full bg-gray-800 rounded-full h-2">
-            <div className={`h-2 rounded-full transition-all duration-300 ${areaColorScheme ? areaColorScheme.primary : 'bg-netflix-red'}`} style={{
-            width: `${(currentQuestionIndex + 1) / questions.length * 100}%`
-          }} />
+          <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
+            <div 
+              className={`h-2 rounded-full transition-all duration-500 ${areaColorScheme ? areaColorScheme.primary : 'bg-netflix-red'}`} 
+              style={{
+                width: `${(currentQuestionIndex + 1) / questions.length * 100}%`
+              }} 
+            />
           </div>
         </div>
         
-        <Button onClick={nextQuestion} disabled={!isQuestionAnnulled && currentQuestionIndex === questions.length - 1 && !answers[currentQuestion.id]} className={`${areaColorScheme ? `${areaColorScheme.primary} ${areaColorScheme.hover}` : 'bg-netflix-red hover:bg-red-700'} text-white disabled:opacity-50 transition-all duration-200 hover:scale-[1.02] text-sm px-3 py-2`}>
+        <Button 
+          onClick={nextQuestion} 
+          disabled={!isQuestionAnnulled && currentQuestionIndex === questions.length - 1 && !answers[currentQuestion.id]} 
+          className={`${areaColorScheme ? `${areaColorScheme.primary} ${areaColorScheme.hover}` : 'bg-netflix-red hover:bg-red-700'} text-white disabled:opacity-50 transition-all duration-200 hover:scale-105 text-sm px-3 py-2`}
+        >
           {currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Próxima'}
         </Button>
       </div>
 
       {/* Question Justification Modal */}
-      <QuestionJustification justification={currentJustification} isVisible={showJustification} onClose={() => setShowJustification(false)} />
+      <QuestionJustification 
+        justification={currentJustification} 
+        isVisible={showJustification} 
+        onClose={() => setShowJustification(false)} 
+      />
 
       {/* Celebration Modal */}
-      <CelebrationModal isVisible={showCelebration} onClose={() => setShowCelebration(false)} streak={streak} percentage={stats.percentage} questionsAnswered={stats.answeredQuestions} />
+      <CelebrationModal 
+        isVisible={showCelebration} 
+        onClose={() => setShowCelebration(false)} 
+        streak={streak} 
+        percentage={stats.percentage} 
+        questionsAnswered={stats.answeredQuestions} 
+      />
     </div>;
 };
 export default QuestionsSection;

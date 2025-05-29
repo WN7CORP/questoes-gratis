@@ -103,8 +103,11 @@ const HomeSection = ({
   if (showQuestions && !showSimulado) {
     return <div className="h-full overflow-y-auto bg-netflix-black">
         <div className="p-6 px-[6px]">
-          <div className="flex items-center gap-4 mb-6 p-4 rounded-lg bg-gray-800 border-l-4 border-netflix-red">
-            <button onClick={handleBackToHome} className="text-netflix-red hover:text-red-400 transition-colors font-semibold">
+          <div className="flex items-center gap-4 mb-6 p-4 rounded-lg bg-gray-800 border-l-4 border-netflix-red animate-fade-in">
+            <button 
+              onClick={handleBackToHome} 
+              className="text-netflix-red hover:text-red-400 transition-all duration-200 font-semibold hover:scale-105"
+            >
               ← Voltar ao Início
             </button>
             <h1 className="text-2xl font-bold text-white">
@@ -112,16 +115,21 @@ const HomeSection = ({
             </h1>
           </div>
           
-          <QuestionsSection selectedArea={showRandomQuestions ? undefined : selectedArea} limit={showDailyChallenge ? 20 : showRandomQuestions ? 10 : 20} isDailyChallenge={showDailyChallenge} onHideNavigation={onHideNavigation} />
+          <QuestionsSection 
+            selectedArea={showRandomQuestions ? undefined : selectedArea} 
+            limit={showDailyChallenge ? 20 : showRandomQuestions ? 10 : 20} 
+            isDailyChallenge={showDailyChallenge} 
+            onHideNavigation={onHideNavigation} 
+          />
         </div>
       </div>;
   }
   return <div className="h-full overflow-y-auto bg-netflix-black">
       {/* Hero Section */}
-      <div className="relative p-6 pb-8">
+      <div className="relative p-6 pb-8 animate-fade-in">
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="bg-netflix-red rounded-full p-3">
+            <div className="bg-netflix-red rounded-full p-3 transition-transform duration-200 hover:scale-110">
               <Award className="text-white" size={32} />
             </div>
             <h1 className="text-4xl sm:text-5xl font-bold text-white">
@@ -134,7 +142,7 @@ const HomeSection = ({
           
           {/* Quick Stats */}
           <div className="grid grid-cols-3 gap-4 mb-8">
-            <div className="bg-netflix-card border border-netflix-border rounded-lg p-4">
+            <div className="bg-netflix-card border border-netflix-border rounded-lg p-4 transition-all duration-200 hover:scale-105">
               <div className="text-2xl font-bold text-netflix-red mb-1">
                 {stats.totalQuestions.toLocaleString()}
               </div>
@@ -142,7 +150,7 @@ const HomeSection = ({
                 Questões Disponíveis
               </div>
             </div>
-            <div className="bg-netflix-card border border-netflix-border rounded-lg p-4">
+            <div className="bg-netflix-card border border-netflix-border rounded-lg p-4 transition-all duration-200 hover:scale-105">
               <div className="text-2xl font-bold text-green-400 mb-1">
                 {stats.totalAreas}
               </div>
@@ -150,7 +158,7 @@ const HomeSection = ({
                 Áreas do Direito
               </div>
             </div>
-            <div className="bg-netflix-card border border-netflix-border rounded-lg p-4">
+            <div className="bg-netflix-card border border-netflix-border rounded-lg p-4 transition-all duration-200 hover:scale-105">
               <div className="text-2xl font-bold text-blue-400 mb-1">
                 {stats.totalExams}
               </div>
@@ -163,7 +171,7 @@ const HomeSection = ({
       </div>
 
       {/* Daily Challenge Section */}
-      <div className="mb-8 px-[5px]">
+      <div className="mb-8 px-[5px] animate-fade-in" style={{ animationDelay: '100ms' }}>
         <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
           <Zap className="text-orange-500" size={28} />
           Desafio Diário
@@ -172,7 +180,7 @@ const HomeSection = ({
       </div>
 
       {/* OAB Tips Carousel */}
-      <div className="mb-8 px-[7px]">
+      <div className="mb-8 px-[7px] animate-fade-in" style={{ animationDelay: '200ms' }}>
         <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
           <Scale className="text-blue-500" size={28} />
           Dicas para o Sucesso na OAB
@@ -181,7 +189,7 @@ const HomeSection = ({
       </div>
 
       {/* Main Study Options */}
-      <div className="px-6 mb-8">
+      <div className="px-6 mb-8 animate-fade-in" style={{ animationDelay: '300ms' }}>
         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
           <Target className="text-netflix-red" size={28} />
           Como você quer estudar hoje?
@@ -189,7 +197,7 @@ const HomeSection = ({
         
         <div className="grid md:grid-cols-3 gap-6">
           {/* Study by Area */}
-          <Card className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border-blue-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group">
+          <Card className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border-blue-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group hover:shadow-xl">
             <div className="flex items-center gap-4 mb-4">
               <div className="bg-blue-600 rounded-lg p-3 group-hover:scale-110 transition-transform">
                 <Scale className="text-white" size={24} />
@@ -210,7 +218,7 @@ const HomeSection = ({
           </Card>
 
           {/* Random Questions */}
-          <Card className="bg-gradient-to-br from-green-900/30 to-green-800/20 border-green-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group" onClick={handleRandomQuestions}>
+          <Card className="bg-gradient-to-br from-green-900/30 to-green-800/20 border-green-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group hover:shadow-xl" onClick={handleRandomQuestions}>
             <div className="flex items-center gap-4 mb-4">
               <div className="bg-green-600 rounded-lg p-3 group-hover:scale-110 transition-transform">
                 <Zap className="text-white" size={24} />
@@ -230,7 +238,7 @@ const HomeSection = ({
           </Card>
 
           {/* Simulado */}
-          <Card className="bg-gradient-to-br from-red-900/30 to-red-800/20 border-red-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group" onClick={handleSimuladoAccess}>
+          <Card className="bg-gradient-to-br from-red-900/30 to-red-800/20 border-red-700/50 p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group hover:shadow-xl" onClick={handleSimuladoAccess}>
             <div className="flex items-center gap-4 mb-4">
               <div className="bg-netflix-red rounded-lg p-3 group-hover:scale-110 transition-transform">
                 <Trophy className="text-white" size={24} />
@@ -252,14 +260,14 @@ const HomeSection = ({
       </div>
 
       {/* Special Categories */}
-      <div className="px-6 mb-8">
+      <div className="px-6 mb-8 animate-fade-in" style={{ animationDelay: '400ms' }}>
         <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
           <TrendingUp className="text-netflix-red" size={24} />
           Categorias Especiais
         </h2>
         
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group" onClick={() => handleAreaSelect('Ética Profissional')}>
+          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-all duration-200 group hover:scale-105" onClick={() => handleAreaSelect('Ética Profissional')}>
             <div className="flex items-center gap-3">
               <div className="bg-purple-600 rounded-lg p-2 group-hover:scale-110 transition-transform">
                 <Award size={20} />
@@ -271,7 +279,7 @@ const HomeSection = ({
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group" onClick={() => handleAreaSelect('Direito Constitucional')}>
+          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-all duration-200 group hover:scale-105" onClick={() => handleAreaSelect('Direito Constitucional')}>
             <div className="flex items-center gap-3">
               <div className="bg-orange-600 rounded-lg p-2 group-hover:scale-110 transition-transform">
                 <FileText size={20} />
@@ -283,7 +291,7 @@ const HomeSection = ({
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group" onClick={() => handleAreaSelect('Direito Civil')}>
+          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-all duration-200 group hover:scale-105" onClick={() => handleAreaSelect('Direito Civil')}>
             <div className="flex items-center gap-3">
               <div className="bg-cyan-600 rounded-lg p-2 group-hover:scale-110 transition-transform">
                 <Users size={20} />
@@ -295,7 +303,7 @@ const HomeSection = ({
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-colors group" onClick={() => handleAreaSelect('Direito Penal')}>
+          <Card className="bg-netflix-card border-netflix-border p-4 cursor-pointer hover:bg-gray-800 transition-all duration-200 group hover:scale-105" onClick={() => handleAreaSelect('Direito Penal')}>
             <div className="flex items-center gap-3">
               <div className="bg-red-600 rounded-lg p-2 group-hover:scale-110 transition-transform">
                 <Target size={20} />
@@ -310,8 +318,8 @@ const HomeSection = ({
       </div>
 
       {/* Quick Access */}
-      <div className="px-6 pb-8">
-        <div className="bg-gradient-to-r from-netflix-red/20 to-red-800/20 border border-netflix-red/30 rounded-lg p-6">
+      <div className="px-6 pb-8 animate-fade-in" style={{ animationDelay: '500ms' }}>
+        <div className="bg-gradient-to-r from-netflix-red/20 to-red-800/20 border border-netflix-red/30 rounded-lg p-6 transition-all duration-300 hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-white font-bold text-lg mb-2">Pronto para começar?</h3>

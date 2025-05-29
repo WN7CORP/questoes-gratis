@@ -1,9 +1,10 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Scale, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 interface Question {
   id: number;
@@ -37,6 +38,9 @@ const MinimalQuestionCard = ({
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [showResult, setShowResult] = useState(false);
   const [answered, setAnswered] = useState(isAnswered);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     setSelectedAnswer('');
@@ -52,47 +56,79 @@ const MinimalQuestionCard = ({
   ].filter(alt => alt.value && alt.value.trim() !== '');
 
   const handleAnswerSelect = (answer: string) => {
-    if (answered || isAnnulled) return;
+    if (answered || isAnnulled || isSubmitting) return;
     setSelectedAnswer(answer);
+    
+    // Vibração sutil em dispositivos móveis
+    if ('vibrate' in navigator) {
+      navigator.vibrate(50);
+    }
   };
 
   const handleSubmitAnswer = async () => {
-    if (!selectedAnswer || answered || isAnnulled) return;
+    if (!selectedAnswer || answered || isAnnulled || isSubmitting) return;
 
+    setIsSubmitting(true);
     const isCorrect = selectedAnswer === question.resposta_correta;
-    setAnswered(true);
-    setShowResult(true);
-
-    if (onAnswer) {
-      onAnswer(question.id, selectedAnswer, isCorrect);
+    
+    // Animação de resposta
+    if (cardRef.current) {
+      cardRef.current.classList.add('animate-pulse');
+      setTimeout(() => {
+        cardRef.current?.classList.remove('animate-pulse');
+      }, 500);
     }
+
+    setTimeout(() => {
+      setAnswered(true);
+      setShowResult(true);
+      setIsSubmitting(false);
+
+      // Notificação discreta
+      toast({
+        description: isCorrect ? "✅" : "❌",
+        duration: 1500,
+        className: `fixed top-4 right-4 w-auto min-w-0 p-2 text-center border-none shadow-lg ${
+          isCorrect 
+            ? 'bg-green-600/90 text-white' 
+            : 'bg-red-600/90 text-white'
+        }`,
+      });
+
+      if (onAnswer) {
+        onAnswer(question.id, selectedAnswer, isCorrect);
+      }
+    }, 300);
   };
 
   const getAlternativeStyle = (key: string) => {
     if (isAnnulled) {
       return 'bg-gray-800/50 border-gray-600/50 text-gray-500 cursor-not-allowed';
     }
+    
     if (!answered) {
-      return selectedAnswer === key 
-        ? 'bg-netflix-red border-netflix-red text-white shadow-lg transform scale-[1.02] transition-all duration-200' 
-        : 'bg-netflix-card border-netflix-border text-gray-100 hover:bg-gray-700 hover:border-gray-500 transition-all duration-200 cursor-pointer';
+      if (selectedAnswer === key) {
+        return 'bg-netflix-red border-netflix-red text-white shadow-lg transform scale-[1.02] transition-all duration-300 animate-pulse';
+      }
+      return 'bg-netflix-card border-netflix-border text-gray-100 hover:bg-gray-700 hover:border-gray-500 hover:scale-[1.01] transition-all duration-200 cursor-pointer';
     }
     
-    // Questão já respondida - mostrar cores
+    // Questão já respondida - feedback visual aprimorado
     if (key === question.resposta_correta) {
-      return 'bg-green-600 border-green-500 text-white shadow-lg';
+      return 'bg-green-600 border-green-500 text-white shadow-lg animate-scale-in';
     }
     
     if (key === selectedAnswer && key !== question.resposta_correta) {
-      return 'bg-red-600 border-red-500 text-white shadow-lg';
+      return 'bg-red-600 border-red-500 text-white shadow-lg animate-scale-in';
     }
     
-    return 'bg-netflix-card border-netflix-border text-gray-400 opacity-60';
+    // Outras alternativas em vermelho claro para indicar que estão "erradas"
+    return 'bg-red-900/20 border-red-800/40 text-red-200/70 opacity-60';
   };
 
   if (isAnnulled) {
     return (
-      <Card className="bg-netflix-card border-netflix-border p-4 sm:p-6 max-w-4xl mx-auto shadow-xl opacity-75">
+      <Card ref={cardRef} className="bg-netflix-card border-netflix-border p-4 sm:p-6 max-w-4xl mx-auto shadow-xl opacity-75">
         {/* Header for annulled question */}
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <div className="flex items-center gap-3 sm:gap-4">
@@ -118,7 +154,7 @@ const MinimalQuestionCard = ({
 
         {/* Question text */}
         <div className="mb-4 sm:mb-6">
-          <div className="text-gray-400 text-lg sm:text-xl leading-relaxed whitespace-pre-wrap">
+          <div className="text-gray-400 text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
             {question.enunciado}
           </div>
         </div>
@@ -128,10 +164,10 @@ const MinimalQuestionCard = ({
           {alternatives.map(alternative => (
             <div key={alternative.key} className="w-full p-3 sm:p-4 rounded-lg border-2 bg-gray-800/50 border-gray-600/50 text-gray-500 cursor-not-allowed">
               <div className="flex items-start gap-2 sm:gap-3">
-                <span className="font-bold text-base sm:text-lg min-w-[24px] sm:min-w-[28px] flex-shrink-0">
+                <span className="font-bold text-sm sm:text-base min-w-[20px] sm:min-w-[24px] flex-shrink-0">
                   {alternative.key})
                 </span>
-                <span className="flex-1 text-base sm:text-lg whitespace-pre-wrap">
+                <span className="flex-1 text-sm sm:text-base whitespace-pre-wrap">
                   {alternative.value}
                 </span>
               </div>
@@ -154,19 +190,19 @@ const MinimalQuestionCard = ({
   }
 
   return (
-    <Card className="bg-netflix-card border-netflix-border p-4 sm:p-6 max-w-4xl mx-auto shadow-xl">
+    <Card ref={cardRef} className="bg-netflix-card border-netflix-border p-4 sm:p-6 max-w-4xl mx-auto shadow-xl transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div className="flex items-center gap-3 sm:gap-4">
-          <div className="bg-netflix-red rounded-lg p-2 sm:p-3">
+          <div className="bg-netflix-red rounded-lg p-2 sm:p-3 transition-transform duration-200 hover:scale-110">
             <Scale className="text-white" size={16} />
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs">
+              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs transition-colors duration-200">
                 {question.exame} - {question.ano}
               </Badge>
-              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs sm:text-sm font-bold px-2 sm:px-3 py-1">
+              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs sm:text-sm font-bold px-2 sm:px-3 py-1 transition-colors duration-200">
                 Questão {question.numero}
               </Badge>
             </div>
@@ -187,27 +223,28 @@ const MinimalQuestionCard = ({
         </div>
       </div>
 
-      {/* Question text - increased font size for mobile */}
+      {/* Question text - fonte ajustada para mobile */}
       <div className="mb-4 sm:mb-6">
-        <div className="text-gray-100 text-lg sm:text-xl leading-relaxed whitespace-pre-wrap">
+        <div className="text-gray-100 text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
           {question.enunciado}
         </div>
       </div>
 
-      {/* Alternatives - increased font size for mobile */}
+      {/* Alternatives - fonte ajustada para mobile */}
       <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-        {alternatives.map(alternative => (
+        {alternatives.map((alternative, index) => (
           <button
             key={alternative.key}
             onClick={() => handleAnswerSelect(alternative.key)}
-            disabled={answered}
-            className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-200 hover:scale-[1.01] ${getAlternativeStyle(alternative.key)}`}
+            disabled={answered || isSubmitting}
+            className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] ${getAlternativeStyle(alternative.key)}`}
+            style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className="flex items-start gap-2 sm:gap-3">
-              <span className="font-bold text-base sm:text-lg min-w-[24px] sm:min-w-[28px] flex-shrink-0 bg-black/20 rounded-full w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center">
+              <span className="font-bold text-sm sm:text-base min-w-[20px] sm:min-w-[24px] flex-shrink-0 bg-black/20 rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center transition-transform duration-200">
                 {alternative.key}
               </span>
-              <span className="flex-1 text-base sm:text-lg whitespace-pre-wrap">
+              <span className="flex-1 text-sm sm:text-base whitespace-pre-wrap">
                 {alternative.value}
               </span>
             </div>
@@ -219,10 +256,17 @@ const MinimalQuestionCard = ({
       {!answered && (
         <Button
           onClick={handleSubmitAnswer}
-          disabled={!selectedAnswer}
-          className="w-full bg-netflix-red hover:bg-red-700 text-white py-3 sm:py-4 text-base sm:text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.02]"
+          disabled={!selectedAnswer || isSubmitting}
+          className="w-full bg-netflix-red hover:bg-red-700 text-white py-3 sm:py-4 text-base sm:text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg"
         >
-          Responder
+          {isSubmitting ? (
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              Processando...
+            </div>
+          ) : (
+            'Responder'
+          )}
         </Button>
       )}
     </Card>

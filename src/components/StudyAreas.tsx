@@ -1,55 +1,55 @@
+
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Scale, Search, ChevronRight } from 'lucide-react';
+import { Scale, BookOpen, ArrowRight, Target, TrendingUp } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import QuestionsSection from './QuestionsSection';
+import { getAreaColors } from '../utils/areaColors';
+
+interface AreaCount {
+  area: string;
+  count: number;
+}
+
 interface StudyAreasProps {
   onHideNavigation?: (hide: boolean) => void;
 }
-const StudyAreas = ({
-  onHideNavigation
-}: StudyAreasProps) => {
-  const [areas, setAreas] = useState<{
-    area: string;
-    count: number;
-  }[]>([]);
-  const [filteredAreas, setFilteredAreas] = useState<{
-    area: string;
-    count: number;
-  }[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedArea, setSelectedArea] = useState<string>('');
+
+const StudyAreas = ({ onHideNavigation }: StudyAreasProps) => {
+  const [areas, setAreas] = useState<AreaCount[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedArea, setSelectedArea] = useState<string>('');
+  const [showQuestions, setShowQuestions] = useState(false);
+
   useEffect(() => {
     fetchAreas();
   }, []);
-  useEffect(() => {
-    const filtered = areas.filter(area => area.area.toLowerCase().includes(searchTerm.toLowerCase()));
-    setFilteredAreas(filtered);
-  }, [searchTerm, areas]);
+
   const fetchAreas = async () => {
+    setLoading(true);
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('Questoes_Comentadas').select('area').not('area', 'is', null);
+      const { data, error } = await supabase
+        .from('Questoes_Comentadas')
+        .select('area')
+        .not('area', 'is', null);
+
       if (error) {
         console.error('Error fetching areas:', error);
       } else {
-        const areaCount = data?.reduce((acc: Record<string, number>, item) => {
+        const areaCounts: Record<string, number> = {};
+        data?.forEach(item => {
           if (item.area) {
-            acc[item.area] = (acc[item.area] || 0) + 1;
+            areaCounts[item.area] = (areaCounts[item.area] || 0) + 1;
           }
-          return acc;
-        }, {});
-        const areasWithCount = Object.entries(areaCount || {}).map(([area, count]) => ({
-          area,
-          count: count as number
-        })).sort((a, b) => b.count - a.count);
-        setAreas(areasWithCount);
-        setFilteredAreas(areasWithCount);
+        });
+
+        const areasArray: AreaCount[] = Object.entries(areaCounts)
+          .map(([area, count]) => ({ area, count }))
+          .sort((a, b) => b.count - a.count);
+
+        setAreas(areasArray);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -57,18 +57,26 @@ const StudyAreas = ({
       setLoading(false);
     }
   };
+
   const handleAreaSelect = (area: string) => {
     setSelectedArea(area);
+    setShowQuestions(true);
   };
-  const getAreaColors = (index: number) => {
-    const colors = ['from-blue-900/30 to-blue-800/20 border-blue-700/50', 'from-green-900/30 to-green-800/20 border-green-700/50', 'from-purple-900/30 to-purple-800/20 border-purple-700/50', 'from-red-900/30 to-red-800/20 border-red-700/50', 'from-orange-900/30 to-orange-800/20 border-orange-700/50', 'from-cyan-900/30 to-cyan-800/20 border-cyan-700/50'];
-    return colors[index % colors.length];
+
+  const handleBackToAreas = () => {
+    setShowQuestions(false);
+    setSelectedArea('');
   };
-  if (selectedArea) {
-    return <div className="h-full overflow-y-auto bg-netflix-black">
-        <div className="p-6 px-[6px]">
-          <div className="flex items-center gap-4 mb-6 p-4 rounded-lg bg-gray-800 border-l-4 border-netflix-red">
-            <button onClick={() => setSelectedArea('')} className="text-netflix-red hover:text-red-400 transition-colors font-semibold">
+
+  if (showQuestions) {
+    return (
+      <div className="h-full overflow-y-auto bg-netflix-black">
+        <div className="p-6">
+          <div className="flex items-center gap-4 mb-6 p-4 rounded-lg bg-gray-800 border-l-4 border-netflix-red animate-fade-in">
+            <button 
+              onClick={handleBackToAreas} 
+              className="text-netflix-red hover:text-red-400 transition-all duration-200 font-semibold hover:scale-105"
+            >
               ← Voltar às Áreas
             </button>
             <h1 className="text-2xl font-bold text-white">
@@ -76,69 +84,107 @@ const StudyAreas = ({
             </h1>
           </div>
           
-          <QuestionsSection selectedArea={selectedArea} limit={50} onHideNavigation={onHideNavigation} />
+          <QuestionsSection 
+            selectedArea={selectedArea} 
+            onHideNavigation={onHideNavigation}
+          />
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="h-full overflow-y-auto bg-netflix-black">
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-netflix-red"></div>
+        <div className="text-gray-400 ml-4">Carregando áreas...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full overflow-y-auto bg-netflix-black p-6">
       {/* Header */}
-      <div className="p-6 pb-4">
-        <div className="flex items-center gap-3 mb-4">
-          <Scale className="text-netflix-red" size={32} />
+      <div className="mb-8 animate-fade-in">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="bg-netflix-red rounded-lg p-3 transition-transform duration-200 hover:scale-110">
+            <BookOpen className="text-white" size={28} />
+          </div>
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Áreas do Direito</h1>
-            <p className="text-netflix-text-secondary text-lg">
-              Escolha uma área para estudar questões específicas
+            <h1 className="text-3xl font-bold text-white">Áreas do Direito</h1>
+            <p className="text-netflix-text-secondary">
+              Estude por área específica e domine cada disciplina
             </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4 text-sm text-gray-400">
+          <div className="flex items-center gap-2">
+            <Target size={16} />
+            <span>{areas.length} áreas disponíveis</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <TrendingUp size={16} />
+            <span>Ordenado por quantidade de questões</span>
           </div>
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="px-6 mb-6">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <Input placeholder="Buscar área do direito..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 bg-netflix-card border-netflix-border text-white placeholder-gray-400 focus:border-netflix-red" />
+      {/* Areas Grid */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {areas.map((area, index) => {
+          const colorScheme = getAreaColors(area.area);
+          return (
+            <Card 
+              key={area.area} 
+              className={`${colorScheme.bg} ${colorScheme.border} border-l-4 p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group animate-fade-in`}
+              style={{ animationDelay: `${index * 50}ms` }}
+              onClick={() => handleAreaSelect(area.area)}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-white font-bold text-lg mb-2 group-hover:text-gray-100 transition-colors">
+                    {area.area}
+                  </h3>
+                  <Badge 
+                    variant="outline" 
+                    className={`${colorScheme.border} ${colorScheme.text} bg-black/20 transition-all duration-200 group-hover:scale-105`}
+                  >
+                    {area.count} questões
+                  </Badge>
+                </div>
+                <div className={`${colorScheme.primary} rounded-lg p-2 transition-transform duration-200 group-hover:scale-110`}>
+                  <Scale className="text-white" size={20} />
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="text-gray-300 text-sm">
+                  Clique para estudar
+                </div>
+                <ArrowRight 
+                  className="text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-200" 
+                  size={16} 
+                />
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Stats Footer */}
+      <div className="mt-12 p-6 bg-gradient-to-r from-netflix-red/10 to-red-800/10 border border-netflix-red/20 rounded-lg animate-fade-in" style={{ animationDelay: '600ms' }}>
+        <div className="text-center">
+          <h3 className="text-white font-bold text-lg mb-2">
+            Total de {areas.reduce((sum, area) => sum + area.count, 0).toLocaleString()} questões disponíveis
+          </h3>
+          <p className="text-netflix-text-secondary">
+            Escolha uma área acima para começar seus estudos focados
+          </p>
         </div>
       </div>
-
-      {/* Areas Grid */}
-      <div className="pb-6 px-6">
-        {loading ? <div className="text-netflix-text-secondary text-center py-8">
-            Carregando áreas...
-          </div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredAreas.map((areaInfo, index) => <Card key={areaInfo.area} className={`bg-gradient-to-br ${getAreaColors(index)} p-6 cursor-pointer hover:scale-[1.02] transition-all duration-300 group border-2`} onClick={() => handleAreaSelect(areaInfo.area)}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="bg-white/10 rounded-lg p-3 group-hover:scale-110 transition-transform">
-                    <Scale className="text-white" size={24} />
-                  </div>
-                  <ChevronRight className="text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" size={20} />
-                </div>
-                
-                <h3 className="text-white font-bold text-lg mb-2 group-hover:text-white transition-colors">
-                  {areaInfo.area}
-                </h3>
-                
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="border-white/30 text-white bg-white/10">
-                    {areaInfo.count} questões
-                  </Badge>
-                  
-                  <div className="text-white/80 text-sm font-medium">
-                    Estudar →
-                  </div>
-                </div>
-              </Card>)}
-          </div>}
-
-        {!loading && filteredAreas.length === 0 && <div className="text-center py-12">
-            <Scale className="mx-auto mb-4 text-gray-500" size={48} />
-            <h3 className="text-white text-xl font-semibold mb-2">Nenhuma área encontrada</h3>
-            <p className="text-gray-400">
-              Tente buscar por outro termo ou verifique a ortografia.
-            </p>
-          </div>}
-      </div>
-    </div>;
+    </div>
+  );
 };
+
 export default StudyAreas;
