@@ -85,6 +85,28 @@ const QuestionsSection = ({
   const questionCardRef = useRef<HTMLDivElement>(null);
   const areaColorScheme = selectedAreaFilter ? getAreaColors(selectedAreaFilter) : null;
 
+  // Função para scroll suave para o topo
+  const scrollToTop = () => {
+    // Scroll imediato
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    
+    // Garantir que funcione após atualização do DOM
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 50);
+    
+    // Backup com requestAnimationFrame
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+  };
+
   useEffect(() => {
     fetchQuestions();
     fetchAreas();
@@ -130,27 +152,6 @@ const QuestionsSection = ({
 
   // Scroll para topo quando a questão atual muda
   useEffect(() => {
-    const scrollToTop = () => {
-      // Scroll imediato
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-      
-      // Garantir que funcione após atualização do DOM
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-      }, 50);
-      
-      // Backup com requestAnimationFrame
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-      });
-    };
-    
     scrollToTop();
   }, [currentQuestionIndex]);
 
