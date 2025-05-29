@@ -327,11 +327,16 @@ const QuestionsSection = ({
     }
   };
   const scrollToQuestion = () => {
-    // Scroll para o topo da página
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+    // Força scroll para o topo da página imediatamente
+    window.scrollTo(0, 0);
+    
+    // Também tenta com smooth scroll como backup
+    setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }, 50);
   };
   const handleAnswer = async (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
     setAnswers(prev => ({
@@ -376,7 +381,8 @@ const QuestionsSection = ({
     if (currentQuestion?.resposta_correta === 'ANULADA') {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
-        setTimeout(scrollToQuestion, 100);
+        // Scroll imediato
+        scrollToQuestion();
       } else {
         finishSession();
       }
@@ -384,7 +390,8 @@ const QuestionsSection = ({
     }
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
-      setTimeout(scrollToQuestion, 100);
+      // Scroll imediato
+      scrollToQuestion();
     } else {
       finishSession();
     }
@@ -392,7 +399,8 @@ const QuestionsSection = ({
   const previousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
-      setTimeout(scrollToQuestion, 100);
+      // Scroll imediato
+      scrollToQuestion();
     }
   };
   const pauseSimulado = () => {
