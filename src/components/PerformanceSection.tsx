@@ -99,11 +99,14 @@ const PerformanceSection = () => {
         return 'Recentes';
       case 'area':
         return 'Por Área';
+      case 'daily_challenge':
+        return 'Desafio Diário';
       default:
-        return mode;
+        return mode === 'all' ? 'Geral' : mode;
     }
   };
-  return <div className="h-full overflow-y-auto bg-black">
+  return (
+    <div className="h-full overflow-y-auto bg-black">
       {/* Header */}
       <div className="p-4 sm:p-6 pb-4">
         <div className="flex items-center justify-between mb-4">
@@ -155,18 +158,27 @@ const PerformanceSection = () => {
             Sessões Recentes
           </h2>
           
-          {loading ? <div className="text-gray-400 text-center py-8">
+          {loading ? (
+            <div className="text-gray-400 text-center py-8">
               Carregando sessões...
-            </div> : sessions.length === 0 ? <div className="text-center py-8">
+            </div>
+          ) : sessions.length === 0 ? (
+            <div className="text-center py-8">
               <CheckCircle className="mx-auto mb-4 text-gray-500" size={48} />
               <h3 className="text-white text-lg font-semibold mb-2">Nenhuma sessão encontrada</h3>
               <p className="text-gray-400">
                 Complete algumas sessões de estudo para ver seu histórico
               </p>
-            </div> : <div className="space-y-3 max-h-96 overflow-y-auto">
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
               {sessions.map(session => {
-            const accuracy = session.questions_answered > 0 ? Math.round(session.correct_answers / session.questions_answered * 100) : 0;
-            return <div key={session.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg py-[17px]">
+                const accuracy = session.questions_answered > 0 
+                  ? Math.round((session.correct_answers / session.questions_answered) * 100) 
+                  : 0;
+
+                return (
+                  <div key={session.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg py-[17px]">
                     <div className="flex items-center gap-4">
                       <div className="bg-red-600 p-2 rounded-lg">
                         <CheckCircle className="text-white" size={16} />
@@ -201,11 +213,14 @@ const PerformanceSection = () => {
                         </div>
                       </div>
                     </div>
-                  </div>;
-          })}
-            </div>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </Card>
       </div>
-    </div>;
+    </div>
+  );
 };
 export default PerformanceSection;

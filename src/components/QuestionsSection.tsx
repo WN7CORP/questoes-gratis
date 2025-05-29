@@ -327,13 +327,13 @@ const QuestionsSection = ({
   };
   const scrollToQuestion = () => {
     if (questionCardRef.current) {
-      // Scroll melhorado para mobile com offset mais preciso
+      // Scroll melhorado para mobile com offset mais preciso para o início do enunciado
       const rect = questionCardRef.current.getBoundingClientRect();
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const targetPosition = rect.top + scrollTop - 80; // Offset para não colar no topo
+      const targetPosition = rect.top + scrollTop - 60; // Offset reduzido para posicionar melhor no enunciado
       
       window.scrollTo({
-        top: targetPosition,
+        top: Math.max(0, targetPosition), // Garantir que não seja negativo
         behavior: 'smooth'
       });
     }
@@ -520,7 +520,8 @@ const QuestionsSection = ({
   const currentQuestion = questions[currentQuestionIndex];
   const isQuestionAnnulled = currentQuestion?.resposta_correta === 'ANULADA';
   const isQuestionAnswered = !!answers[currentQuestion.id];
-  return <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-0 py-0 px-0">
+  return (
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-0 py-0 px-0">
       {/* Simulado Controls - Timer and Pause/Finish buttons */}
       {(isSimulado || isDailyChallenge) && <div className="flex justify-between items-center animate-fade-in">
           <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50 text-xs">
@@ -673,6 +674,8 @@ const QuestionsSection = ({
         percentage={stats.percentage} 
         questionsAnswered={stats.answeredQuestions} 
       />
-    </div>;
+    </div>
+  );
 };
+
 export default QuestionsSection;

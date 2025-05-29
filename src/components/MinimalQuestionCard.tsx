@@ -127,7 +127,7 @@ const MinimalQuestionCard = ({
                 <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50 text-xs">
                   {question.exame} - {question.ano}
                 </Badge>
-                <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50 text-xs sm:text-sm font-bold">
+                <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50 text-xs font-bold">
                   Questão {question.numero}
                 </Badge>
                 <Badge variant="outline" className="border-red-600 text-red-400 bg-red-900/20 text-xs">
@@ -151,10 +151,10 @@ const MinimalQuestionCard = ({
           {alternatives.map(alternative => (
             <div key={alternative.key} className="w-full p-3 sm:p-4 rounded-lg border-2 bg-gray-800/50 border-gray-600/50 text-gray-500 cursor-not-allowed">
               <div className="flex items-start gap-2 sm:gap-3">
-                <span className="font-bold text-xs sm:text-sm min-w-[20px] sm:min-w-[24px] flex-shrink-0">
+                <span className="font-bold text-xs min-w-[20px] flex-shrink-0">
                   {alternative.key})
                 </span>
-                <span className="flex-1 text-xs sm:text-sm whitespace-pre-wrap">
+                <span className="flex-1 text-xs whitespace-pre-wrap">
                   {alternative.value}
                 </span>
               </div>
@@ -189,7 +189,7 @@ const MinimalQuestionCard = ({
               <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs transition-colors duration-200">
                 {question.exame} - {question.ano}
               </Badge>
-              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs sm:text-sm font-bold px-2 sm:px-3 py-1 transition-colors duration-200">
+              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs font-bold px-2 py-1 transition-colors duration-200">
                 Questão {question.numero}
               </Badge>
             </div>
@@ -210,14 +210,14 @@ const MinimalQuestionCard = ({
         </div>
       </div>
 
-      {/* Question text - fonte reduzida para mobile */}
+      {/* Question text - fonte ajustada para mobile */}
       <div className="mb-4 sm:mb-6">
         <div className="text-gray-100 text-sm sm:text-lg leading-relaxed whitespace-pre-wrap">
           {question.enunciado}
         </div>
       </div>
 
-      {/* Alternatives - fonte reduzida para mobile */}
+      {/* Alternatives - fonte ajustada para mobile */}
       <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
         {alternatives.map((alternative, index) => (
           <button
@@ -228,7 +228,7 @@ const MinimalQuestionCard = ({
             style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className="flex items-start gap-2 sm:gap-3">
-              <span className="font-bold text-xs sm:text-base min-w-[20px] sm:min-w-[24px] flex-shrink-0 bg-black/20 rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center transition-transform duration-200">
+              <span className="font-bold text-xs min-w-[18px] flex-shrink-0 bg-black/20 rounded-full w-5 h-5 sm:w-7 sm:h-7 flex items-center justify-center transition-transform duration-200">
                 {alternative.key}
               </span>
               <span className="flex-1 text-xs sm:text-base whitespace-pre-wrap">
