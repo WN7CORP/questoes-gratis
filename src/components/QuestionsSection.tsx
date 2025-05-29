@@ -84,6 +84,7 @@ const QuestionsSection = ({
   const [previousAttempts, setPreviousAttempts] = useState<any[]>([]);
   const questionCardRef = useRef<HTMLDivElement>(null);
   const areaColorScheme = selectedAreaFilter ? getAreaColors(selectedAreaFilter) : null;
+
   useEffect(() => {
     fetchQuestions();
     fetchAreas();
@@ -126,6 +127,26 @@ const QuestionsSection = ({
       return () => clearInterval(timer);
     }
   }, [isSimulado, isDailyChallenge, isPaused, simuladoStartTime]);
+
+  // Scroll para topo quando a questão atual muda
+  useEffect(() => {
+    const scrollToTop = () => {
+      // Múltiplas tentativas para garantir que funcione
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      
+      // Força com requestAnimationFrame
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
+    };
+    
+    scrollToTop();
+  }, [currentQuestionIndex]);
+
   const fetchPreviousAttempts = async () => {
     try {
       const {
@@ -149,6 +170,7 @@ const QuestionsSection = ({
       console.error('Error:', error);
     }
   };
+
   const calculateAreaStats = () => {
     const stats: Record<string, {
       correct: number;
@@ -179,6 +201,7 @@ const QuestionsSection = ({
     setAreaStats(areaStatsArray);
     return areaStatsArray;
   };
+
   const createStudySession = async () => {
     try {
       const {
@@ -209,6 +232,7 @@ const QuestionsSection = ({
       console.error('Error creating session:', error);
     }
   };
+
   const saveSessionProgress = async () => {
     if (!currentSessionId) return;
     try {
@@ -234,6 +258,7 @@ const QuestionsSection = ({
       console.error('Error saving progress:', error);
     }
   };
+
   const saveQuestionResponse = async (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
     try {
       const {
@@ -263,6 +288,7 @@ const QuestionsSection = ({
       console.error('Error saving question response:', error);
     }
   };
+
   const fetchQuestions = async () => {
     setLoading(true);
     try {
@@ -310,6 +336,7 @@ const QuestionsSection = ({
       setLoading(false);
     }
   };
+
   const fetchAreas = async () => {
     try {
       const {
@@ -326,18 +353,7 @@ const QuestionsSection = ({
       console.error('Error:', error);
     }
   };
-  const scrollToQuestion = () => {
-    // Força scroll para o topo da página imediatamente
-    window.scrollTo(0, 0);
-    
-    // Também tenta com smooth scroll como backup
-    setTimeout(() => {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    }, 50);
-  };
+
   const handleAnswer = async (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
     setAnswers(prev => ({
       ...prev,
@@ -369,6 +385,7 @@ const QuestionsSection = ({
       setStreak(0);
     }
   };
+
   const handleShowJustification = () => {
     const currentQuestion = questions[currentQuestionIndex];
     if (currentQuestion?.justificativa) {
@@ -376,13 +393,12 @@ const QuestionsSection = ({
       setShowJustification(true);
     }
   };
+
   const nextQuestion = () => {
     const currentQuestion = questions[currentQuestionIndex];
     if (currentQuestion?.resposta_correta === 'ANULADA') {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
-        // Scroll imediato
-        scrollToQuestion();
       } else {
         finishSession();
       }
@@ -390,28 +406,28 @@ const QuestionsSection = ({
     }
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
-      // Scroll imediato
-      scrollToQuestion();
     } else {
       finishSession();
     }
   };
+
   const previousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
-      // Scroll imediato
-      scrollToQuestion();
     }
   };
+
   const pauseSimulado = () => {
     setIsPaused(true);
   };
+
   const resumeSimulado = () => {
     setIsPaused(false);
     if (simuladoStartTime) {
       setSimuladoStartTime(Date.now() - simuladoTime * 1000);
     }
   };
+
   const finishSimulado = async () => {
     const totalTime = Math.floor((Date.now() - (simuladoStartTime || Date.now())) / 1000);
     const percentage = Math.round(sessionStats.correct / sessionStats.total * 100);
@@ -419,6 +435,7 @@ const QuestionsSection = ({
     const finalAreaStats = calculateAreaStats();
     setShowResults(true);
   };
+
   const finishSession = async () => {
     if (isSimulado || isDailyChallenge) {
       finishSimulado();
@@ -428,6 +445,7 @@ const QuestionsSection = ({
       setShowCelebration(true);
     }
   };
+
   const shuffleQuestions = () => {
     const shuffled = [...questions].sort(() => Math.random() - 0.5);
     setQuestions(shuffled);
@@ -441,6 +459,7 @@ const QuestionsSection = ({
     setStreak(0);
     createStudySession();
   };
+
   const resetSession = () => {
     setCurrentQuestionIndex(0);
     setAnswers({});
@@ -452,6 +471,7 @@ const QuestionsSection = ({
     setStreak(0);
     createStudySession();
   };
+
   const getStats = () => {
     const answeredQuestions = Object.keys(answers).length;
     const correctAnswers = Object.values(answers).filter(a => a.correct).length;
@@ -462,6 +482,7 @@ const QuestionsSection = ({
       percentage
     };
   };
+
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (sessionStats.total > 0) {
@@ -476,6 +497,7 @@ const QuestionsSection = ({
       }
     };
   }, [sessionStats, currentSessionId]);
+
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor(seconds % 3600 / 60);
@@ -485,6 +507,7 @@ const QuestionsSection = ({
     }
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
+
   if (showResults && (isSimulado || isDailyChallenge)) {
     return <SimuladoResults 
       sessionStats={sessionStats} 
@@ -504,12 +527,14 @@ const QuestionsSection = ({
       }} 
     />;
   }
+
   if (loading) {
     return <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-netflix-red"></div>
         <div className="text-gray-400 ml-4">Carregando questões...</div>
       </div>;
   }
+
   if (questions.length === 0) {
     return <Card className="bg-netflix-card border-netflix-border p-8 text-center">
         <Scale className="mx-auto mb-4 text-gray-500" size={48} />
@@ -519,10 +544,12 @@ const QuestionsSection = ({
         </p>
       </Card>;
   }
+
   const stats = getStats();
   const currentQuestion = questions[currentQuestionIndex];
   const isQuestionAnnulled = currentQuestion?.resposta_correta === 'ANULADA';
   const isQuestionAnswered = !!answers[currentQuestion.id];
+
   return (
     <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-0 py-0 px-0">
       {/* Simulado Controls - Timer and Pause/Finish buttons */}
@@ -628,8 +655,8 @@ const QuestionsSection = ({
           </Button>
         </div>}
 
-      {/* Enhanced Navigation - Movida um pouco mais para cima */}
-      <div className="flex justify-between items-center gap-4 animate-fade-in mt-6">
+      {/* Enhanced Navigation - Movida mais para cima */}
+      <div className="flex justify-between items-center gap-4 animate-fade-in mt-4">
         <Button 
           onClick={previousQuestion} 
           disabled={currentQuestionIndex === 0} 
