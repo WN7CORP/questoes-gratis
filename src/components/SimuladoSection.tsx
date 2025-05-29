@@ -23,7 +23,7 @@ const SimuladoSection = ({ onHideNavigation }: SimuladoSectionProps) => {
   const [selectedExam, setSelectedExam] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     checkUser();
@@ -78,12 +78,14 @@ const SimuladoSection = ({ onHideNavigation }: SimuladoSectionProps) => {
   };
 
   const handleStartSimulado = (exame: string, ano: string) => {
-    if (!user) {
-      checkUser();
-      return;
-    }
+    // Removida verificação de usuário para permitir iniciar sem login
     setSelectedExam(exame);
     setSelectedYear(ano);
+    
+    // Garantir que a navegação está escondida
+    if (onHideNavigation) {
+      onHideNavigation(true);
+    }
   };
 
   const getTotalQuestionsForExam = () => {
@@ -199,9 +201,8 @@ const SimuladoSection = ({ onHideNavigation }: SimuladoSectionProps) => {
               <Card 
                 key={`${exam.exame}-${exam.ano}`} 
                 className="bg-netflix-card border-netflix-border p-6 cursor-pointer hover:bg-gray-800 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border-l-4 border-netflix-red" 
-                onClick={() => handleStartSimulado(exam.exame, exam.ano)}
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4" onClick={() => handleStartSimulado(exam.exame, exam.ano)}>
                   <div className="bg-netflix-red rounded-lg p-3 mt-1">
                     <Trophy className="text-white" size={24} />
                   </div>
@@ -237,7 +238,14 @@ const SimuladoSection = ({ onHideNavigation }: SimuladoSectionProps) => {
                         <span>~{Math.ceil(exam.total_questoes * 3)} min</span>
                       </div>
                       
-                      <Button size="sm" className="bg-netflix-red hover:bg-red-700 text-white text-xs px-3 py-1">
+                      <Button 
+                        size="sm" 
+                        className="bg-netflix-red hover:bg-red-700 text-white text-xs px-3 py-1"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Previne propagação do evento
+                          handleStartSimulado(exam.exame, exam.ano);
+                        }}
+                      >
                         <Play size={12} className="mr-1" />
                         Iniciar
                       </Button>
