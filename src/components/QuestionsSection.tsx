@@ -9,7 +9,7 @@ import SimuladoResults from './SimuladoResults';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Scale, Target, Zap, Clock, Pause, Square, GraduationCap } from 'lucide-react';
+import { Scale, Target, Zap, Clock, Pause, Square, GraduationCap, Play } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { getAreaColors } from '../utils/areaColors';
 
@@ -38,6 +38,7 @@ interface QuestionsSectionProps {
   isSimulado?: boolean;
   isDailyChallenge?: boolean;
   onHideNavigation?: (hide: boolean) => void;
+  onFinishSimulado?: () => void;
 }
 
 interface AreaStats {
@@ -55,7 +56,8 @@ const QuestionsSection = ({
   showFilters = true,
   isSimulado = false,
   isDailyChallenge = false,
-  onHideNavigation
+  onHideNavigation,
+  onFinishSimulado
 }: QuestionsSectionProps) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -283,12 +285,6 @@ const QuestionsSection = ({
 
       if (error) {
         console.error('Error fetching questions:', error);
-        toast({
-          title: "❌",
-          description: "Erro ao carregar questões",
-          variant: "destructive",
-          duration: 2000
-        });
       } else {
         setQuestions(data || []);
         setAnswers({});
@@ -347,13 +343,6 @@ const QuestionsSection = ({
       saveSessionProgress();
     }, 100);
 
-    // Toast estratégico com emoji
-    toast({
-      title: isCorrect ? "🎉" : "❌",
-      description: "",
-      duration: 1500
-    });
-
     if (isCorrect) {
       setStreak(prev => {
         const newStreak = prev + 1;
@@ -403,8 +392,8 @@ const QuestionsSection = ({
   const pauseSimulado = () => {
     setIsPaused(true);
     toast({
-      title: "⏸️",
-      description: "Simulado pausado",
+      title: "⏸️ Simulado pausado",
+      description: "Clique em retomar para continuar",
       duration: 2000
     });
   };
@@ -414,6 +403,15 @@ const QuestionsSection = ({
     if (simuladoStartTime) {
       setSimuladoStartTime(Date.now() - simuladoTime * 1000);
     }
+    toast({
+      title: "▶️ Simulado retomado",
+      description: "Continue respondendo",
+      duration: 2000
+    });
+  };
+
+  const finishSimuladoEarly = async () => {
+    await finishSimulado();
   };
 
   const finishSimulado = async () => {
@@ -426,12 +424,10 @@ const QuestionsSection = ({
     const finalAreaStats = calculateAreaStats();
     setShowResults(true);
 
-    const passMessage = passed ? "🎉 Aprovado!" : "📚 Continue estudando!";
-    toast({
-      title: passMessage,
-      description: `${sessionStats.correct}/${sessionStats.total} (${percentage}%)`,
-      duration: 3000
-    });
+    // Esconder navegação para mostrar resultados
+    if (onHideNavigation) {
+      onHideNavigation(false);
+    }
   };
 
   const finishSession = async () => {
@@ -445,7 +441,7 @@ const QuestionsSection = ({
       setShowCelebration(true);
 
       toast({
-        title: "✅",
+        title: "✅ Sessão concluída",
         description: `${sessionStats.correct}/${sessionStats.total} (${percentage}%)`,
         duration: 2000
       });
@@ -530,7 +526,9 @@ const QuestionsSection = ({
         totalTime={simuladoTime}
         onClose={() => {
           setShowResults(false);
-          window.location.reload();
+          if (onFinishSimulado) {
+            onFinishSimulado();
+          }
         }}
       />
     );
@@ -564,9 +562,41 @@ const QuestionsSection = ({
 
   return (
     <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-0 px-[5px] py-0">
-      {/* Simulado Timer - mais discreto */}
+      {/* Simulado Controls & Timer */}
       {(isSimulado || isDailyChallenge) && (
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+          <div className="flex gap-2">
+            {isPaused ? (
+              <Button
+                onClick={resumeSimulado}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Play size={14} className="mr-1" />
+                Retomar
+              </Button>
+            ) : (
+              <Button
+                onClick={pauseSimulado}
+                size="sm"
+                variant="outline"
+                className="border-gray-600 text-gray-300 hover:bg-gray-800"
+              >
+                <Pause size={14} className="mr-1" />
+                Pausar
+              </Button>
+            )}
+            <Button
+              onClick={finishSimuladoEarly}
+              size="sm"
+              variant="outline"
+              className="border-red-600 text-red-400 hover:bg-red-900/20"
+            >
+              <Square size={14} className="mr-1" />
+              Encerrar
+            </Button>
+          </div>
+          
           <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50 text-xs">
             <Clock size={12} className="mr-1" />
             {formatTime(simuladoTime)}
