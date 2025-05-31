@@ -43,6 +43,11 @@ const StudySessionFinal = ({
     return () => clearInterval(timer);
   }, [sessionStartTime]);
 
+  // Scroll to top when question changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentQuestionIndex]);
+
   const fetchQuestions = async () => {
     setLoading(true);
     try {
@@ -59,7 +64,6 @@ const StudySessionFinal = ({
         query = query.eq('assunto', filters.assunto);
       }
 
-      // Remove the limit to allow all questions
       const { data, error } = await query;
 
       if (error) {

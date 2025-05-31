@@ -142,6 +142,21 @@ const HomeSection = ({
             Prepare-se para concursos jurídicos com questões comentadas, simulados e conteúdo atualizado
           </p>
           
+          {/* Hero CTA Button - Destacado */}
+          <div className="mb-8">
+            <Button 
+              onClick={handleRandomQuestions}
+              className="bg-gradient-to-r from-netflix-red to-red-700 hover:from-red-700 hover:to-red-800 text-white px-12 py-6 text-xl font-bold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105 hover:shadow-red-500/25 animate-pulse"
+            >
+              <Target className="mr-3 h-6 w-6" />
+              Iniciar Questões
+              <ChevronRight className="ml-3 h-6 w-6" />
+            </Button>
+            <p className="text-netflix-text-secondary text-sm mt-3">
+              Comece a estudar agora com questões aleatórias
+            </p>
+          </div>
+          
           {/* Quick Stats */}
           <div className="grid grid-cols-3 gap-4 mb-8">
             <div className="bg-netflix-card border border-netflix-border rounded-lg p-4 transition-all duration-200 hover:scale-105">
