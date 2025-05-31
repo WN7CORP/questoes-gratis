@@ -122,7 +122,7 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-netflix-black p-4">
+    <div className="bg-netflix-black p-4 pb-20">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6">

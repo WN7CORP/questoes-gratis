@@ -152,7 +152,9 @@ const Index = () => {
           </TabsContent>
           
           <TabsContent value="practice" className="h-full mt-0">
-            <QuestionsHome onHideNavigation={setHideNavigation} />
+            <div className="h-full overflow-y-auto">
+              <QuestionsHome onHideNavigation={setHideNavigation} />
+            </div>
           </TabsContent>
           
           <TabsContent value="areas" className="h-full mt-0">
