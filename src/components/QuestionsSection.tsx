@@ -6,6 +6,7 @@ import CelebrationModal from './CelebrationModal';
 import StreakCounter from './StreakCounter';
 import QuestionJustification from './QuestionJustification';
 import SimuladoResults from './SimuladoResults';
+import StudySession from './StudySession';
 import PlaylistCreator from './PlaylistCreator';
 import PlaylistManager from './PlaylistManager';
 import { Card } from "@/components/ui/card";
@@ -87,6 +88,9 @@ const QuestionsSection = ({
   const [showPlaylistCreator, setShowPlaylistCreator] = useState(false);
   const [showPlaylistManager, setShowPlaylistManager] = useState(false);
   const [activePlaylist, setActivePlaylist] = useState<any>(null);
+  const [showAreaStudySession, setShowAreaStudySession] = useState(false);
+  const [showAreaResults, setShowAreaResults] = useState(false);
+  const [areaStudyResults, setAreaStudyResults] = useState<any>(null);
   const questionCardRef = useRef<HTMLDivElement>(null);
   const areaColorScheme = selectedAreaFilter ? getAreaColors(selectedAreaFilter) : null;
 
@@ -306,6 +310,7 @@ const QuestionsSection = ({
     setLoading(true);
     try {
       let query = supabase.from('Questoes_Comentadas').select('*');
+      
       if (selectedAreaFilter) {
         query = query.eq('area', selectedAreaFilter);
       }
@@ -320,9 +325,14 @@ const QuestionsSection = ({
         query = query.not('resposta_correta', 'eq', 'ANULADA').limit(20);
       } else if (isSimulado && selectedExam) {
         query = query.order('numero', { ascending: true });
+      } else if (!selectedArea) {
+        // Para estudos normais (não de área específica), manter limite
+        query = query.limit(limit);
       }
-      query = query.limit(limit);
+      // Para área específica, não aplicar limite - buscar todas as questões
+
       const { data, error } = await query;
+      
       if (error) {
         console.error('Error fetching questions:', error);
       } else {
@@ -570,6 +580,58 @@ const QuestionsSection = ({
     }
   };
 
+  const handleAreaStudyStart = () => {
+    if (selectedArea) {
+      setShowAreaStudySession(true);
+    }
+  };
+
+  const handleAreaStudyComplete = (results: any) => {
+    setAreaStudyResults(results);
+    setShowAreaStudySession(false);
+    setShowAreaResults(true);
+    
+    // Salvar estatísticas
+    saveAreaStudySession(results);
+  };
+
+  const handleAreaStudyExit = () => {
+    setShowAreaStudySession(false);
+  };
+
+  const handleAreaResultsClose = () => {
+    setShowAreaResults(false);
+    setAreaStudyResults(null);
+    if (onHideNavigation) {
+      onHideNavigation(false);
+    }
+  };
+
+  const saveAreaStudySession = async (results: any) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('user_study_sessions')
+        .insert({
+          user_id: user.id,
+          mode: 'area_study',
+          area: selectedArea || null,
+          questions_answered: results.sessionStats.total,
+          correct_answers: results.sessionStats.correct,
+          total_time: results.totalTime,
+          completed_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error saving area study session:', error);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
   if (showResults && (isSimulado || isDailyChallenge)) {
     return <SimuladoResults 
       sessionStats={sessionStats} 
@@ -615,6 +677,36 @@ const QuestionsSection = ({
   const currentQuestion = questions[currentQuestionIndex];
   const isQuestionAnnulled = currentQuestion?.resposta_correta === 'ANULADA';
   const isQuestionAnswered = !!answers[currentQuestion.id];
+
+  // Se está em sessão de estudo de área
+  if (showAreaStudySession && selectedArea && questions.length > 0) {
+    return (
+      <StudySession
+        questions={questions}
+        onExit={handleAreaStudyExit}
+        onComplete={handleAreaStudyComplete}
+        title={`Estudando: ${selectedArea}`}
+        mode="area"
+      />
+    );
+  }
+
+  // Se está mostrando resultados de área
+  if (showAreaResults && areaStudyResults) {
+    return (
+      <SimuladoResults
+        sessionStats={areaStudyResults.sessionStats}
+        areaStats={areaStudyResults.areaStats}
+        previousAttempts={[]}
+        examInfo={{
+          exame: 'Estudo de Área',
+          ano: selectedArea
+        }}
+        totalTime={areaStudyResults.totalTime}
+        onClose={handleAreaResultsClose}
+      />
+    );
+  }
 
   return (
     <div id="questions-container" className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-0 py-0 px-0">
@@ -727,13 +819,18 @@ const QuestionsSection = ({
         </div>
       )}
 
-      {/* Enhanced Stats with Achievements */}
+      {/* Enhanced Stats with Area Study Info */}
       <Card className={`bg-netflix-card border-netflix-border p-3 sm:p-4 transition-all duration-300 hover:shadow-lg animate-fade-in ${areaColorScheme ? `border-l-4 ${areaColorScheme.border}` : ''}`}>
         <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
             <Badge variant="outline" className={`border-gray-600 text-gray-300 text-sm sm:text-lg font-bold px-2 sm:px-4 py-1 sm:py-2 transition-all duration-200 hover:scale-105 ${areaColorScheme ? areaColorScheme.bg : 'bg-gray-800'}`}>
               Questão {currentQuestionIndex + 1} de {questions.length}
             </Badge>
+            {selectedArea && (
+              <Badge variant="outline" className="border-green-600 text-green-300 bg-green-900/20 text-xs sm:text-sm">
+                Total: {questions.length} questões disponíveis
+              </Badge>
+            )}
             <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-800 text-xs sm:text-sm transition-all duration-200 hover:scale-105">
               Respondidas: {stats.answeredQuestions}
             </Badge>

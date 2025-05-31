@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import MinimalQuestionCard from './MinimalQuestionCard';
 import ProgressBar from './ProgressBar';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RotateCcw, Star } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Star, Trophy, CheckCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface Question {
   id: number;
@@ -24,13 +26,15 @@ interface Question {
 interface StudySessionProps {
   questions: Question[];
   onExit: () => void;
+  onComplete: (results: any) => void;
   title?: string;
-  mode?: 'practice' | 'favorites' | 'review';
+  mode?: 'practice' | 'favorites' | 'review' | 'area';
 }
 
 const StudySession = ({ 
   questions, 
   onExit, 
+  onComplete,
   title = "Sessão de Estudo",
   mode = 'practice'
 }: StudySessionProps) => {
@@ -51,35 +55,17 @@ const StudySession = ({
     setQuestionStartTime(Date.now());
   }, [currentIndex]);
 
-  // Função aprimorada para scroll suave
   const scrollToTop = () => {
     try {
-      // Tentar encontrar o container da sessão ou usar o body
       const container = document.getElementById('study-session-container') || document.body;
-      
       container.scrollIntoView({ 
         behavior: 'smooth', 
         block: 'start',
         inline: 'nearest'
       });
     } catch (error) {
-      // Fallback para navegadores antigos
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    
-    // Garantir que funcione após mudança de questão
-    setTimeout(() => {
-      try {
-        const container = document.getElementById('study-session-container') || document.body;
-        container.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start',
-          inline: 'nearest'
-        });
-      } catch (error) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }, 100);
   };
 
   const handleAnswer = (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
@@ -94,48 +80,52 @@ const StudySession = ({
       }
     }));
 
-    // Update streak
     if (isCorrect) {
       setStreak(prev => prev + 1);
     } else {
       setStreak(0);
     }
-
-    // Auto-advance after 2 seconds with improved scroll
-    setTimeout(() => {
-      if (!isLastQuestion) {
-        setCurrentIndex(prev => prev + 1);
-        // Scroll suave após mudança de questão
-        setTimeout(() => scrollToTop(), 50);
-      } else {
-        handleSessionComplete();
-      }
-    }, 2000);
   };
 
-  const handleSessionComplete = () => {
+  const handleComplete = () => {
     const accuracy = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
     
-    toast({
-      title: "Sessão Concluída!",
-      description: `Você acertou ${correctCount} de ${answeredCount} questões (${accuracy}%)`,
+    // Calcular estatísticas por área
+    const areaStats: Record<string, { correct: number; total: number; }> = {};
+    
+    questions.forEach(question => {
+      const answer = answers[question.id];
+      if (answer) {
+        if (!areaStats[question.area]) {
+          areaStats[question.area] = { correct: 0, total: 0 };
+        }
+        areaStats[question.area].total++;
+        if (answer.correct) {
+          areaStats[question.area].correct++;
+        }
+      }
     });
 
-    // Save session stats
-    saveSessionStats();
-  };
+    const areaStatsArray = Object.entries(areaStats).map(([area, data]) => ({
+      area,
+      correct: data.correct,
+      total: data.total,
+      percentage: Math.round((data.correct / data.total) * 100)
+    }));
 
-  const saveSessionStats = async () => {
-    // This would integrate with Supabase to save session statistics
-    console.log('Session stats:', {
-      mode,
-      totalQuestions: questions.length,
-      answeredCount,
-      correctCount,
-      totalTimeSpent,
-      accuracy: answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0,
+    const results = {
+      sessionStats: {
+        correct: correctCount,
+        total: answeredCount,
+        startTime: sessionStartTime
+      },
+      areaStats: areaStatsArray,
+      totalTime: totalTimeSpent,
+      accuracy,
       finalStreak: streak
-    });
+    };
+
+    onComplete(results);
   };
 
   const handlePrevious = () => {
@@ -158,10 +148,15 @@ const StudySession = ({
         return <Star className="text-yellow-500" size={20} />;
       case 'review':
         return <RotateCcw className="text-blue-500" size={20} />;
+      case 'area':
+        return <Trophy className="text-green-500" size={20} />;
       default:
         return null;
     }
   };
+
+  const allQuestionsAnswered = answeredCount === questions.length;
+  const canFinish = answeredCount > 0;
 
   return (
     <div id="study-session-container" className="min-h-screen bg-netflix-black text-white p-4">
@@ -171,7 +166,7 @@ const StudySession = ({
           <Button
             variant="ghost"
             onClick={onExit}
-            className="text-netflix-text-secondary hover:text-white"
+            className="text-netflix-text-secondary hover:text-white transition-all duration-200 hover:scale-105"
           >
             <ArrowLeft size={20} className="mr-2" />
             Voltar
@@ -183,18 +178,67 @@ const StudySession = ({
           </div>
           
           <div className="text-netflix-text-secondary text-sm">
-            Questão {currentIndex + 1} de {questions.length}
+            {currentIndex + 1} de {questions.length}
           </div>
         </div>
 
-        {/* Progress Bar with Achievements */}
-        <ProgressBar
-          current={answeredCount}
-          total={questions.length}
-          correct={correctCount}
-          timeSpent={totalTimeSpent}
-          streak={streak}
-        />
+        {/* Enhanced Progress with Finish Option */}
+        <div className="mb-6">
+          <ProgressBar
+            current={answeredCount}
+            total={questions.length}
+            correct={correctCount}
+            timeSpent={totalTimeSpent}
+            streak={streak}
+          />
+          
+          {/* Finish Button for Areas */}
+          {mode === 'area' && canFinish && (
+            <div className="mt-4 text-center">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg hover:scale-105 transition-all duration-200 mx-auto"
+                  >
+                    <CheckCircle size={20} />
+                    Finalizar e Ver Resultados
+                    {allQuestionsAnswered && (
+                      <span className="ml-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                        Completo!
+                      </span>
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-netflix-card border-netflix-border">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-white flex items-center gap-2">
+                      <Trophy className="text-green-500" size={24} />
+                      Finalizar Sessão?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-gray-400">
+                      Você respondeu {answeredCount} de {questions.length} questões ({Math.round((answeredCount / questions.length) * 100)}%).
+                      <br />
+                      <span className="text-green-400 font-medium">
+                        Taxa de acerto atual: {answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0}%
+                      </span>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600">
+                      Continuar Estudando
+                    </AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleComplete} 
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      Ver Resultados
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
+        </div>
 
         {/* Question Card */}
         {currentQuestion && (
@@ -207,32 +251,52 @@ const StudySession = ({
           </div>
         )}
 
-        {/* Navigation */}
-        <div className="flex justify-between items-center">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentIndex === 0}
-            className="border-netflix-border text-gray-300 hover:bg-gray-800"
+        {/* Enhanced Navigation */}
+        <div className="flex justify-between items-center gap-4">
+          <Button 
+            onClick={handlePrevious} 
+            disabled={currentIndex === 0} 
+            variant="outline" 
+            className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white disabled:opacity-50 transition-all duration-200 hover:scale-105 px-6 py-3"
           >
-            Anterior
+            ← Anterior
           </Button>
-
-          <div className="text-center">
-            <div className="text-netflix-text-secondary text-sm">
+          
+          <div className="text-center flex-1">
+            <div className="text-gray-400 text-sm mb-2">
               Progresso: {Math.round(((currentIndex + 1) / questions.length) * 100)}%
             </div>
+            <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+              <div 
+                className="h-3 rounded-full transition-all duration-500 bg-gradient-to-r from-netflix-red to-red-600" 
+                style={{
+                  width: `${((currentIndex + 1) / questions.length) * 100}%`
+                }} 
+              />
+            </div>
           </div>
-
-          <Button
-            variant="outline"
-            onClick={handleNext}
-            disabled={isLastQuestion}
-            className="border-netflix-border text-gray-300 hover:bg-gray-800"
+          
+          <Button 
+            onClick={handleNext} 
+            disabled={currentIndex === questions.length - 1} 
+            className="bg-netflix-red hover:bg-red-700 text-white disabled:opacity-50 transition-all duration-200 hover:scale-105 px-6 py-3"
           >
-            Próxima
+            Próxima →
           </Button>
         </div>
+
+        {/* Motivational Messages */}
+        {streak >= 5 && (
+          <div className="mt-6 p-4 bg-gradient-to-r from-green-900/30 to-green-800/30 border border-green-600/30 rounded-lg text-center animate-pulse">
+            <span className="text-green-400 font-bold">🔥 Sequência incrível de {streak} acertos! Continue assim!</span>
+          </div>
+        )}
+        
+        {answeredCount > 0 && answeredCount % 10 === 0 && (
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-900/30 to-blue-800/30 border border-blue-600/30 rounded-lg text-center">
+            <span className="text-blue-400 font-bold">🎯 Parabéns! Você já respondeu {answeredCount} questões!</span>
+          </div>
+        )}
       </div>
     </div>
   );

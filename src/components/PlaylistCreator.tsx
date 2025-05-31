@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { X, Plus, List } from 'lucide-react';
+import { X, Plus, List, BookOpen } from 'lucide-react';
 
 interface PlaylistCreatorProps {
   isVisible: boolean;
@@ -22,28 +22,19 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
-  const [selectedExams, setSelectedExams] = useState<string[]>([]);
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
-  const [questionCount, setQuestionCount] = useState(10);
+  const [questionCount, setQuestionCount] = useState(20);
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
 
-  const exams = ['OAB', 'ENEM', 'Concurso', 'Vestibular'];
-  const years = ['2023', '2022', '2021', '2020', '2019', '2018'];
+  // Anos do OAB (baseado nos dados históricos)
+  const oabYears = ['2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'];
 
   const handleAreaToggle = (area: string) => {
     setSelectedAreas(prev => 
       prev.includes(area) 
         ? prev.filter(a => a !== area)
         : [...prev, area]
-    );
-  };
-
-  const handleExamToggle = (exam: string) => {
-    setSelectedExams(prev => 
-      prev.includes(exam) 
-        ? prev.filter(e => e !== exam)
-        : [...prev, exam]
     );
   };
 
@@ -65,6 +56,15 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
       return;
     }
 
+    if (selectedAreas.length === 0) {
+      toast({
+        title: "Área necessária",
+        description: "Selecione pelo menos uma área do direito",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsCreating(true);
     
     try {
@@ -78,15 +78,14 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
         return;
       }
 
-      // Use a generic query to avoid TypeScript issues with new tables
       const { error } = await supabase
         .from('user_playlists' as any)
         .insert({
           user_id: user.id,
           name: name.trim(),
           description: description.trim() || null,
-          areas: selectedAreas.length > 0 ? selectedAreas : null,
-          exams: selectedExams.length > 0 ? selectedExams : null,
+          areas: selectedAreas,
+          exams: ['OAB'], // Sempre OAB
           years: selectedYears.length > 0 ? selectedYears : null,
           question_count: questionCount
         });
@@ -100,17 +99,11 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
         });
       } else {
         toast({
-          title: "Playlist criada!",
-          description: `A playlist "${name}" foi criada com sucesso.`
+          title: "Playlist criada com sucesso! 🎉",
+          description: `"${name}" foi criada para estudos do OAB.`
         });
         
-        // Reset form
-        setName('');
-        setDescription('');
-        setSelectedAreas([]);
-        setSelectedExams([]);
-        setSelectedYears([]);
-        setQuestionCount(10);
+        resetForm();
         onClose();
       }
     } catch (error) {
@@ -129,9 +122,24 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
     setName('');
     setDescription('');
     setSelectedAreas([]);
-    setSelectedExams([]);
     setSelectedYears([]);
-    setQuestionCount(10);
+    setQuestionCount(20);
+  };
+
+  const handleSelectAllAreas = () => {
+    if (selectedAreas.length === areas.length) {
+      setSelectedAreas([]);
+    } else {
+      setSelectedAreas([...areas]);
+    }
+  };
+
+  const handleSelectAllYears = () => {
+    if (selectedYears.length === oabYears.length) {
+      setSelectedYears([]);
+    } else {
+      setSelectedYears([...oabYears]);
+    }
   };
 
   return (
@@ -140,7 +148,7 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
             <List size={20} className="text-blue-500" />
-            Criar Nova Playlist
+            Criar Playlist de Estudos OAB
           </DialogTitle>
         </DialogHeader>
 
@@ -154,7 +162,7 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ex: Direito Constitucional - Revisão"
+                placeholder="Ex: Direito Constitucional - Revisão OAB"
                 className="bg-gray-800 border-gray-600 text-white"
                 maxLength={50}
               />
@@ -167,7 +175,7 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descreva o objetivo desta playlist..."
+                placeholder="Descreva o objetivo desta playlist de estudos..."
                 className="bg-gray-800 border-gray-600 text-white resize-none"
                 rows={3}
                 maxLength={200}
@@ -175,34 +183,59 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
             </div>
           </div>
 
+          {/* Tipo de Exame - Fixo OAB */}
+          <Card className="bg-blue-900/20 border-blue-600/30 p-4">
+            <h3 className="text-white font-medium mb-2 flex items-center gap-2">
+              <BookOpen size={18} className="text-blue-400" />
+              Tipo de Exame
+            </h3>
+            <div className="flex items-center gap-2">
+              <Badge className="bg-blue-600 text-white px-3 py-1">
+                OAB - Ordem dos Advogados do Brasil
+              </Badge>
+              <span className="text-blue-300 text-sm">
+                Playlists são especializadas para questões do OAB
+              </span>
+            </div>
+          </Card>
+
           {/* Quantidade de Questões */}
           <div>
             <label className="text-white text-sm font-medium mb-2 block">
-              Quantidade de Questões
+              Quantidade de Questões por Sessão
             </label>
             <Select value={questionCount.toString()} onValueChange={(value) => setQuestionCount(parseInt(value))}>
               <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-gray-600">
-                <SelectItem value="5">5 questões</SelectItem>
                 <SelectItem value="10">10 questões</SelectItem>
                 <SelectItem value="20">20 questões</SelectItem>
                 <SelectItem value="30">30 questões</SelectItem>
                 <SelectItem value="50">50 questões</SelectItem>
-                <SelectItem value="100">100 questões</SelectItem>
+                <SelectItem value="80">80 questões (Simulado)</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Áreas */}
+          {/* Áreas do Direito */}
           <Card className="bg-gray-800/50 border-gray-700 p-4">
-            <h3 className="text-white font-medium mb-3 flex items-center gap-2">
-              Áreas do Direito
-              <Badge variant="outline" className="text-xs">
-                {selectedAreas.length} selecionadas
-              </Badge>
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-white font-medium flex items-center gap-2">
+                Áreas do Direito
+                <Badge variant="outline" className="text-xs">
+                  {selectedAreas.length} selecionadas
+                </Badge>
+              </h3>
+              <Button
+                onClick={handleSelectAllAreas}
+                variant="ghost"
+                size="sm"
+                className="text-blue-400 hover:text-blue-300 text-xs"
+              >
+                {selectedAreas.length === areas.length ? 'Desmarcar Todas' : 'Selecionar Todas'}
+              </Button>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto">
               {areas.map((area) => (
                 <div key={area} className="flex items-center space-x-2">
@@ -237,58 +270,26 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
             )}
           </Card>
 
-          {/* Exames */}
+          {/* Anos do OAB */}
           <Card className="bg-gray-800/50 border-gray-700 p-4">
-            <h3 className="text-white font-medium mb-3 flex items-center gap-2">
-              Tipos de Exame
-              <Badge variant="outline" className="text-xs">
-                {selectedExams.length} selecionados
-              </Badge>
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {exams.map((exam) => (
-                <div key={exam} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`exam-${exam}`}
-                    checked={selectedExams.includes(exam)}
-                    onCheckedChange={() => handleExamToggle(exam)}
-                  />
-                  <label
-                    htmlFor={`exam-${exam}`}
-                    className="text-sm text-gray-300 cursor-pointer hover:text-white transition-colors"
-                  >
-                    {exam}
-                  </label>
-                </div>
-              ))}
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-white font-medium flex items-center gap-2">
+                Anos do OAB
+                <Badge variant="outline" className="text-xs">
+                  {selectedYears.length} selecionados
+                </Badge>
+              </h3>
+              <Button
+                onClick={handleSelectAllYears}
+                variant="ghost"
+                size="sm"
+                className="text-orange-400 hover:text-orange-300 text-xs"
+              >
+                {selectedYears.length === oabYears.length ? 'Desmarcar Todos' : 'Selecionar Todos'}
+              </Button>
             </div>
-            {selectedExams.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1">
-                {selectedExams.map((exam) => (
-                  <Badge
-                    key={exam}
-                    variant="outline"
-                    className="text-xs bg-green-900/30 border-green-600 text-green-300 cursor-pointer hover:bg-green-900/50"
-                    onClick={() => handleExamToggle(exam)}
-                  >
-                    {exam}
-                    <X size={12} className="ml-1" />
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </Card>
-
-          {/* Anos */}
-          <Card className="bg-gray-800/50 border-gray-700 p-4">
-            <h3 className="text-white font-medium mb-3 flex items-center gap-2">
-              Anos
-              <Badge variant="outline" className="text-xs">
-                {selectedYears.length} selecionados
-              </Badge>
-            </h3>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-              {years.map((year) => (
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              {oabYears.map((year) => (
                 <div key={year} className="flex items-center space-x-2">
                   <Checkbox
                     id={`year-${year}`}
@@ -319,7 +320,22 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
                 ))}
               </div>
             )}
+            <p className="text-gray-400 text-xs mt-2">
+              Se nenhum ano for selecionado, serão incluídas questões de todos os anos disponíveis.
+            </p>
           </Card>
+
+          {/* Resumo da Playlist */}
+          {selectedAreas.length > 0 && (
+            <Card className="bg-green-900/20 border-green-600/30 p-4">
+              <h4 className="text-green-300 font-medium mb-2">Resumo da Playlist:</h4>
+              <ul className="text-green-400 text-sm space-y-1">
+                <li>• {selectedAreas.length} área(s) do direito selecionada(s)</li>
+                <li>• {selectedYears.length > 0 ? selectedYears.length : 'Todos os'} ano(s) do OAB</li>
+                <li>• {questionCount} questões por sessão de estudo</li>
+              </ul>
+            </Card>
+          )}
 
           {/* Botões */}
           <div className="flex gap-3 pt-4">
@@ -339,7 +355,7 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
             </Button>
             <Button
               onClick={handleCreatePlaylist}
-              disabled={isCreating || !name.trim()}
+              disabled={isCreating || !name.trim() || selectedAreas.length === 0}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
             >
               {isCreating ? (
