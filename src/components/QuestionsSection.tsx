@@ -862,7 +862,7 @@ const QuestionsSection = ({
         />
       </div>
 
-      {/* Ver Comentário Button */}
+      {/* Ver Comentário Button - Restaurado */}
       {isQuestionAnswered && !isQuestionAnnulled && currentQuestion?.justificativa && (
         <div className="flex justify-center animate-fade-in">
           <Button 
@@ -875,13 +875,13 @@ const QuestionsSection = ({
         </div>
       )}
 
-      {/* Enhanced Navigation */}
+      {/* Enhanced Navigation com cores restauradas */}
       <div className="flex justify-between items-center gap-4 animate-fade-in mt-4">
         <Button 
           onClick={previousQuestion} 
           disabled={currentQuestionIndex === 0} 
           variant="outline" 
-          className={`border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 transition-all duration-200 hover:scale-105 ${areaColorScheme ? `${areaColorScheme.hover} ${areaColorScheme.border} border` : 'bg-gray-800'} text-sm px-4 py-3`}
+          className="border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 transition-all duration-200 hover:scale-105 text-sm px-4 py-3"
         >
           Anterior
         </Button>
@@ -902,8 +902,8 @@ const QuestionsSection = ({
         
         <Button 
           onClick={nextQuestion} 
-          disabled={!isQuestionAnnulled && currentQuestionIndex === questions.length - 1 && !answers[currentQuestion.id]} 
-          className={`${areaColorScheme ? `${areaColorScheme.primary} ${areaColorScheme.hover}` : 'bg-netflix-red hover:bg-red-700'} text-white disabled:opacity-50 transition-all duration-200 hover:scale-105 text-sm px-4 py-3`}
+          disabled={currentQuestionIndex === questions.length - 1 && !answers[currentQuestion.id] && !isQuestionAnnulled} 
+          className="bg-netflix-red hover:bg-red-700 text-white disabled:opacity-50 transition-all duration-200 hover:scale-105 text-sm px-4 py-3"
         >
           {currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Próxima'}
         </Button>
