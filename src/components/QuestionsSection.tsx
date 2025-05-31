@@ -1,8 +1,9 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { Question } from '@/types/question';
-import { transformSupabaseToQuestions } from '@/utils/questionTransform';
-import MinimalQuestionCard from './MinimalQuestionCard';
+import { QuestionFinal } from '@/types/questionFinal';
+import { transformSupabaseToQuestionsFinal } from '@/utils/questionFinalTransform';
+import QuestionCardFinal from './QuestionCardFinal';
 import StudyModeSelector from './StudyModeSelector';
 import CelebrationModal from './CelebrationModal';
 import StreakCounter from './StreakCounter';
@@ -29,12 +30,14 @@ interface QuestionsSectionProps {
   onHideNavigation?: (hide: boolean) => void;
   randomizeQuestions?: boolean;
 }
+
 interface AreaStats {
   area: string;
   correct: number;
   total: number;
   percentage: number;
 }
+
 const QuestionsSection = ({
   selectedArea,
   selectedExam,
@@ -46,7 +49,7 @@ const QuestionsSection = ({
   onHideNavigation,
   randomizeQuestions = false
 }: QuestionsSectionProps) => {
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<QuestionFinal[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, {
@@ -83,9 +86,7 @@ const QuestionsSection = ({
   const questionCardRef = useRef<HTMLDivElement>(null);
   const areaColorScheme = selectedAreaFilter ? getAreaColors(selectedAreaFilter) : null;
 
-  // Função aprimorada para scroll suave para o topo
   const scrollToTop = () => {
-    // Método principal usando scrollIntoView
     const target = document.getElementById('questions-container') || document.body;
     
     try {
@@ -95,11 +96,9 @@ const QuestionsSection = ({
         inline: 'nearest'
       });
     } catch (error) {
-      // Fallback para navegadores antigos
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     
-    // Garantir que funcione após atualização do DOM
     setTimeout(() => {
       try {
         target.scrollIntoView({ 
@@ -112,7 +111,6 @@ const QuestionsSection = ({
       }
     }, 100);
     
-    // Backup final
     requestAnimationFrame(() => {
       try {
         target.scrollIntoView({ 
@@ -166,7 +164,6 @@ const QuestionsSection = ({
     }
   }, [isSimulado, isDailyChallenge, isPaused, simuladoStartTime]);
 
-  // Scroll melhorado quando a questão atual muda
   useEffect(() => {
     scrollToTop();
   }, [currentQuestionIndex]);
@@ -298,27 +295,22 @@ const QuestionsSection = ({
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      let query = supabase.from('Questoes_Comentadas').select('*');
+      let query = supabase.from('QUESTOES_FINAL').select('*');
       
       if (selectedAreaFilter) {
         query = query.eq('area', selectedAreaFilter);
       }
       if (selectedExam) {
-        query = query.eq('exame', selectedExam);
-      }
-      if (selectedYear) {
-        query = query.eq('ano', selectedYear);
+        query = query.eq('aplicada_em', selectedExam);
       }
 
       if (isDailyChallenge) {
         query = query.not('resposta_correta', 'eq', 'ANULADA').limit(20);
       } else if (isSimulado && selectedExam) {
-        query = query.order('numero', { ascending: true });
+        query = query.order('numero_questao', { ascending: true });
       } else if (!selectedArea) {
-        // Para estudos normais (não de área específica), manter limite
         query = query.limit(limit);
       }
-      // Para área específica, não aplicar limite - buscar todas as questões
 
       const { data, error } = await query;
       
@@ -327,10 +319,8 @@ const QuestionsSection = ({
       } else {
         let questionsData = data || [];
         
-        // Transformar dados do Supabase para o tipo Question
-        const transformedQuestions = transformSupabaseToQuestions(questionsData);
+        const transformedQuestions = transformSupabaseToQuestionsFinal(questionsData);
         
-        // Aplicar aleatorização se necessário (não para simulados)
         if (randomizeQuestions && !isSimulado && !isDailyChallenge) {
           transformedQuestions.sort(() => Math.random() - 0.5);
         }
@@ -355,7 +345,7 @@ const QuestionsSection = ({
   const fetchAreas = async () => {
     try {
       const { data, error } = await supabase
-        .from('Questoes_Comentadas')
+        .from('QUESTOES_FINAL')
         .select('area')
         .not('area', 'is', null);
       if (error) {
@@ -497,21 +487,6 @@ const QuestionsSection = ({
     return { answeredQuestions, correctAnswers, percentage };
   };
 
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (sessionStats.total > 0) {
-        saveSessionProgress();
-      }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      if (sessionStats.total > 0) {
-        saveSessionProgress();
-      }
-    };
-  }, [sessionStats, currentSessionId]);
-
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -526,33 +501,25 @@ const QuestionsSection = ({
     console.log('Starting playlist:', playlist);
     setActivePlaylist(playlist);
     
-    // Apply playlist filters and fetch questions
     setSelectedAreaFilter(playlist.areas?.[0] || '');
     setStudyMode('all');
     
-    // Update the limit based on playlist settings
     const playlistLimit = playlist.question_count || 10;
     
-    // Fetch questions with playlist criteria
     fetchQuestionsWithPlaylistFilters(playlist, playlistLimit);
   };
 
   const fetchQuestionsWithPlaylistFilters = async (playlist: any, playlistLimit: number) => {
     setLoading(true);
     try {
-      let query = supabase.from('Questoes_Comentadas').select('*');
+      let query = supabase.from('QUESTOES_FINAL').select('*');
       
-      // Apply playlist filters
       if (playlist.areas && playlist.areas.length > 0) {
         query = query.in('area', playlist.areas);
       }
       
       if (playlist.exams && playlist.exams.length > 0) {
-        query = query.in('exame', playlist.exams);
-      }
-      
-      if (playlist.years && playlist.years.length > 0) {
-        query = query.in('ano', playlist.years);
+        query = query.in('aplicada_em', playlist.exams);
       }
 
       query = query.limit(playlistLimit);
@@ -562,8 +529,7 @@ const QuestionsSection = ({
       if (error) {
         console.error('Error fetching playlist questions:', error);
       } else {
-        // Transformar dados do Supabase para o tipo Question
-        const transformedQuestions = transformSupabaseToQuestions(data || []);
+        const transformedQuestions = transformSupabaseToQuestionsFinal(data || []);
         
         setQuestions(transformedQuestions);
         setAnswers({});
@@ -592,7 +558,6 @@ const QuestionsSection = ({
     setShowAreaStudySession(false);
     setShowAreaResults(true);
     
-    // Calculate results
     const results = {
       sessionStats,
       areaStats: calculateAreaStats(),
@@ -601,7 +566,6 @@ const QuestionsSection = ({
     
     setAreaStudyResults(results);
     
-    // Save statistics
     saveAreaStudySession(results);
   };
 
@@ -623,7 +587,6 @@ const QuestionsSection = ({
     if (onHideNavigation) {
       onHideNavigation(false);
     }
-    // Redirect to areas selection - this will be handled by parent component
     window.location.hash = '#areas';
   };
 
@@ -699,7 +662,6 @@ const QuestionsSection = ({
   const isQuestionAnswered = !!answers[currentQuestion.id];
   const canFinish = stats.answeredQuestions > 0;
 
-  // Se está em sessão de estudo de área
   if (showAreaStudySession && selectedArea && questions.length > 0) {
     return (
       <StudySession
@@ -712,7 +674,6 @@ const QuestionsSection = ({
     );
   }
 
-  // Se está mostrando resultados de área OU resultados de estudo normal com área selecionada
   if (showResults && (isSimulado || isDailyChallenge || (selectedArea && randomizeQuestions))) {
     return (
       <SimuladoResults
@@ -748,7 +709,6 @@ const QuestionsSection = ({
 
   return (
     <div id="questions-container" className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-0 py-0 px-0">
-      {/* Simulado Controls - Timer and Pause/Finish buttons */}
       {(isSimulado || isDailyChallenge) && (
         <div className="flex justify-between items-center animate-fade-in">
           <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50 text-xs">
@@ -796,7 +756,6 @@ const QuestionsSection = ({
         </div>
       )}
 
-      {/* Study Mode Selector com Playlist */}
       {!isSimulado && !isDailyChallenge && (
         <div className="animate-fade-in">
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
@@ -812,7 +771,6 @@ const QuestionsSection = ({
               />
             </div>
             
-            {/* Playlist Controls */}
             <div className="flex gap-2">
               <Button
                 onClick={() => setShowPlaylistCreator(true)}
@@ -857,7 +815,6 @@ const QuestionsSection = ({
         </div>
       )}
 
-      {/* Enhanced Stats with Area Study Info and Finish Button */}
       <Card className={`bg-netflix-card border-netflix-border p-3 sm:p-4 transition-all duration-300 hover:shadow-lg animate-fade-in ${areaColorScheme ? `border-l-4 ${areaColorScheme.border}` : ''}`}>
         <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-4 mb-3">
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
@@ -892,7 +849,6 @@ const QuestionsSection = ({
           <StreakCounter streak={streak} showAnimation={showStreakAnimation} />
         </div>
 
-        {/* Botão Finalizar para estudos de área */}
         {canFinish && !isSimulado && !isDailyChallenge && selectedArea && (
           <div className="flex justify-center mb-3">
             <AlertDialog>
@@ -937,17 +893,16 @@ const QuestionsSection = ({
         )}
       </Card>
 
-      {/* Question */}
       <div ref={questionCardRef} className={`transition-all duration-500 animate-fade-in ${isQuestionAnnulled ? 'opacity-50 pointer-events-none' : ''}`}>
-        <MinimalQuestionCard 
+        <QuestionCardFinal 
           question={currentQuestion} 
           onAnswer={handleAnswer} 
-          isAnswered={isQuestionAnswered} 
-          isAnnulled={isQuestionAnnulled} 
+          showQuestionNumber={true}
+          currentQuestion={currentQuestionIndex + 1}
+          totalQuestions={questions.length}
         />
       </div>
 
-      {/* Ver Comentário Button */}
       {isQuestionAnswered && !isQuestionAnnulled && currentQuestion?.justificativa && (
         <div className="flex justify-center animate-fade-in">
           <Button 
@@ -960,7 +915,6 @@ const QuestionsSection = ({
         </div>
       )}
 
-      {/* Enhanced Navigation */}
       <div className="flex justify-between items-center gap-4 animate-fade-in mt-4">
         <Button 
           onClick={previousQuestion} 
@@ -994,7 +948,6 @@ const QuestionsSection = ({
         </Button>
       </div>
 
-      {/* Modals */}
       <QuestionJustification 
         justification={currentJustification} 
         isVisible={showJustification} 
