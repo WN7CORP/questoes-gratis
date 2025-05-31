@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,13 +6,16 @@ import { Scale, BookOpen, ArrowRight, Target, TrendingUp, Play } from 'lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import StudySessionFinal from './StudySessionFinal';
 import { getAreaColors } from '../utils/areaColors';
+
 interface AreaCount {
   area: string;
   count: number;
 }
+
 interface StudyAreasProps {
   onHideNavigation?: (hide: boolean) => void;
 }
+
 const StudyAreas = ({
   onHideNavigation
 }: StudyAreasProps) => {
@@ -20,9 +23,12 @@ const StudyAreas = ({
   const [loading, setLoading] = useState(true);
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [showStudySession, setShowStudySession] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     fetchAreas();
   }, []);
+
   const fetchAreas = async () => {
     setLoading(true);
     try {
@@ -51,18 +57,39 @@ const StudyAreas = ({
       setLoading(false);
     }
   };
+
   const handleAreaSelect = (area: string) => {
     setSelectedArea(area);
     setShowStudySession(true);
     onHideNavigation?.(true);
+    
+    // Scroll to top when area is selected
+    setTimeout(() => {
+      if (containerRef.current) {
+        containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      // Also scroll the main window as fallback
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
+
   const handleBackToAreas = () => {
     setShowStudySession(false);
     setSelectedArea('');
     onHideNavigation?.(false);
+    
+    // Scroll to top when returning to areas list
+    setTimeout(() => {
+      if (containerRef.current) {
+        containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
+
   if (showStudySession) {
-    return <div className="h-full overflow-y-auto bg-netflix-black">
+    return (
+      <div className="h-full overflow-y-auto bg-netflix-black" ref={containerRef}>
         <div className="p-3 sm:p-6 px-0">
           <div className="flex items-center gap-2 sm:gap-4 mb-4 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-gray-800/40 to-gray-700/20 border border-gray-600/30 backdrop-blur-sm animate-fade-in shadow-lg">
             <button onClick={handleBackToAreas} className="group flex items-center gap-2 text-gray-400 hover:text-white transition-all duration-300 text-sm sm:text-base bg-gray-700/50 hover:bg-gray-600/50 px-3 py-2 rounded-lg border border-gray-600/50 hover:border-gray-500/50 hover:scale-105">
@@ -89,19 +116,26 @@ const StudyAreas = ({
             </div>
           </div>
           
-          <StudySessionFinal filters={{
-          area: selectedArea
-        }} onExit={handleBackToAreas} />
+          <StudySessionFinal 
+            filters={{ area: selectedArea }} 
+            onExit={handleBackToAreas} 
+          />
         </div>
-      </div>;
+      </div>
+    );
   }
+
   if (loading) {
-    return <div className="flex items-center justify-center py-12">
+    return (
+      <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-netflix-red"></div>
         <div className="text-gray-400 ml-4 text-sm sm:text-base">Carregando áreas...</div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="h-full overflow-y-auto bg-netflix-black p-3 sm:p-6">
+
+  return (
+    <div className="h-full overflow-y-auto bg-netflix-black p-3 sm:p-6" ref={containerRef}>
       {/* Header Mobile Optimized */}
       <div className="mb-6 sm:mb-8 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
@@ -131,10 +165,14 @@ const StudyAreas = ({
       {/* Areas Grid Mobile Optimized */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {areas.map((area, index) => {
-        const colorScheme = getAreaColors(area.area);
-        return <Card key={area.area} className={`${colorScheme.bg} ${colorScheme.border} border-l-4 p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group animate-fade-in relative overflow-hidden`} style={{
-          animationDelay: `${index * 50}ms`
-        }} onClick={() => handleAreaSelect(area.area)}>
+          const colorScheme = getAreaColors(area.area);
+          return (
+            <Card 
+              key={area.area} 
+              className={`${colorScheme.bg} ${colorScheme.border} border-l-4 p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group animate-fade-in relative overflow-hidden`} 
+              style={{ animationDelay: `${index * 50}ms` }} 
+              onClick={() => handleAreaSelect(area.area)}
+            >
               <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/20 group-hover:to-black/30 transition-all duration-300"></div>
               
               <div className="relative z-10">
@@ -160,19 +198,19 @@ const StudyAreas = ({
                 </div>
 
                 <div className="mt-3 w-full bg-gray-700/50 rounded-full h-1 overflow-hidden">
-                  <div className={`h-1 ${colorScheme.primary} transition-all duration-500 group-hover:w-full`} style={{
-                width: '0%'
-              }} />
+                  <div 
+                    className={`h-1 ${colorScheme.primary} transition-all duration-500 group-hover:w-full`} 
+                    style={{ width: '0%' }} 
+                  />
                 </div>
               </div>
-            </Card>;
-      })}
+            </Card>
+          );
+        })}
       </div>
 
       {/* Stats Footer Mobile Optimized */}
-      <div className="mt-8 sm:mt-12 p-4 sm:p-6 bg-gradient-to-r from-netflix-red/10 to-red-800/10 border border-netflix-red/20 rounded-lg animate-fade-in" style={{
-      animationDelay: '600ms'
-    }}>
+      <div className="mt-8 sm:mt-12 p-4 sm:p-6 bg-gradient-to-r from-netflix-red/10 to-red-800/10 border border-netflix-red/20 rounded-lg animate-fade-in" style={{ animationDelay: '600ms' }}>
         <div className="text-center">
           <h3 className="text-white font-bold text-base sm:text-lg mb-2 flex items-center justify-center gap-2">
             <Target className="text-netflix-red" size={18} />
@@ -188,6 +226,8 @@ const StudyAreas = ({
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default StudyAreas;
