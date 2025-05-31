@@ -607,6 +607,16 @@ const QuestionsSection = ({
     }
   };
 
+  const handleChooseNewArea = () => {
+    setShowAreaResults(false);
+    setAreaStudyResults(null);
+    if (onHideNavigation) {
+      onHideNavigation(false);
+    }
+    // Redirect to areas selection - this will be handled by parent component
+    window.location.hash = '#areas';
+  };
+
   const saveAreaStudySession = async (results: any) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -704,6 +714,7 @@ const QuestionsSection = ({
         }}
         totalTime={areaStudyResults.totalTime}
         onClose={handleAreaResultsClose}
+        onChooseNewArea={handleChooseNewArea}
       />
     );
   }

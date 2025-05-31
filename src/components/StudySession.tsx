@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import MinimalQuestionCard from './MinimalQuestionCard';
 import ProgressBar from './ProgressBar';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RotateCcw, Star, Trophy, CheckCircle } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Star, Trophy, CheckCircle, Flag } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -192,15 +192,15 @@ const StudySession = ({
             streak={streak}
           />
           
-          {/* Finish Button for Areas */}
-          {mode === 'area' && canFinish && (
+          {/* Finish Button - Always available when there are answered questions */}
+          {canFinish && (
             <div className="mt-4 text-center">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button 
                     className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg hover:scale-105 transition-all duration-200 mx-auto"
                   >
-                    <CheckCircle size={20} />
+                    <Flag size={20} />
                     Finalizar e Ver Resultados
                     {allQuestionsAnswered && (
                       <span className="ml-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
@@ -213,19 +213,35 @@ const StudySession = ({
                   <AlertDialogHeader>
                     <AlertDialogTitle className="text-white flex items-center gap-2">
                       <Trophy className="text-green-500" size={24} />
-                      Finalizar Sessão?
+                      {allQuestionsAnswered ? 'Sessão Completa!' : 'Finalizar Sessão?'}
                     </AlertDialogTitle>
                     <AlertDialogDescription className="text-gray-400">
-                      Você respondeu {answeredCount} de {questions.length} questões ({Math.round((answeredCount / questions.length) * 100)}%).
-                      <br />
-                      <span className="text-green-400 font-medium">
-                        Taxa de acerto atual: {answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0}%
-                      </span>
+                      {allQuestionsAnswered ? (
+                        <>
+                          Parabéns! Você respondeu todas as {questions.length} questões desta área.
+                          <br />
+                          <span className="text-green-400 font-medium">
+                            Taxa de acerto: {answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0}%
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          Você respondeu {answeredCount} de {questions.length} questões ({Math.round((answeredCount / questions.length) * 100)}%).
+                          <br />
+                          <span className="text-green-400 font-medium">
+                            Taxa de acerto atual: {answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0}%
+                          </span>
+                          <br />
+                          <span className="text-yellow-400 text-sm">
+                            Você pode continuar estudando ou ver seus resultados agora.
+                          </span>
+                        </>
+                      )}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600">
-                      Continuar Estudando
+                      {allQuestionsAnswered ? 'Revisar' : 'Continuar Estudando'}
                     </AlertDialogCancel>
                     <AlertDialogAction 
                       onClick={handleComplete} 
@@ -295,6 +311,19 @@ const StudySession = ({
         {answeredCount > 0 && answeredCount % 10 === 0 && (
           <div className="mt-6 p-4 bg-gradient-to-r from-blue-900/30 to-blue-800/30 border border-blue-600/30 rounded-lg text-center">
             <span className="text-blue-400 font-bold">🎯 Parabéns! Você já respondeu {answeredCount} questões!</span>
+          </div>
+        )}
+
+        {/* Progress Motivation */}
+        {answeredCount > 0 && (
+          <div className="mt-4 text-center">
+            <p className="text-gray-400 text-sm">
+              {answeredCount < questions.length ? (
+                <>Restam {questions.length - answeredCount} questões • Continue focado! 💪</>
+              ) : (
+                <>🎉 Todas as questões respondidas! Clique em "Finalizar" para ver seus resultados.</>
+              )}
+            </p>
           </div>
         )}
       </div>
