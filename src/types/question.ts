@@ -15,5 +15,5 @@ export interface Question {
   resposta_correta: string;
   justificativa: string;
   banca: string;
-  questao?: string; // Made this optional to match usage and fix the build error
+  questao: string; // Made this required again to fix the type error
 }
