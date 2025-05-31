@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Scale, BookOpen, ArrowRight, Target, TrendingUp, Play } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
-import QuestionsSection from './QuestionsSection';
+import StudySessionFinal from './StudySessionFinal';
 import { getAreaColors } from '../utils/areaColors';
 
 interface AreaCount {
@@ -23,7 +23,7 @@ const StudyAreas = ({
   const [areas, setAreas] = useState<AreaCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedArea, setSelectedArea] = useState<string>('');
-  const [showQuestions, setShowQuestions] = useState(false);
+  const [showStudySession, setShowStudySession] = useState(false);
 
   useEffect(() => {
     fetchAreas();
@@ -33,7 +33,7 @@ const StudyAreas = ({
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('Questoes_Comentadas')
+        .from('QUESTOES_FINAL')
         .select('area')
         .not('area', 'is', null);
 
@@ -62,22 +62,20 @@ const StudyAreas = ({
 
   const handleAreaSelect = (area: string) => {
     setSelectedArea(area);
-    setShowQuestions(true);
+    setShowStudySession(true);
+    onHideNavigation?.(true);
   };
 
   const handleBackToAreas = () => {
-    setShowQuestions(false);
+    setShowStudySession(false);
     setSelectedArea('');
-    if (onHideNavigation) {
-      onHideNavigation(false);
-    }
+    onHideNavigation?.(false);
   };
 
-  if (showQuestions) {
+  if (showStudySession) {
     return (
       <div className="h-full overflow-y-auto bg-netflix-black">
         <div className="p-3 sm:p-6">
-          {/* Header mais elegante e responsivo */}
           <div className="flex items-center gap-2 sm:gap-4 mb-4 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-gray-800/40 to-gray-700/20 border border-gray-600/30 backdrop-blur-sm animate-fade-in shadow-lg">
             <button 
               onClick={handleBackToAreas} 
@@ -111,12 +109,9 @@ const StudyAreas = ({
             </div>
           </div>
           
-          <QuestionsSection 
-            selectedArea={selectedArea} 
-            onHideNavigation={onHideNavigation}
-            limit={1000}
-            showFilters={false}
-            randomizeQuestions={true}
+          <StudySessionFinal 
+            filters={{ area: selectedArea }}
+            onExit={handleBackToAreas}
           />
         </div>
       </div>

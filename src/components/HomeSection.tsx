@@ -1,35 +1,23 @@
+
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Scale, Target, Trophy, TrendingUp, Clock, ChevronRight, Play, Zap, Award, Users, FileText } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
-import QuestionsSection from './QuestionsSection';
+import StudySessionFinal from './StudySessionFinal';
 import DailyChallenge from './DailyChallenge';
 import OabTipsCarousel from './OabTipsCarousel';
 import { useToast } from "@/hooks/use-toast";
-interface Question {
-  id: number;
-  ano: string;
-  exame: string;
-  area: string;
-  numero: string;
-  enunciado: string;
-  alternativa_a: string;
-  alternativa_b: string;
-  alternativa_c: string;
-  alternativa_d: string;
-  resposta_correta: string;
-  justificativa: string;
-  banca: string;
-}
+
 interface HomeSectionProps {
   onHideNavigation?: (hide: boolean) => void;
 }
+
 const HomeSection = ({
   onHideNavigation
 }: HomeSectionProps) => {
-  const [showQuestions, setShowQuestions] = useState(false);
+  const [showStudySession, setShowStudySession] = useState(false);
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [showRandomQuestions, setShowRandomQuestions] = useState(false);
   const [showSimulado, setShowSimulado] = useState(false);
@@ -39,23 +27,24 @@ const HomeSection = ({
     totalAreas: 0,
     totalExams: 0
   });
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   useEffect(() => {
     fetchStats();
   }, []);
+
   const fetchStats = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('Questoes_Comentadas').select('area, exame, ano');
+      const { data, error } = await supabase
+        .from('QUESTOES_FINAL')
+        .select('area, aplicada_em');
+
       if (error) {
         console.error('Error fetching stats:', error);
       } else {
         const uniqueAreas = new Set(data?.map(item => item.area).filter(Boolean));
-        const uniqueExams = new Set(data?.map(item => `${item.exame}-${item.ano}`).filter(item => !item.includes('null')));
+        const uniqueExams = new Set(data?.map(item => item.aplicada_em).filter(item => item && !item.includes('null')));
+
         setStats({
           totalQuestions: data?.length || 0,
           totalAreas: uniqueAreas.size,
@@ -66,46 +55,54 @@ const HomeSection = ({
       console.error('Error:', error);
     }
   };
+
   const handleAreaSelect = (area: string) => {
     setSelectedArea(area);
-    setShowQuestions(true);
+    setShowStudySession(true);
     setShowRandomQuestions(false);
     setShowSimulado(false);
     setShowDailyChallenge(false);
+    onHideNavigation?.(true);
   };
+
   const handleRandomQuestions = () => {
     setSelectedArea('');
     setShowRandomQuestions(true);
-    setShowQuestions(true);
+    setShowStudySession(true);
     setShowSimulado(false);
     setShowDailyChallenge(false);
+    onHideNavigation?.(true);
   };
+
   const handleSimuladoAccess = () => {
     setShowSimulado(true);
-    setShowQuestions(false);
+    setShowStudySession(false);
     setShowRandomQuestions(false);
     setShowDailyChallenge(false);
   };
+
   const handleDailyChallenge = () => {
     setShowDailyChallenge(true);
-    setShowQuestions(true);
+    setShowStudySession(true);
     setShowRandomQuestions(false);
     setShowSimulado(false);
     setSelectedArea('');
+    onHideNavigation?.(true);
   };
+
   const handleBackToHome = () => {
-    setShowQuestions(false);
+    setShowStudySession(false);
     setShowRandomQuestions(false);
     setSelectedArea('');
     setShowDailyChallenge(false);
-    // Mostrar menu novamente quando voltar para o início
-    if (onHideNavigation) {
-      onHideNavigation(false);
-    }
+    onHideNavigation?.(false);
   };
+
   const popularAreas = ['Direito Constitucional', 'Direito Civil', 'Direito Penal', 'Direito Processual Civil', 'Direito do Trabalho', 'Direito Administrativo'];
-  if (showQuestions && !showSimulado) {
-    return <div className="h-full overflow-y-auto bg-netflix-black">
+
+  if (showStudySession && !showSimulado) {
+    return (
+      <div className="h-full overflow-y-auto bg-netflix-black">
         <div className="p-6 px-[6px]">
           <div className="flex items-center gap-4 mb-6 p-4 rounded-lg bg-gray-800 border-l-4 border-netflix-red animate-fade-in">
             <button 
@@ -119,16 +116,17 @@ const HomeSection = ({
             </h1>
           </div>
           
-          <QuestionsSection 
-            selectedArea={showRandomQuestions ? undefined : selectedArea} 
-            limit={showDailyChallenge ? 20 : showRandomQuestions ? 10 : 20} 
-            isDailyChallenge={showDailyChallenge} 
-            onHideNavigation={onHideNavigation} 
+          <StudySessionFinal 
+            filters={showRandomQuestions ? {} : selectedArea ? { area: selectedArea } : {}}
+            onExit={handleBackToHome}
           />
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="h-full overflow-y-auto bg-netflix-black">
+
+  return (
+    <div className="h-full overflow-y-auto bg-netflix-black">
       {/* Hero Section */}
       <div className="relative p-6 pb-8 animate-fade-in">
         <div className="max-w-4xl mx-auto text-center">
@@ -215,9 +213,15 @@ const HomeSection = ({
               Escolha uma área do direito e pratique questões específicas para fortalecer seus conhecimentos.
             </p>
             <div className="flex flex-wrap gap-2">
-              {popularAreas.slice(0, 3).map(area => <button key={area} onClick={() => handleAreaSelect(area)} className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-200 px-3 py-1 rounded-full text-xs transition-colors">
+              {popularAreas.slice(0, 3).map(area => (
+                <button 
+                  key={area} 
+                  onClick={() => handleAreaSelect(area)} 
+                  className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-200 px-3 py-1 rounded-full text-xs transition-colors"
+                >
                   {area}
-                </button>)}
+                </button>
+              ))}
             </div>
           </Card>
 
@@ -339,6 +343,8 @@ const HomeSection = ({
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default HomeSection;
