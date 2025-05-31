@@ -193,6 +193,7 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
           <QuestionFiltersComponent
             onFiltersChange={setSelectedFilters}
             totalQuestions={totalQuestions}
+            onStartStudy={handleStartStudy}
           />
         </div>
 
