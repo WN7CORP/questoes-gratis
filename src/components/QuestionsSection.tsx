@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Question } from '@/types/question';
+import { transformSupabaseToQuestions } from '@/utils/questionTransform';
 import MinimalQuestionCard from './MinimalQuestionCard';
 import StudyModeSelector from './StudyModeSelector';
 import CelebrationModal from './CelebrationModal';
@@ -326,12 +327,15 @@ const QuestionsSection = ({
       } else {
         let questionsData = data || [];
         
+        // Transformar dados do Supabase para o tipo Question
+        const transformedQuestions = transformSupabaseToQuestions(questionsData);
+        
         // Aplicar aleatorização se necessário (não para simulados)
         if (randomizeQuestions && !isSimulado && !isDailyChallenge) {
-          questionsData = [...questionsData].sort(() => Math.random() - 0.5);
+          transformedQuestions.sort(() => Math.random() - 0.5);
         }
         
-        setQuestions(questionsData);
+        setQuestions(transformedQuestions);
         setAnswers({});
         setCurrentQuestionIndex(0);
         setStreak(0);
@@ -558,7 +562,10 @@ const QuestionsSection = ({
       if (error) {
         console.error('Error fetching playlist questions:', error);
       } else {
-        setQuestions(data || []);
+        // Transformar dados do Supabase para o tipo Question
+        const transformedQuestions = transformSupabaseToQuestions(data || []);
+        
+        setQuestions(transformedQuestions);
         setAnswers({});
         setCurrentQuestionIndex(0);
         setStreak(0);

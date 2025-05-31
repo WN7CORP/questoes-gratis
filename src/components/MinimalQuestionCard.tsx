@@ -3,24 +3,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Scale, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Question } from '@/types/question';
 import AnswerFeedback from './AnswerFeedback';
 import FavoritesManager from './FavoritesManager';
-
-interface Question {
-  id: number;
-  ano: string;
-  exame: string;
-  area: string;
-  numero: string;
-  enunciado: string;
-  alternativa_a: string;
-  alternativa_b: string;
-  alternativa_c: string;
-  alternativa_d: string;
-  resposta_correta: string;
-  justificativa: string;
-  banca: string;
-}
 
 interface MinimalQuestionCardProps {
   question: Question;

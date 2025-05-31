@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Question } from '@/types/question';
+import { transformSupabaseToQuestions } from '@/utils/questionTransform';
 import { supabase } from '@/integrations/supabase/client';
 import QuestionCard from './QuestionCard';
 import Options from './Options';
@@ -73,15 +74,11 @@ const StudySession = ({
       if (error) {
         console.error('Error fetching questions:', error);
       } else {
-        // Transform data to match Question interface
-        const transformedData = data?.map(item => ({
-          ...item,
-          resposta: item.resposta_correta,
-          opcoes: [item.alternativa_a, item.alternativa_b, item.alternativa_c, item.alternativa_d]
-        })) || [];
+        // Transformar dados do Supabase para o tipo Question
+        const transformedQuestions = transformSupabaseToQuestions(data || []);
         
         // Randomize questions
-        const shuffledQuestions = transformedData.sort(() => Math.random() - 0.5);
+        const shuffledQuestions = transformedQuestions.sort(() => Math.random() - 0.5);
         setQuestions(shuffledQuestions);
       }
     } catch (error) {
