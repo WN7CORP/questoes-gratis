@@ -4263,6 +4263,60 @@ export type Database = {
         }
         Relationships: []
       }
+      QUESTOES_FINAL: {
+        Row: {
+          A: string | null
+          alternativa_correta: string | null
+          aplicada_em: string | null
+          area: string | null
+          assunto: string | null
+          B: string | null
+          C: string | null
+          D: string | null
+          E: string | null
+          enunciado: string | null
+          id: number
+          justificativa: string | null
+          numero_questao: number | null
+          resposta_correta: string | null
+          tema: string | null
+        }
+        Insert: {
+          A?: string | null
+          alternativa_correta?: string | null
+          aplicada_em?: string | null
+          area?: string | null
+          assunto?: string | null
+          B?: string | null
+          C?: string | null
+          D?: string | null
+          E?: string | null
+          enunciado?: string | null
+          id?: number
+          justificativa?: string | null
+          numero_questao?: number | null
+          resposta_correta?: string | null
+          tema?: string | null
+        }
+        Update: {
+          A?: string | null
+          alternativa_correta?: string | null
+          aplicada_em?: string | null
+          area?: string | null
+          assunto?: string | null
+          B?: string | null
+          C?: string | null
+          D?: string | null
+          E?: string | null
+          enunciado?: string | null
+          id?: number
+          justificativa?: string | null
+          numero_questao?: number | null
+          resposta_correta?: string | null
+          tema?: string | null
+        }
+        Relationships: []
+      }
       redacao_artigos: {
         Row: {
           categoria: string
