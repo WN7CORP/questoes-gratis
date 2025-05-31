@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Scale, Target, Zap, Clock, Pause, Square, GraduationCap, List, Shuffle } from 'lucide-react';
+import { Scale, Target, Zap, Clock, Pause, Square, GraduationCap, List, Shuffle, Flag } from 'lucide-react';
 import { getAreaColors } from '../utils/areaColors';
 
 interface Question {
@@ -40,6 +40,7 @@ interface QuestionsSectionProps {
   isSimulado?: boolean;
   isDailyChallenge?: boolean;
   onHideNavigation?: (hide: boolean) => void;
+  randomizeQuestions?: boolean;
 }
 interface AreaStats {
   area: string;
@@ -55,7 +56,8 @@ const QuestionsSection = ({
   showFilters = true,
   isSimulado = false,
   isDailyChallenge = false,
-  onHideNavigation
+  onHideNavigation,
+  randomizeQuestions = false
 }: QuestionsSectionProps) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -336,7 +338,14 @@ const QuestionsSection = ({
       if (error) {
         console.error('Error fetching questions:', error);
       } else {
-        setQuestions(data || []);
+        let questionsData = data || [];
+        
+        // Aplicar aleatorização se necessário (não para simulados)
+        if (randomizeQuestions && !isSimulado && !isDailyChallenge) {
+          questionsData = [...questionsData].sort(() => Math.random() - 0.5);
+        }
+        
+        setQuestions(questionsData);
         setAnswers({});
         setCurrentQuestionIndex(0);
         setStreak(0);
@@ -687,6 +696,7 @@ const QuestionsSection = ({
   const currentQuestion = questions[currentQuestionIndex];
   const isQuestionAnnulled = currentQuestion?.resposta_correta === 'ANULADA';
   const isQuestionAnswered = !!answers[currentQuestion.id];
+  const canFinish = stats.answeredQuestions > 0;
 
   // Se está em sessão de estudo de área
   if (showAreaStudySession && selectedArea && questions.length > 0) {
@@ -701,20 +711,36 @@ const QuestionsSection = ({
     );
   }
 
-  // Se está mostrando resultados de área
-  if (showAreaResults && areaStudyResults) {
+  // Se está mostrando resultados de área OU resultados de estudo normal com área selecionada
+  if (showResults && (isSimulado || isDailyChallenge || (selectedArea && randomizeQuestions))) {
     return (
       <SimuladoResults
-        sessionStats={areaStudyResults.sessionStats}
-        areaStats={areaStudyResults.areaStats}
-        previousAttempts={[]}
+        sessionStats={sessionStats}
+        areaStats={areaStats}
+        previousAttempts={selectedArea ? [] : previousAttempts}
         examInfo={{
-          exame: 'Estudo de Área',
-          ano: selectedArea
+          exame: selectedArea ? 'Estudo de Área' : selectedExam,
+          ano: selectedArea ? selectedArea : selectedYear
         }}
-        totalTime={areaStudyResults.totalTime}
-        onClose={handleAreaResultsClose}
-        onChooseNewArea={handleChooseNewArea}
+        totalTime={selectedArea ? Math.floor((Date.now() - sessionStats.startTime) / 1000) : simuladoTime}
+        onClose={() => {
+          setShowResults(false);
+          if (onHideNavigation) {
+            onHideNavigation(false);
+          }
+          if (selectedArea) {
+            window.location.hash = '#areas';
+          } else {
+            window.location.reload();
+          }
+        }}
+        onChooseNewArea={selectedArea ? () => {
+          setShowResults(false);
+          if (onHideNavigation) {
+            onHideNavigation(false);
+          }
+          window.location.hash = '#areas';
+        } : undefined}
       />
     );
   }
@@ -830,16 +856,16 @@ const QuestionsSection = ({
         </div>
       )}
 
-      {/* Enhanced Stats with Area Study Info */}
+      {/* Enhanced Stats with Area Study Info and Finish Button */}
       <Card className={`bg-netflix-card border-netflix-border p-3 sm:p-4 transition-all duration-300 hover:shadow-lg animate-fade-in ${areaColorScheme ? `border-l-4 ${areaColorScheme.border}` : ''}`}>
-        <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-4">
+        <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-4 mb-3">
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
             <Badge variant="outline" className={`border-gray-600 text-gray-300 text-sm sm:text-lg font-bold px-2 sm:px-4 py-1 sm:py-2 transition-all duration-200 hover:scale-105 ${areaColorScheme ? areaColorScheme.bg : 'bg-gray-800'}`}>
               Questão {currentQuestionIndex + 1} de {questions.length}
             </Badge>
-            {selectedArea && (
+            {selectedArea && randomizeQuestions && (
               <Badge variant="outline" className="border-green-600 text-green-300 bg-green-900/20 text-xs sm:text-sm">
-                Total: {questions.length} questões disponíveis
+                Aleatório: {questions.length} questões
               </Badge>
             )}
             <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-800 text-xs sm:text-sm transition-all duration-200 hover:scale-105">
@@ -864,6 +890,50 @@ const QuestionsSection = ({
           
           <StreakCounter streak={streak} showAnimation={showStreakAnimation} />
         </div>
+
+        {/* Botão Finalizar para estudos de área */}
+        {canFinish && !isSimulado && !isDailyChallenge && selectedArea && (
+          <div className="flex justify-center mb-3">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg hover:scale-105 transition-all duration-200"
+                  size="sm"
+                >
+                  <Flag size={16} />
+                  Finalizar Estudo
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-netflix-card border-netflix-border">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-white">Finalizar Estudo?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-gray-400">
+                    Você respondeu {stats.answeredQuestions} de {questions.length} questões ({Math.round((stats.answeredQuestions / questions.length) * 100)}%).
+                    <br />
+                    <span className="text-green-400 font-medium">
+                      Taxa de acerto: {stats.percentage}%
+                    </span>
+                    <br />
+                    <span className="text-yellow-400 text-sm">
+                      Você pode continuar estudando ou ver seus resultados agora.
+                    </span>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600">
+                    Continuar Estudando
+                  </AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={finishSession} 
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    Ver Resultados
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
       </Card>
 
       {/* Question */}

@@ -77,20 +77,23 @@ const StudyAreas = ({
     return (
       <div className="h-full overflow-y-auto bg-netflix-black">
         <div className="p-3 sm:p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg bg-gradient-to-r from-netflix-red/20 to-red-800/20 border border-netflix-red/30 animate-fade-in">
+          {/* Header mais discreto */}
+          <div className="flex items-center gap-3 mb-4 p-2 sm:p-3 rounded-lg bg-gray-800/30 border border-gray-700/50 animate-fade-in">
             <button 
               onClick={handleBackToAreas} 
-              className="text-netflix-red hover:text-red-400 transition-all duration-200 font-semibold hover:scale-105 flex items-center gap-2 text-sm sm:text-base"
+              className="text-gray-400 hover:text-white transition-colors duration-200 text-sm flex items-center gap-1"
             >
               ← Voltar às Áreas
             </button>
-            <div className="flex-1 w-full sm:w-auto">
-              <h1 className="text-lg sm:text-2xl font-bold text-white flex items-center gap-2 mb-1">
-                <Play className="text-netflix-red" size={20} />
-                Estudando: {selectedArea}
-              </h1>
-              <p className="text-gray-400 text-xs sm:text-sm">
-                Todas as questões disponíveis para esta área
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <Play className="text-gray-400" size={16} />
+                <h2 className="text-base font-medium text-gray-300">
+                  Estudando: {selectedArea}
+                </h2>
+              </div>
+              <p className="text-gray-500 text-xs mt-1">
+                Questões em ordem aleatória
               </p>
             </div>
           </div>
@@ -100,6 +103,7 @@ const StudyAreas = ({
             onHideNavigation={onHideNavigation}
             limit={1000}
             showFilters={false}
+            randomizeQuestions={true}
           />
         </div>
       </div>
