@@ -1,10 +1,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Question } from '@/types/question';
-import { transformSupabaseToQuestions } from '@/utils/questionTransform';
+import { QuestionFinal } from '@/types/questionFinal';
+import { transformSupabaseToQuestionsFinal } from '@/utils/questionFinalTransform';
 import { supabase } from '@/integrations/supabase/client';
-import QuestionCard from './QuestionCard';
-import Options from './Options';
+import QuestionCardFinal from './QuestionCardFinal';
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, BookOpen } from 'lucide-react';
 import { useConfettiStore } from '@/stores/confettiStore';
@@ -24,7 +23,7 @@ interface SessionStats {
 
 interface StudySessionProps {
   selectedArea?: string;
-  questions?: Question[];
+  questions?: QuestionFinal[];
   onComplete: () => void;
   onChooseNewArea?: () => void;
   onExit?: () => void;
@@ -41,7 +40,7 @@ const StudySession = ({
   title,
   mode 
 }: StudySessionProps) => {
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<QuestionFinal[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -67,7 +66,7 @@ const StudySession = ({
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('Questoes_Comentadas')
+        .from('QUESTOES_FINAL')
         .select('*')
         .eq('area', selectedArea)
         .limit(10);
@@ -75,8 +74,8 @@ const StudySession = ({
       if (error) {
         console.error('Error fetching questions:', error);
       } else {
-        // Transformar dados do Supabase para o tipo Question
-        const transformedQuestions = transformSupabaseToQuestions(data || []);
+        // Transformar dados do Supabase para o tipo QuestionFinal
+        const transformedQuestions = transformSupabaseToQuestionsFinal(data || []);
         
         // Randomize questions
         const shuffledQuestions = transformedQuestions.sort(() => Math.random() - 0.5);
@@ -202,29 +201,17 @@ const StudySession = ({
 
       {/* Question Card */}
       <div className="mb-4">
-        <QuestionCard
+        <QuestionCardFinal
           question={currentQuestion}
+          currentQuestion={currentQuestionIndex + 1}
           totalQuestions={questions.length}
+          showQuestionNumber={true}
+          onAnswer={(questionId, selectedAnswer, isCorrect) => {
+            setSelectedOption(selectedAnswer);
+            handleSubmit();
+          }}
         />
       </div>
-
-      {/* Options */}
-      <div className="flex-grow">
-        <Options
-          options={currentQuestion.opcoes}
-          selectedOption={selectedOption}
-          onSelect={handleOptionSelect}
-          isCorrect={isCorrect}
-          correctAnswer={currentQuestion.resposta_correta}
-        />
-      </div>
-
-      {/* Submit Button */}
-      {isCorrect === null && (
-        <Button onClick={handleSubmit} className="w-full mt-4">
-          Confirmar
-        </Button>
-      )}
 
       {/* Navigation Buttons */}
       {isCorrect !== null && (

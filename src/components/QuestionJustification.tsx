@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { Star, X } from 'lucide-react';
+import { MessageSquare, X } from 'lucide-react';
 
 interface QuestionJustificationProps {
   justification: string;
@@ -22,7 +22,7 @@ const QuestionJustification = ({ justification, isVisible, onClose }: QuestionJu
           <DrawerContent className="bg-netflix-card border-netflix-border max-h-[85vh]">
             <DrawerHeader className="pb-4">
               <DrawerTitle className="text-white text-xl font-semibold flex items-center gap-2">
-                <Star size={20} className="text-yellow-500" />
+                <MessageSquare size={20} className="text-netflix-red" />
                 Comentário da Questão
               </DrawerTitle>
               <DrawerDescription className="text-gray-400">
@@ -32,7 +32,7 @@ const QuestionJustification = ({ justification, isVisible, onClose }: QuestionJu
             
             <div className="p-4 overflow-y-auto max-h-[60vh]">
               <div className="text-gray-300 leading-relaxed text-base whitespace-pre-wrap">
-                {justification}
+                {justification || 'Justificativa não disponível para esta questão.'}
               </div>
             </div>
 
@@ -65,7 +65,7 @@ const QuestionJustification = ({ justification, isVisible, onClose }: QuestionJu
           <div className="p-6 h-full overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-white font-semibold flex items-center gap-2">
-                <Star size={16} className="text-yellow-500" />
+                <MessageSquare size={16} className="text-netflix-red" />
                 Comentário da Questão
               </h4>
               <Button
@@ -79,7 +79,7 @@ const QuestionJustification = ({ justification, isVisible, onClose }: QuestionJu
             </div>
             
             <div className="text-gray-300 leading-relaxed text-sm whitespace-pre-wrap">
-              {justification}
+              {justification || 'Justificativa não disponível para esta questão.'}
             </div>
           </div>
         </div>
