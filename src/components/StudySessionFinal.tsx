@@ -8,6 +8,7 @@ import ProgressBar from './ProgressBar';
 import QuestionJustification from './QuestionJustification';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Loader2, RotateCcw, MessageSquare } from 'lucide-react';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface StudySessionFinalProps {
   filters: QuestionFilters;
@@ -146,73 +147,83 @@ const StudySessionFinal = ({
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
   return (
-    <>
-      <div className="flex flex-col h-full max-w-6xl mx-auto p-4 px-0">
-        {/* Progress Bar at the top */}
-        <ProgressBar
-          current={sessionStats.total}
-          total={questions.length}
-          correct={sessionStats.correct}
-          timeSpent={timeSpent}
-          showStats={true}
-          streak={0}
-        />
-
-        {/* Question Card */}
-        <div className="flex-grow mb-6">
-          <QuestionCardFinal 
-            question={currentQuestion} 
-            onAnswer={handleAnswer} 
-            showQuestionNumber={true} 
-            currentQuestion={currentQuestionIndex + 1} 
-            totalQuestions={questions.length}
-            onShowJustification={handleShowJustification}
-          />
-        </div>
-
-        {/* Navigation */}
-        <div className="flex justify-between items-center">
-          <Button 
-            onClick={goToPreviousQuestion} 
-            disabled={currentQuestionIndex === 0} 
-            variant="outline" 
-            className="w-24 sm:w-32"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Anterior
-          </Button>
-
-          <Button 
-            onClick={goToNextQuestion} 
-            disabled={isLastQuestion} 
-            variant="outline" 
-            className="w-24 sm:w-32"
-          >
-            Próxima
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Blue Comment Button - Fixed position at bottom */}
-        {isCurrentQuestionAnswered() && (
-          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
-            <Button
-              onClick={handleShowJustification}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-200 hover:scale-[1.02] flex items-center gap-2"
-            >
-              <MessageSquare size={18} />
-              Ver Comentário
-            </Button>
-          </div>
-        )}
-
-        {/* Question Counter */}
-        <div className="text-center mt-4">
-          <span className="text-gray-400 text-sm">
-            {currentQuestionIndex + 1} de {questions.length}
-          </span>
+    <div className="h-full flex flex-col">
+      {/* Header with Back Button */}
+      <div className="bg-netflix-card border-b border-netflix-border p-4 flex items-center justify-between">
+        <Button
+          onClick={onExit}
+          variant="ghost"
+          className="text-white hover:text-netflix-red"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
+        </Button>
+        <div className="text-white font-semibold">
+          Questão {currentQuestionIndex + 1} de {questions.length}
         </div>
       </div>
+
+      <ScrollArea className="flex-1">
+        <div className="max-w-6xl mx-auto p-4">
+          {/* Progress Bar */}
+          <ProgressBar
+            current={sessionStats.total}
+            total={questions.length}
+            correct={sessionStats.correct}
+            timeSpent={timeSpent}
+            showStats={true}
+            streak={0}
+          />
+
+          {/* Question Card */}
+          <div className="mb-6">
+            <QuestionCardFinal 
+              question={currentQuestion} 
+              onAnswer={handleAnswer} 
+              showQuestionNumber={true} 
+              currentQuestion={currentQuestionIndex + 1} 
+              totalQuestions={questions.length}
+              onShowJustification={handleShowJustification}
+            />
+          </div>
+
+          {/* Navigation */}
+          <div className="flex justify-between items-center mb-20">
+            <Button 
+              onClick={goToPreviousQuestion} 
+              disabled={currentQuestionIndex === 0} 
+              variant="outline" 
+              className="w-24 sm:w-32"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Anterior
+            </Button>
+
+            <Button 
+              onClick={goToNextQuestion} 
+              disabled={isLastQuestion} 
+              variant="outline" 
+              className="w-24 sm:w-32"
+            >
+              Próxima
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </ScrollArea>
+
+      {/* Blue Comment Button - Fixed position at bottom */}
+      {isCurrentQuestionAnswered() && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
+          <Button
+            onClick={handleShowJustification}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-200 hover:scale-[1.02] flex items-center gap-2"
+          >
+            <MessageSquare size={18} />
+            Ver Comentário
+          </Button>
+        </div>
+      )}
 
       {/* Question Justification */}
       <QuestionJustification 
@@ -220,7 +231,7 @@ const StudySessionFinal = ({
         isVisible={showJustification}
         onClose={() => setShowJustification(false)}
       />
-    </>
+    </div>
   );
 };
 
