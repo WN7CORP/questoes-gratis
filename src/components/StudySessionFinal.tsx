@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { QuestionFinal, QuestionFilters } from '@/types/questionFinal';
 import { transformSupabaseToQuestionsFinal } from '@/utils/questionFinalTransform';
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +29,7 @@ const StudySessionFinal = ({
   const [timeSpent, setTimeSpent] = useState(0);
   const [sessionStartTime] = useState(Date.now());
   const [showJustification, setShowJustification] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchQuestions();
@@ -44,7 +45,12 @@ const StudySessionFinal = ({
 
   // Scroll to top when question changes
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (scrollAreaRef.current) {
+      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (viewport) {
+        viewport.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
   }, [currentQuestionIndex]);
 
   const fetchQuestions = async () => {
@@ -166,7 +172,7 @@ const StudySessionFinal = ({
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1" ref={scrollAreaRef}>
         <div className="max-w-6xl mx-auto p-4">
           {/* Progress Bar */}
           <ProgressBar
