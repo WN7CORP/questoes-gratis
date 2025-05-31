@@ -39,6 +39,7 @@ const StudySession = ({
   const [answers, setAnswers] = useState<Record<number, { answer: string; correct: boolean; timeSpent: number }>>({});
   const [sessionStartTime] = useState(Date.now());
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+  const [streak, setStreak] = useState(0);
   const { toast } = useToast();
 
   const currentQuestion = questions[currentIndex];
@@ -62,6 +63,13 @@ const StudySession = ({
         timeSpent
       }
     }));
+
+    // Update streak
+    if (isCorrect) {
+      setStreak(prev => prev + 1);
+    } else {
+      setStreak(0);
+    }
 
     // Auto-advance after 2 seconds
     setTimeout(() => {
@@ -93,7 +101,8 @@ const StudySession = ({
       answeredCount,
       correctCount,
       totalTimeSpent,
-      accuracy: answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0
+      accuracy: answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0,
+      finalStreak: streak
     });
   };
 
@@ -144,12 +153,13 @@ const StudySession = ({
           </div>
         </div>
 
-        {/* Progress Bar */}
+        {/* Progress Bar with Achievements */}
         <ProgressBar
           current={answeredCount}
           total={questions.length}
           correct={correctCount}
           timeSpent={totalTimeSpent}
+          streak={streak}
         />
 
         {/* Question Card */}

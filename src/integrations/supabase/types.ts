@@ -5218,6 +5218,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_type: string
+          achievement_value: number
+          created_at: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_type: string
+          achievement_value?: number
+          created_at?: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_type?: string
+          achievement_value?: number
+          created_at?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_annotations: {
         Row: {
           article_id: string
@@ -5713,6 +5740,27 @@ export type Database = {
           },
         ]
       }
+      user_question_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          question_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          question_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          question_id?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_question_responses: {
         Row: {
           answer: string
@@ -5848,6 +5896,42 @@ export type Database = {
           progress_percent?: number | null
           reading_time_minutes?: number | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          created_at: string
+          difficulty_preference: string
+          id: string
+          sound_enabled: boolean
+          theme: string
+          timer_duration: number
+          timer_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty_preference?: string
+          id?: string
+          sound_enabled?: boolean
+          theme?: string
+          timer_duration?: number
+          timer_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          difficulty_preference?: string
+          id?: string
+          sound_enabled?: boolean
+          theme?: string
+          timer_duration?: number
+          timer_enabled?: boolean
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

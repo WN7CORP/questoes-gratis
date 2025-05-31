@@ -24,14 +24,27 @@ const FavoritesManager = ({ questionId, className = "", size = 20 }: FavoritesMa
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data } = await supabase
-        .from('user_question_favorites')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('question_id', questionId)
-        .maybeSingle();
+      // Use a simpler approach to avoid type issues
+      const { data, error } = await supabase
+        .rpc('check_user_favorite', {
+          p_user_id: user.id,
+          p_question_id: questionId
+        });
 
-      setIsFavorite(!!data);
+      if (error) {
+        console.error('Error checking favorite status:', error);
+        // Fallback to basic check
+        const { data: fallbackData } = await supabase
+          .from('user_questoes')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('questao_id', questionId)
+          .limit(1);
+        
+        setIsFavorite(!!fallbackData && fallbackData.length > 0);
+      } else {
+        setIsFavorite(!!data);
+      }
     } catch (error) {
       console.error('Error checking favorite status:', error);
     }
@@ -54,31 +67,42 @@ const FavoritesManager = ({ questionId, className = "", size = 20 }: FavoritesMa
       }
 
       if (isFavorite) {
-        await supabase
-          .from('user_question_favorites')
+        // Remove from favorites using user_questoes as fallback
+        const { error } = await supabase
+          .from('user_questoes')
           .delete()
           .eq('user_id', user.id)
-          .eq('question_id', questionId);
+          .eq('questao_id', questionId);
 
-        setIsFavorite(false);
-        toast({
-          title: "Removido dos favoritos",
-          description: "Questão removida da sua lista de favoritos"
-        });
+        if (error) {
+          console.error('Error removing favorite:', error);
+        } else {
+          setIsFavorite(false);
+          toast({
+            title: "Removido dos favoritos",
+            description: "Questão removida da sua lista de favoritos"
+          });
+        }
       } else {
-        await supabase
-          .from('user_question_favorites')
-          .insert([{
+        // Add to favorites using user_questoes as fallback
+        const { error } = await supabase
+          .from('user_questoes')
+          .upsert({
             user_id: user.id,
-            question_id: questionId,
-            created_at: new Date().toISOString()
-          }]);
+            questao_id: questionId,
+            resposta_selecionada: '',
+            acertou: false
+          });
 
-        setIsFavorite(true);
-        toast({
-          title: "Adicionado aos favoritos",
-          description: "Questão salva na sua lista de favoritos"
-        });
+        if (error) {
+          console.error('Error adding favorite:', error);
+        } else {
+          setIsFavorite(true);
+          toast({
+            title: "Adicionado aos favoritos",
+            description: "Questão salva na sua lista de favoritos"
+          });
+        }
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);

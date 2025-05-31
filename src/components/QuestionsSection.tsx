@@ -621,7 +621,7 @@ const QuestionsSection = ({
           />
         </div>}
 
-      {/* Enhanced Stats */}
+      {/* Enhanced Stats with Achievements */}
       <Card className={`bg-netflix-card border-netflix-border p-3 sm:p-4 transition-all duration-300 hover:shadow-lg animate-fade-in ${areaColorScheme ? `border-l-4 ${areaColorScheme.border}` : ''}`}>
         <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">

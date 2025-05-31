@@ -2,6 +2,7 @@
 import React from 'react';
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Clock, Target } from 'lucide-react';
+import AchievementsBadge from './AchievementsBadge';
 
 interface ProgressBarProps {
   current: number;
@@ -9,6 +10,7 @@ interface ProgressBarProps {
   correct?: number;
   timeSpent?: number;
   showStats?: boolean;
+  streak?: number;
 }
 
 const ProgressBar = ({ 
@@ -16,7 +18,8 @@ const ProgressBar = ({
   total, 
   correct = 0, 
   timeSpent = 0, 
-  showStats = true 
+  showStats = true,
+  streak = 0
 }: ProgressBarProps) => {
   const progressPercentage = (current / total) * 100;
   const accuracy = current > 0 ? Math.round((correct / current) * 100) : 0;
@@ -34,8 +37,15 @@ const ProgressBar = ({
           <Target size={18} className="text-netflix-red" />
           Progresso da Sessão
         </h3>
-        <div className="text-netflix-text-secondary text-sm">
-          {current} de {total} questões
+        <div className="flex items-center gap-3">
+          <AchievementsBadge 
+            questionsAnswered={current}
+            correctAnswers={correct}
+            streak={streak}
+          />
+          <div className="text-netflix-text-secondary text-sm">
+            {current} de {total} questões
+          </div>
         </div>
       </div>
 
