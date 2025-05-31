@@ -120,26 +120,7 @@ const StudySessionFinal = ({
   const percentageCorrect = sessionStats.total > 0 ? Math.round(sessionStats.correct / sessionStats.total * 100) : 0;
   return <div className="flex flex-col h-full max-w-6xl mx-auto p-4 px-0">
       {/* Header com estatísticas */}
-      <div className="flex justify-between items-center mb-6 p-4 bg-netflix-card rounded-lg">
-        <Button onClick={onExit} variant="outline" size="sm">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Sair
-        </Button>
-        
-        <div className="text-center">
-          <div className="text-white text-lg font-semibold">
-            Sessão de Estudos
-          </div>
-          <div className="text-gray-400 text-sm">
-            {sessionStats.total > 0 && <>Acertos: {sessionStats.correct}/{sessionStats.total} ({percentageCorrect}%)</>}
-          </div>
-        </div>
-
-        <Button onClick={restartSession} variant="outline" size="sm">
-          <RotateCcw className="mr-2 h-4 w-4" />
-          Reiniciar
-        </Button>
-      </div>
+      
 
       {/* Question Card */}
       <div className="flex-grow">
