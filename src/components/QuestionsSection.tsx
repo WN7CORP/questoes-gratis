@@ -6,11 +6,13 @@ import CelebrationModal from './CelebrationModal';
 import StreakCounter from './StreakCounter';
 import QuestionJustification from './QuestionJustification';
 import SimuladoResults from './SimuladoResults';
+import PlaylistCreator from './PlaylistCreator';
+import PlaylistManager from './PlaylistManager';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Scale, Target, Zap, Clock, Pause, Square, GraduationCap } from 'lucide-react';
+import { Scale, Target, Zap, Clock, Pause, Square, GraduationCap, List, Shuffle } from 'lucide-react';
 import { getAreaColors } from '../utils/areaColors';
 
 interface Question {
@@ -82,28 +84,52 @@ const QuestionsSection = ({
   const [showResults, setShowResults] = useState(false);
   const [areaStats, setAreaStats] = useState<AreaStats[]>([]);
   const [previousAttempts, setPreviousAttempts] = useState<any[]>([]);
+  const [showPlaylistCreator, setShowPlaylistCreator] = useState(false);
+  const [showPlaylistManager, setShowPlaylistManager] = useState(false);
+  const [activePlaylist, setActivePlaylist] = useState<any>(null);
   const questionCardRef = useRef<HTMLDivElement>(null);
   const areaColorScheme = selectedAreaFilter ? getAreaColors(selectedAreaFilter) : null;
 
-  // Função para scroll suave para o topo
+  // Função aprimorada para scroll suave para o topo
   const scrollToTop = () => {
-    // Scroll imediato
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    // Método principal usando scrollIntoView
+    const target = document.getElementById('questions-container') || document.body;
+    
+    try {
+      target.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start',
+        inline: 'nearest'
+      });
+    } catch (error) {
+      // Fallback para navegadores antigos
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     
     // Garantir que funcione após atualização do DOM
     setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    }, 50);
+      try {
+        target.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      } catch (error) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 100);
     
-    // Backup com requestAnimationFrame
+    // Backup final
     requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
+      try {
+        target.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      } catch (error) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     });
   };
 
@@ -116,7 +142,6 @@ const QuestionsSection = ({
       fetchPreviousAttempts();
     }
     
-    // Sempre ocultar navegação quando estiver respondendo questões
     if (onHideNavigation) {
       onHideNavigation(true);
     }
@@ -128,7 +153,6 @@ const QuestionsSection = ({
     };
   }, [selectedAreaFilter, selectedExam, selectedYear, limit, studyMode, onHideNavigation]);
 
-  // Ocultar navegação para todas as seções quando estiver respondendo questões
   useEffect(() => {
     if (onHideNavigation) {
       onHideNavigation(true);
@@ -140,7 +164,6 @@ const QuestionsSection = ({
     };
   }, [onHideNavigation]);
 
-  // Timer for simulado
   useEffect(() => {
     if ((isSimulado || isDailyChallenge) && !isPaused && simuladoStartTime) {
       const timer = setInterval(() => {
@@ -150,25 +173,23 @@ const QuestionsSection = ({
     }
   }, [isSimulado, isDailyChallenge, isPaused, simuladoStartTime]);
 
-  // Scroll para topo quando a questão atual muda
+  // Scroll melhorado quando a questão atual muda
   useEffect(() => {
     scrollToTop();
   }, [currentQuestionIndex]);
 
   const fetchPreviousAttempts = async () => {
     try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const {
-        data,
-        error
-      } = await supabase.from('user_study_sessions').select('*').eq('user_id', user.id).eq('mode', 'simulado').not('completed_at', 'is', null).order('completed_at', {
-        ascending: false
-      }).limit(5);
+      const { data, error } = await supabase
+        .from('user_study_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('mode', 'simulado')
+        .not('completed_at', 'is', null)
+        .order('completed_at', { ascending: false })
+        .limit(5);
       if (error) {
         console.error('Error fetching previous attempts:', error);
       } else {
@@ -180,18 +201,12 @@ const QuestionsSection = ({
   };
 
   const calculateAreaStats = () => {
-    const stats: Record<string, {
-      correct: number;
-      total: number;
-    }> = {};
+    const stats: Record<string, { correct: number; total: number; }> = {};
     questions.forEach(question => {
       const answer = answers[question.id];
       if (answer) {
         if (!stats[question.area]) {
-          stats[question.area] = {
-            correct: 0,
-            total: 0
-          };
+          stats[question.area] = { correct: 0, total: 0 };
         }
         stats[question.area].total++;
         if (answer.correct) {
@@ -203,7 +218,7 @@ const QuestionsSection = ({
       area,
       correct: data.correct,
       total: data.total,
-      percentage: Math.round(data.correct / data.total * 100)
+      percentage: Math.round((data.correct / data.total) * 100)
     }));
     areaStatsArray.sort((a, b) => b.percentage - a.percentage);
     setAreaStats(areaStatsArray);
@@ -212,24 +227,21 @@ const QuestionsSection = ({
 
   const createStudySession = async () => {
     try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const sessionMode = isDailyChallenge ? 'daily_challenge' : isSimulado ? 'simulado' : studyMode;
-      const {
-        data: session,
-        error
-      } = await supabase.from('user_study_sessions').insert({
-        user_id: user.id,
-        mode: sessionMode,
-        area: selectedAreaFilter || null,
-        questions_answered: 0,
-        correct_answers: 0,
-        total_time: 0
-      }).select().single();
+      const { data: session, error } = await supabase
+        .from('user_study_sessions')
+        .insert({
+          user_id: user.id,
+          mode: sessionMode,
+          area: selectedAreaFilter || null,
+          questions_answered: 0,
+          correct_answers: 0,
+          total_time: 0
+        })
+        .select()
+        .single();
       if (error) {
         console.error('Error creating study session:', error);
       } else {
@@ -245,14 +257,15 @@ const QuestionsSection = ({
     if (!currentSessionId) return;
     try {
       const totalTime = Math.floor((Date.now() - sessionStats.startTime) / 1000);
-      const {
-        error
-      } = await supabase.from('user_study_sessions').update({
-        questions_answered: sessionStats.total,
-        correct_answers: sessionStats.correct,
-        total_time: totalTime,
-        completed_at: new Date().toISOString()
-      }).eq('id', currentSessionId);
+      const { error } = await supabase
+        .from('user_study_sessions')
+        .update({
+          questions_answered: sessionStats.total,
+          correct_answers: sessionStats.correct,
+          total_time: totalTime,
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', currentSessionId);
       if (error) {
         console.error('Error saving session progress:', error);
       } else {
@@ -269,28 +282,20 @@ const QuestionsSection = ({
 
   const saveQuestionResponse = async (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
     try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const {
-        error
-      } = await supabase.from('user_questoes').insert({
-        user_id: user.id,
-        questao_id: questionId,
-        resposta_selecionada: selectedAnswer,
-        acertou: isCorrect
-      });
+      const { error } = await supabase
+        .from('user_questoes')
+        .insert({
+          user_id: user.id,
+          questao_id: questionId,
+          resposta_selecionada: selectedAnswer,
+          acertou: isCorrect
+        });
       if (error) {
         console.error('Error saving question response:', error);
       } else {
-        console.log('Question response saved:', {
-          questionId,
-          selectedAnswer,
-          isCorrect
-        });
+        console.log('Question response saved:', { questionId, selectedAnswer, isCorrect });
       }
     } catch (error) {
       console.error('Error saving question response:', error);
@@ -311,20 +316,13 @@ const QuestionsSection = ({
         query = query.eq('ano', selectedYear);
       }
 
-      // Para desafio diário, excluir questões anuladas
       if (isDailyChallenge) {
         query = query.not('resposta_correta', 'eq', 'ANULADA').limit(20);
       } else if (isSimulado && selectedExam) {
-        // Para simulados, ordenar por número da questão e excluir anuladas se necessário
-        query = query.order('numero', {
-          ascending: true
-        });
+        query = query.order('numero', { ascending: true });
       }
       query = query.limit(limit);
-      const {
-        data,
-        error
-      } = await query;
+      const { data, error } = await query;
       if (error) {
         console.error('Error fetching questions:', error);
       } else {
@@ -347,10 +345,10 @@ const QuestionsSection = ({
 
   const fetchAreas = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('Questoes_Comentadas').select('area').not('area', 'is', null);
+      const { data, error } = await supabase
+        .from('Questoes_Comentadas')
+        .select('area')
+        .not('area', 'is', null);
       if (error) {
         console.error('Error fetching areas:', error);
       } else {
@@ -407,8 +405,7 @@ const QuestionsSection = ({
     if (currentQuestion?.resposta_correta === 'ANULADA') {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
-        // Scroll após mudança de questão
-        setTimeout(() => scrollToTop(), 10);
+        setTimeout(() => scrollToTop(), 50);
       } else {
         finishSession();
       }
@@ -416,8 +413,7 @@ const QuestionsSection = ({
     }
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
-      // Scroll após mudança de questão
-      setTimeout(() => scrollToTop(), 10);
+      setTimeout(() => scrollToTop(), 50);
     } else {
       finishSession();
     }
@@ -426,8 +422,7 @@ const QuestionsSection = ({
   const previousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
-      // Scroll após mudança de questão
-      setTimeout(() => scrollToTop(), 10);
+      setTimeout(() => scrollToTop(), 50);
     }
   };
 
@@ -444,7 +439,7 @@ const QuestionsSection = ({
 
   const finishSimulado = async () => {
     const totalTime = Math.floor((Date.now() - (simuladoStartTime || Date.now())) / 1000);
-    const percentage = Math.round(sessionStats.correct / sessionStats.total * 100);
+    const percentage = Math.round((sessionStats.correct / sessionStats.total) * 100);
     await saveSessionProgress();
     const finalAreaStats = calculateAreaStats();
     setShowResults(true);
@@ -489,12 +484,8 @@ const QuestionsSection = ({
   const getStats = () => {
     const answeredQuestions = Object.keys(answers).length;
     const correctAnswers = Object.values(answers).filter(a => a.correct).length;
-    const percentage = answeredQuestions > 0 ? Math.round(correctAnswers / answeredQuestions * 100) : 0;
-    return {
-      answeredQuestions,
-      correctAnswers,
-      percentage
-    };
+    const percentage = answeredQuestions > 0 ? Math.round((correctAnswers / answeredQuestions) * 100) : 0;
+    return { answeredQuestions, correctAnswers, percentage };
   };
 
   useEffect(() => {
@@ -514,7 +505,7 @@ const QuestionsSection = ({
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor(seconds % 3600 / 60);
+    const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
     if (hours > 0) {
       return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -543,20 +534,24 @@ const QuestionsSection = ({
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center py-12">
+    return (
+      <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-netflix-red"></div>
         <div className="text-gray-400 ml-4">Carregando questões...</div>
-      </div>;
+      </div>
+    );
   }
 
   if (questions.length === 0) {
-    return <Card className="bg-netflix-card border-netflix-border p-8 text-center">
+    return (
+      <Card className="bg-netflix-card border-netflix-border p-8 text-center">
         <Scale className="mx-auto mb-4 text-gray-500" size={48} />
         <h3 className="text-white text-xl font-semibold mb-2">Nenhuma questão encontrada</h3>
         <p className="text-gray-400">
           Não há questões disponíveis para os filtros selecionados.
         </p>
-      </Card>;
+      </Card>
+    );
   }
 
   const stats = getStats();
@@ -565,21 +560,26 @@ const QuestionsSection = ({
   const isQuestionAnswered = !!answers[currentQuestion.id];
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-0 py-0 px-0">
+    <div id="questions-container" className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-0 py-0 px-0">
       {/* Simulado Controls - Timer and Pause/Finish buttons */}
-      {(isSimulado || isDailyChallenge) && <div className="flex justify-between items-center animate-fade-in">
+      {(isSimulado || isDailyChallenge) && (
+        <div className="flex justify-between items-center animate-fade-in">
           <Badge variant="outline" className="border-gray-600 text-gray-400 bg-gray-800/50 text-xs">
             <Clock size={12} className="mr-1" />
             {formatTime(simuladoTime)}
           </Badge>
           
           <div className="flex gap-2">
-            {isPaused ? <Button onClick={resumeSimulado} size="sm" className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 transition-all duration-200 hover:scale-105">
+            {isPaused ? (
+              <Button onClick={resumeSimulado} size="sm" className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 transition-all duration-200 hover:scale-105">
                 Retomar
-              </Button> : <Button onClick={pauseSimulado} size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 text-xs px-3 py-1 transition-all duration-200 hover:scale-105">
+              </Button>
+            ) : (
+              <Button onClick={pauseSimulado} size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 text-xs px-3 py-1 transition-all duration-200 hover:scale-105">
                 <Pause size={12} className="mr-1" />
                 Pausar
-              </Button>}
+              </Button>
+            )}
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -606,20 +606,69 @@ const QuestionsSection = ({
               </AlertDialogContent>
             </AlertDialog>
           </div>
-        </div>}
+        </div>
+      )}
 
-      {/* Study Mode Selector */}
-      {!isSimulado && !isDailyChallenge && <div className="animate-fade-in">
-          <StudyModeSelector 
-            studyMode={studyMode} 
-            setStudyMode={setStudyMode} 
-            selectedAreaFilter={selectedAreaFilter} 
-            setSelectedAreaFilter={setSelectedAreaFilter} 
-            areas={areas} 
-            onShuffle={shuffleQuestions} 
-            onReset={resetSession} 
-          />
-        </div>}
+      {/* Study Mode Selector com Playlist */}
+      {!isSimulado && !isDailyChallenge && (
+        <div className="animate-fade-in">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            <div className="flex-1">
+              <StudyModeSelector 
+                studyMode={studyMode} 
+                setStudyMode={setStudyMode} 
+                selectedAreaFilter={selectedAreaFilter} 
+                setSelectedAreaFilter={setSelectedAreaFilter} 
+                areas={areas} 
+                onShuffle={shuffleQuestions} 
+                onReset={resetSession} 
+              />
+            </div>
+            
+            {/* Playlist Controls */}
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowPlaylistCreator(true)}
+                variant="outline"
+                size="sm"
+                className="border-blue-600 text-blue-400 hover:bg-blue-900/20 flex items-center gap-2"
+              >
+                <List size={16} />
+                Criar Playlist
+              </Button>
+              
+              <Button
+                onClick={() => setShowPlaylistManager(true)}
+                variant="outline"
+                size="sm"
+                className="border-green-600 text-green-400 hover:bg-green-900/20 flex items-center gap-2"
+              >
+                <Shuffle size={16} />
+                Playlists
+              </Button>
+            </div>
+          </div>
+          
+          {activePlaylist && (
+            <Card className="bg-blue-900/20 border-blue-600/30 p-3 mb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-blue-300 font-medium">{activePlaylist.name}</h4>
+                  <p className="text-blue-400/70 text-sm">{activePlaylist.description}</p>
+                </div>
+                <Button
+                  onClick={() => setActivePlaylist(null)}
+                  size="sm"
+                  variant="ghost"
+                  className="text-blue-400 hover:text-blue-300"
+                >
+                  Sair
+                </Button>
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Enhanced Stats with Achievements */}
       <Card className={`bg-netflix-card border-netflix-border p-3 sm:p-4 transition-all duration-300 hover:shadow-lg animate-fade-in ${areaColorScheme ? `border-l-4 ${areaColorScheme.border}` : ''}`}>
@@ -635,13 +684,17 @@ const QuestionsSection = ({
               <Target size={12} className="mr-1" />
               Acertos: {stats.percentage}%
             </Badge>
-            {streak >= 3 && <Badge variant="outline" className="border-orange-500 text-orange-300 bg-orange-900/20 animate-pulse text-xs sm:text-sm">
+            {streak >= 3 && (
+              <Badge variant="outline" className="border-orange-500 text-orange-300 bg-orange-900/20 animate-pulse text-xs sm:text-sm">
                 <Zap size={12} className="mr-1" />
                 {streak} sequência!
-              </Badge>}
-            {isQuestionAnnulled && <Badge variant="outline" className="border-gray-500 text-gray-400 bg-gray-800/50 text-xs">
+              </Badge>
+            )}
+            {isQuestionAnnulled && (
+              <Badge variant="outline" className="border-gray-500 text-gray-400 bg-gray-800/50 text-xs">
                 QUESTÃO ANULADA
-              </Badge>}
+              </Badge>
+            )}
           </div>
           
           <StreakCounter streak={streak} showAnimation={showStreakAnimation} />
@@ -659,7 +712,8 @@ const QuestionsSection = ({
       </div>
 
       {/* Ver Comentário Button */}
-      {isQuestionAnswered && !isQuestionAnnulled && currentQuestion?.justificativa && <div className="flex justify-center animate-fade-in">
+      {isQuestionAnswered && !isQuestionAnnulled && currentQuestion?.justificativa && (
+        <div className="flex justify-center animate-fade-in">
           <Button 
             onClick={handleShowJustification} 
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg hover:scale-105 transition-all duration-200"
@@ -667,9 +721,10 @@ const QuestionsSection = ({
             <GraduationCap size={20} />
             Ver Comentário
           </Button>
-        </div>}
+        </div>
+      )}
 
-      {/* Enhanced Navigation - Movida mais para cima */}
+      {/* Enhanced Navigation */}
       <div className="flex justify-between items-center gap-4 animate-fade-in mt-4">
         <Button 
           onClick={previousQuestion} 
@@ -682,13 +737,13 @@ const QuestionsSection = ({
         
         <div className="text-center flex-1">
           <div className="text-gray-400 text-xs sm:text-sm mb-2">
-            Progresso: {Math.round((currentQuestionIndex + 1) / questions.length * 100)}%
+            Progresso: {Math.round(((currentQuestionIndex + 1) / questions.length) * 100)}%
           </div>
           <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
             <div 
               className={`h-3 rounded-full transition-all duration-500 ${areaColorScheme ? areaColorScheme.primary : 'bg-netflix-red'}`} 
               style={{
-                width: `${(currentQuestionIndex + 1) / questions.length * 100}%`
+                width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`
               }} 
             />
           </div>
@@ -703,20 +758,31 @@ const QuestionsSection = ({
         </Button>
       </div>
 
-      {/* Question Justification Modal */}
+      {/* Modals */}
       <QuestionJustification 
         justification={currentJustification} 
         isVisible={showJustification} 
         onClose={() => setShowJustification(false)} 
       />
 
-      {/* Celebration Modal */}
       <CelebrationModal 
         isVisible={showCelebration} 
         onClose={() => setShowCelebration(false)} 
         streak={streak} 
         percentage={stats.percentage} 
         questionsAnswered={stats.answeredQuestions} 
+      />
+
+      <PlaylistCreator
+        isVisible={showPlaylistCreator}
+        onClose={() => setShowPlaylistCreator(false)}
+        areas={areas}
+      />
+
+      <PlaylistManager
+        isVisible={showPlaylistManager}
+        onClose={() => setShowPlaylistManager(false)}
+        onPlaylistStart={handlePlaylistStart}
       />
     </div>
   );

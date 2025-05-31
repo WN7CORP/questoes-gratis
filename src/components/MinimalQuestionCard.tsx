@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,6 +57,69 @@ const MinimalQuestionCard = ({
     { key: 'D', value: question.alternativa_d },
   ].filter(alt => alt.value && alt.value.trim() !== '');
 
+  const playFeedbackSound = (isCorrect: boolean) => {
+    if ('AudioContext' in window) {
+      try {
+        const audioContext = new AudioContext();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        if (isCorrect) {
+          // Som de acerto harmonioso - acorde maior (Do-Mi-Sol)
+          const playNote = (frequency: number, delay: number, duration: number) => {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            osc.frequency.value = frequency;
+            osc.type = 'sine';
+            
+            gain.gain.setValueAtTime(0, audioContext.currentTime + delay);
+            gain.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + delay + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + delay + duration);
+            
+            osc.start(audioContext.currentTime + delay);
+            osc.stop(audioContext.currentTime + delay + duration);
+          };
+          
+          playNote(523.25, 0, 0.3);    // Do
+          playNote(659.25, 0.1, 0.3);  // Mi
+          playNote(783.99, 0.2, 0.4);  // Sol
+        } else {
+          // Som de erro mais suave - apenas duas notas descendentes
+          oscillator.frequency.value = 349.23; // Fá
+          oscillator.type = 'sine';
+          gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+          
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.4);
+          
+          // Segunda nota mais grave
+          setTimeout(() => {
+            const osc2 = audioContext.createOscillator();
+            const gain2 = audioContext.createGain();
+            osc2.connect(gain2);
+            gain2.connect(audioContext.destination);
+            osc2.frequency.value = 293.66; // Ré
+            osc2.type = 'sine';
+            gain2.gain.setValueAtTime(0.06, audioContext.currentTime);
+            gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            osc2.start(audioContext.currentTime);
+            osc2.stop(audioContext.currentTime + 0.3);
+          }, 200);
+        }
+      } catch (error) {
+        // Falha silenciosa para navegadores que não suportam áudio
+      }
+    }
+  };
+
   const handleAnswerSelect = (answer: string) => {
     if (answered || isAnnulled || isSubmitting) return;
     setSelectedAnswer(answer);
@@ -86,27 +148,8 @@ const MinimalQuestionCard = ({
     setIsCorrectAnswer(isCorrect);
     setShowFeedback(true);
 
-    // Som de feedback (opcional)
-    if ('AudioContext' in window) {
-      try {
-        const audioContext = new AudioContext();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.value = isCorrect ? 800 : 400;
-        oscillator.type = 'sine';
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.3);
-      } catch (error) {
-        // Falha silenciosa para navegadores que não suportam áudio
-      }
-    }
+    // Som de feedback aprimorado
+    playFeedbackSound(isCorrect);
 
     setTimeout(() => {
       setAnswered(true);
@@ -131,22 +174,25 @@ const MinimalQuestionCard = ({
     
     if (!answered) {
       if (selectedAnswer === key) {
-        return 'bg-netflix-red border-netflix-red text-white shadow-lg transform scale-[1.02] transition-all duration-300 animate-pulse';
+        // Alternativa selecionada em azul antes de responder
+        return 'bg-blue-600 border-blue-500 text-white shadow-lg transform scale-[1.02] transition-all duration-300';
       }
       return 'bg-netflix-card border-netflix-border text-gray-100 hover:bg-gray-700 hover:border-gray-500 hover:scale-[1.01] transition-all duration-200 cursor-pointer';
     }
     
-    // Questão já respondida - feedback visual aprimorado com animações
+    // Questão já respondida - feedback visual corrigido
     if (key === question.resposta_correta) {
+      // Resposta correta sempre em verde
       return 'bg-green-600 border-green-500 text-white shadow-lg shadow-green-500/20 animate-scale-in';
     }
     
     if (key === selectedAnswer && key !== question.resposta_correta) {
+      // Resposta errada selecionada em vermelho
       return 'bg-red-600 border-red-500 text-white shadow-lg shadow-red-500/20 animate-scale-in';
     }
     
-    // Outras alternativas em vermelho claro para indicar que estão "erradas"
-    return 'bg-red-900/20 border-red-800/40 text-red-200/70 opacity-60';
+    // Outras alternativas ficam escuras/opacas
+    return 'bg-gray-800/60 border-gray-700/60 text-gray-400/70 opacity-50';
   };
 
   if (isAnnulled) {
@@ -252,7 +298,7 @@ const MinimalQuestionCard = ({
           </div>
         </div>
 
-        {/* Alternatives com animações aprimoradas */}
+        {/* Alternatives com melhor feedback visual */}
         <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
           {alternatives.map((alternative, index) => (
             <button

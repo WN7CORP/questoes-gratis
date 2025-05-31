@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import MinimalQuestionCard from './MinimalQuestionCard';
 import ProgressBar from './ProgressBar';
@@ -52,6 +51,37 @@ const StudySession = ({
     setQuestionStartTime(Date.now());
   }, [currentIndex]);
 
+  // Função aprimorada para scroll suave
+  const scrollToTop = () => {
+    try {
+      // Tentar encontrar o container da sessão ou usar o body
+      const container = document.getElementById('study-session-container') || document.body;
+      
+      container.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start',
+        inline: 'nearest'
+      });
+    } catch (error) {
+      // Fallback para navegadores antigos
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    // Garantir que funcione após mudança de questão
+    setTimeout(() => {
+      try {
+        const container = document.getElementById('study-session-container') || document.body;
+        container.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      } catch (error) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
   const handleAnswer = (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
     const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
     
@@ -71,10 +101,12 @@ const StudySession = ({
       setStreak(0);
     }
 
-    // Auto-advance after 2 seconds
+    // Auto-advance after 2 seconds with improved scroll
     setTimeout(() => {
       if (!isLastQuestion) {
         setCurrentIndex(prev => prev + 1);
+        // Scroll suave após mudança de questão
+        setTimeout(() => scrollToTop(), 50);
       } else {
         handleSessionComplete();
       }
@@ -109,12 +141,14 @@ const StudySession = ({
   const handlePrevious = () => {
     if (currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
+      setTimeout(() => scrollToTop(), 50);
     }
   };
 
   const handleNext = () => {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(prev => prev + 1);
+      setTimeout(() => scrollToTop(), 50);
     }
   };
 
@@ -130,7 +164,7 @@ const StudySession = ({
   };
 
   return (
-    <div className="min-h-screen bg-netflix-black text-white p-4">
+    <div id="study-session-container" className="min-h-screen bg-netflix-black text-white p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
