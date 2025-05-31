@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Trophy, Target, Clock, TrendingUp, BookOpen, Settings, LogOut } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
+import UserSettings from './UserSettings';
 
 interface UserProfile {
   id: string;
@@ -328,31 +328,8 @@ const ProfileSection = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="settings" className="mt-4 sm:mt-6 space-y-4">
-            <Card className="bg-netflix-card border-netflix-border p-4">
-              <Button variant="ghost" className="w-full justify-start text-white hover:bg-gray-800">
-                <Settings className="mr-3" size={20} />
-                Preferências de Estudo
-              </Button>
-            </Card>
-            
-            <Card className="bg-netflix-card border-netflix-border p-4">
-              <Button variant="ghost" className="w-full justify-start text-white hover:bg-gray-800">
-                <Target className="mr-3" size={20} />
-                Definir Metas
-              </Button>
-            </Card>
-
-            <Card className="bg-red-900/20 border-red-800 p-4">
-              <Button 
-                variant="destructive" 
-                className="w-full"
-                onClick={handleSignOut}
-              >
-                <LogOut className="mr-2" size={16} />
-                Sair da Conta
-              </Button>
-            </Card>
+          <TabsContent value="settings" className="mt-4 sm:mt-6">
+            <UserSettings />
           </TabsContent>
         </Tabs>
       </div>

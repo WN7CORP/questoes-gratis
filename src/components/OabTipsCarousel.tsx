@@ -1,7 +1,9 @@
+
 import { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Lightbulb } from 'lucide-react';
+
 const oabTips = [{
   day: 1,
   title: "Organize seu cronograma",
@@ -122,18 +124,50 @@ const oabTips = [{
   day: 30,
   title: "Visualize o sucesso",
   tip: "Imagine-se aprovado. A confiança e o mindset positivo fazem diferença na prova."
+}, {
+  day: 31,
+  title: "Última revisão",
+  tip: "Revise apenas os pontos mais importantes. Mantenha a calma e confie no seu preparo."
 }];
+
 const OabTipsCarousel = () => {
   const [currentTip, setCurrentTip] = useState(0);
+  
   const nextTip = () => {
     setCurrentTip(prev => (prev + 1) % oabTips.length);
   };
+  
   const prevTip = () => {
     setCurrentTip(prev => (prev - 1 + oabTips.length) % oabTips.length);
   };
-  const currentDay = new Date().getDate();
-  const todayTip = oabTips.find(tip => tip.day === currentDay) || oabTips[0];
-  return <div className="space-y-4">
+
+  // Função para obter o número de dias no mês atual
+  const getDaysInCurrentMonth = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  // Função para obter a dica do dia atual
+  const getTodayTip = () => {
+    const currentDay = new Date().getDate();
+    const daysInMonth = getDaysInCurrentMonth();
+    
+    // Se o dia atual é maior que o número de dicas disponíveis, 
+    // usa a última dica disponível
+    if (currentDay > oabTips.length) {
+      return oabTips[oabTips.length - 1];
+    }
+    
+    return oabTips.find(tip => tip.day === currentDay) || oabTips[0];
+  };
+
+  const todayTip = getTodayTip();
+  const daysInMonth = getDaysInCurrentMonth();
+
+  return (
+    <div className="space-y-4">
       {/* Today's tip highlight */}
       <Card className="bg-gradient-to-r from-blue-900/30 to-blue-800/20 border-blue-700/50 p-6">
         <div className="flex items-center gap-3 mb-4">
@@ -154,15 +188,27 @@ const OabTipsCarousel = () => {
       {/* Carousel */}
       <Card className="bg-netflix-card border-netflix-border p-6 px-[14px]">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-white font-bold text-lg">30 Dicas para o Sucesso</h3>
+          <h3 className="text-white font-bold text-lg">
+            {daysInMonth} Dicas para o Sucesso
+          </h3>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={prevTip} className="border-gray-600 text-gray-300 hover:bg-gray-700">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={prevTip} 
+              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+            >
               <ChevronLeft size={16} />
             </Button>
             <span className="text-gray-400 text-sm">
-              {currentTip + 1} / {oabTips.length}
+              {currentTip + 1} / {Math.min(oabTips.length, daysInMonth)}
             </span>
-            <Button variant="outline" size="sm" onClick={nextTip} className="border-gray-600 text-gray-300 hover:bg-gray-700">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={nextTip} 
+              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+            >
               <ChevronRight size={16} />
             </Button>
           </div>
@@ -178,11 +224,21 @@ const OabTipsCarousel = () => {
           <p className="text-gray-300 leading-relaxed">{oabTips[currentTip].tip}</p>
         </div>
 
-        {/* Progress indicators */}
-        <div className="flex gap-1 mt-4 justify-center">
-          {oabTips.slice(0, 10).map((_, index) => <button key={index} onClick={() => setCurrentTip(index)} className={`w-2 h-2 rounded-full transition-colors ${index === currentTip ? 'bg-netflix-red' : 'bg-gray-600'}`} />)}
+        {/* Progress indicators - mostra apenas os dias do mês atual */}
+        <div className="flex gap-1 mt-4 justify-center flex-wrap">
+          {Array.from({ length: Math.min(10, daysInMonth) }, (_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentTip(index)}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                index === currentTip ? 'bg-netflix-red' : 'bg-gray-600'
+              }`}
+            />
+          ))}
         </div>
       </Card>
-    </div>;
+    </div>
+  );
 };
+
 export default OabTipsCarousel;
