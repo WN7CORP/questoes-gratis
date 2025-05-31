@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
+import { Question } from '@/types/question';
 import MinimalQuestionCard from './MinimalQuestionCard';
 import StudyModeSelector from './StudyModeSelector';
 import CelebrationModal from './CelebrationModal';
@@ -16,21 +17,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Scale, Target, Zap, Clock, Pause, Square, GraduationCap, List, Shuffle, Flag } from 'lucide-react';
 import { getAreaColors } from '../utils/areaColors';
 
-interface Question {
-  id: number;
-  ano: string;
-  exame: string;
-  area: string;
-  numero: string;
-  enunciado: string;
-  alternativa_a: string;
-  alternativa_b: string;
-  alternativa_c: string;
-  alternativa_d: string;
-  resposta_correta: string;
-  justificativa: string;
-  banca: string;
-}
 interface QuestionsSectionProps {
   selectedArea?: string;
   selectedExam?: string;
