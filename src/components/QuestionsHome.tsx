@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen, Target, TrendingUp, Play } from 'lucide-react';
 import { QuestionFilters } from '@/types/questionFinal';
 import { supabase } from '@/integrations/supabase/client';
-import QuestionFilters as FilterComponent from './QuestionFilters';
+import QuestionFiltersComponent from './QuestionFilters';
 import StudySessionFinal from './StudySessionFinal';
 
 interface QuestionsHomeProps {
@@ -191,7 +191,7 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
         </div>
 
         {/* Filters */}
-        <FilterComponent
+        <QuestionFiltersComponent
           onFiltersChange={setSelectedFilters}
           totalQuestions={totalQuestions}
         />
