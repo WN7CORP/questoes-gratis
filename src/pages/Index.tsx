@@ -44,7 +44,7 @@ const Index = () => {
           <div className="bg-netflix-card border-b border-netflix-border px-6 py-4 fixed top-0 z-30 w-full">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
               <div className="flex items-center gap-8">
-                <h1 className="text-xl font-bold text-netflix-red">Questões Comentadas</h1>
+                <h1 className="text-xl font-bold text-netflix-red">Questões comentadas Pro</h1>
                 <TabsList className="bg-transparent h-auto p-0 space-x-6">
                   <TabsTrigger 
                     value="home" 
@@ -140,7 +140,7 @@ const Index = () => {
         <div className={`flex-1 overflow-hidden ${!isMobile ? 'pt-20' : hideNavigation ? 'pt-0' : 'pt-16 sm:pt-20'}`}>
           <TabsContent value="home" className="h-full mt-0">
             <div className="h-full overflow-y-auto">
-              <HomeSection />
+              <HomeSection onHideNavigation={setHideNavigation} />
             </div>
           </TabsContent>
           

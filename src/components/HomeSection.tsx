@@ -135,11 +135,11 @@ const HomeSection = ({
               <Award className="text-white" size={32} />
             </div>
             <h1 className="text-4xl sm:text-5xl font-bold text-white">
-              OAB Questões
+              Questões comentadas Pro
             </h1>
           </div>
           <p className="text-xl text-netflix-text-secondary mb-8 max-w-2xl mx-auto">
-            Prepare-se para o Exame da OAB com questões comentadas, simulados reais e conteúdo atualizado
+            Prepare-se para concursos jurídicos com questões comentadas, simulados e conteúdo atualizado
           </p>
           
           {/* Quick Stats */}
@@ -165,7 +165,7 @@ const HomeSection = ({
                 {stats.totalExams}
               </div>
               <div className="text-sm text-netflix-text-secondary">
-                Exames Passados
+                Concursos Passados
               </div>
             </div>
           </div>
@@ -185,7 +185,7 @@ const HomeSection = ({
       <div className="mb-8 px-[7px] animate-fade-in" style={{ animationDelay: '200ms' }}>
         <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
           <Scale className="text-blue-500" size={28} />
-          Dicas para o Sucesso na OAB
+          Dicas para o Sucesso em Concursos Jurídicos
         </h2>
         <OabTipsCarousel />
       </div>
@@ -253,11 +253,11 @@ const HomeSection = ({
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">Simulado Completo</h3>
-                <p className="text-red-200">Provas reais de exames anteriores</p>
+                <p className="text-red-200">Provas reais de concursos anteriores</p>
               </div>
             </div>
             <p className="text-red-100/80 text-sm mb-4">
-              Pratique com exames reais da OAB, cronometrado e nas mesmas condições da prova oficial.
+              Pratique com questões reais de concursos, cronometrado e nas mesmas condições da prova oficial.
             </p>
             <div className="flex items-center gap-2 text-red-200">
               <Clock size={16} />
@@ -282,7 +282,7 @@ const HomeSection = ({
               </div>
               <div>
                 <h3 className="text-white font-semibold">Ética Profissional</h3>
-                <p className="text-gray-400 text-xs">Estatuto da OAB</p>
+                <p className="text-gray-400 text-xs">Estatuto da Advocacia</p>
               </div>
             </div>
           </Card>
@@ -332,7 +332,7 @@ const HomeSection = ({
             <div>
               <h3 className="text-white font-bold text-lg mb-2">Pronto para começar?</h3>
               <p className="text-netflix-text-secondary">
-                Escolha uma das opções acima e comece sua jornada rumo à aprovação na OAB!
+                Escolha uma das opções acima e comece sua jornada rumo ao sucesso em concursos jurídicos!
               </p>
             </div>
             <div className="hidden sm:block">

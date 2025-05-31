@@ -16,7 +16,7 @@ const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
             <Scale size={40} className="text-white" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">
-            Questões Comentadas
+            Questões comentadas Pro
           </h1>
           <p className="text-xl text-netflix-text-secondary">
             Direito de forma completa e organizada
