@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,25 +7,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Filter, X, Target, Settings } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { QuestionFilters as QuestionFiltersType } from '@/types/questionFinal';
-
 interface QuestionFiltersProps {
   onFiltersChange: (filters: QuestionFiltersType) => void;
   totalQuestions: number;
   onStartStudy: () => void;
 }
-
-const QuestionFilters = ({ onFiltersChange, totalQuestions, onStartStudy }: QuestionFiltersProps) => {
+const QuestionFilters = ({
+  onFiltersChange,
+  totalQuestions,
+  onStartStudy
+}: QuestionFiltersProps) => {
   const [areas, setAreas] = useState<string[]>([]);
   const [temas, setTemas] = useState<string[]>([]);
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [selectedTema, setSelectedTema] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [showCustomFilters, setShowCustomFilters] = useState(false);
-
   useEffect(() => {
     fetchFilterOptions();
   }, []);
-
   useEffect(() => {
     if (selectedArea && selectedArea !== 'todos') {
       fetchTemas(selectedArea);
@@ -35,22 +34,18 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions, onStartStudy }: Ques
       setSelectedTema('');
     }
   }, [selectedArea]);
-
   useEffect(() => {
     const filters: QuestionFiltersType = {};
     if (selectedArea && selectedArea !== 'todos') filters.area = selectedArea;
     if (selectedTema && selectedTema !== 'todos') filters.tema = selectedTema;
-    
     onFiltersChange(filters);
   }, [selectedArea, selectedTema, onFiltersChange]);
-
   const fetchFilterOptions = async () => {
     try {
-      const { data, error } = await supabase
-        .from('QUESTOES_FINAL')
-        .select('area')
-        .not('area', 'is', null);
-
+      const {
+        data,
+        error
+      } = await supabase.from('QUESTOES_FINAL').select('area').not('area', 'is', null);
       if (error) {
         console.error('Error fetching areas:', error);
       } else {
@@ -63,15 +58,12 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions, onStartStudy }: Ques
       setLoading(false);
     }
   };
-
   const fetchTemas = async (area: string) => {
     try {
-      const { data, error } = await supabase
-        .from('QUESTOES_FINAL')
-        .select('tema')
-        .eq('area', area)
-        .not('tema', 'is', null);
-
+      const {
+        data,
+        error
+      } = await supabase.from('QUESTOES_FINAL').select('tema').eq('area', area).not('tema', 'is', null);
       if (error) {
         console.error('Error fetching temas:', error);
       } else {
@@ -82,50 +74,31 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions, onStartStudy }: Ques
       console.error('Error:', error);
     }
   };
-
   const clearFilters = () => {
     setSelectedArea('');
     setSelectedTema('');
   };
-
   const hasActiveFilters = selectedArea || selectedTema;
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
+    return <div className="flex items-center justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-netflix-red"></div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <Card className="bg-netflix-card border-netflix-border p-6 mb-6">
+  return <Card className="bg-netflix-card border-netflix-border p-6 mb-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Filter className="text-netflix-red" size={24} />
           <h2 className="text-xl font-semibold text-white">Filtros de Estudo</h2>
-          {hasActiveFilters && (
-            <Badge variant="outline" className="border-netflix-red text-netflix-red">
+          {hasActiveFilters && <Badge variant="outline" className="border-netflix-red text-netflix-red">
               Filtros ativos
-            </Badge>
-          )}
+            </Badge>}
         </div>
         <div className="flex items-center gap-2">
-          <Button 
-            onClick={() => setShowCustomFilters(!showCustomFilters)} 
-            variant="outline" 
-            size="sm"
-            className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"
-          >
-            <Settings className="mr-2 h-4 w-4" />
-            Filtros Personalizados
-          </Button>
-          {hasActiveFilters && (
-            <Button onClick={clearFilters} variant="outline" size="sm">
+          
+          {hasActiveFilters && <Button onClick={clearFilters} variant="outline" size="sm">
               <X className="mr-2 h-4 w-4" />
               Limpar
-            </Button>
-          )}
+            </Button>}
         </div>
       </div>
 
@@ -139,9 +112,7 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions, onStartStudy }: Ques
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todas as áreas</SelectItem>
-              {areas.map(area => (
-                <SelectItem key={area} value={area}>{area}</SelectItem>
-              ))}
+              {areas.map(area => <SelectItem key={area} value={area}>{area}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -155,44 +126,30 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions, onStartStudy }: Ques
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos os temas</SelectItem>
-              {temas.map(tema => (
-                <SelectItem key={tema} value={tema}>{tema}</SelectItem>
-              ))}
+              {temas.map(tema => <SelectItem key={tema} value={tema}>{tema}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
       </div>
 
       {/* Custom Filters Section */}
-      {showCustomFilters && (
-        <div className="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-600">
+      {showCustomFilters && <div className="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-600">
           <h3 className="text-lg font-semibold text-white mb-4">Filtros Avançados</h3>
           <p className="text-gray-400 text-sm">
             Filtros personalizados estarão disponíveis em breve. Por enquanto, use os filtros básicos de Área e Tema.
           </p>
-        </div>
-      )}
+        </div>}
 
       {/* Start Study Button */}
       <div className="flex items-center justify-between pt-4 border-t border-netflix-border">
         <div className="text-gray-400">
-          {totalQuestions > 0 ? (
-            <span>{totalQuestions.toLocaleString()} questões encontradas</span>
-          ) : (
-            <span>Nenhuma questão encontrada com os filtros aplicados</span>
-          )}
+          {totalQuestions > 0 ? <span>{totalQuestions.toLocaleString()} questões encontradas</span> : <span>Nenhuma questão encontrada com os filtros aplicados</span>}
         </div>
-        <Button 
-          onClick={onStartStudy} 
-          className="bg-netflix-red hover:bg-red-700 text-white px-6 py-2"
-          disabled={totalQuestions === 0}
-        >
+        <Button onClick={onStartStudy} className="bg-netflix-red hover:bg-red-700 text-white px-6 py-2" disabled={totalQuestions === 0}>
           <Target className="mr-2 h-4 w-4" />
           Iniciar Estudo
         </Button>
       </div>
-    </Card>
-  );
+    </Card>;
 };
-
 export default QuestionFilters;
