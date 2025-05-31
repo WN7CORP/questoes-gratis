@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Question } from '@/types/question';
 import { supabase } from '@/integrations/supabase/client';
