@@ -133,11 +133,11 @@ const StudyAreas = ({
         
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-400">
           <div className="flex items-center gap-2">
-            <Target size={14} sm:size={16} />
+            <Target size={16} />
             <span>{areas.length} áreas disponíveis</span>
           </div>
           <div className="flex items-center gap-2">
-            <TrendingUp size={14} sm:size={16} />
+            <TrendingUp size={16} />
             <span>Ordenado por quantidade de questões</span>
           </div>
         </div>
