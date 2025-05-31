@@ -704,6 +704,204 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_article_comments: {
+        Row: {
+          article_id: string
+          content: string
+          created_at: string
+          id: string
+          likes_count: number | null
+          parent_id: string | null
+          updated_at: string
+          user_email: string | null
+          user_name: string
+        }
+        Insert: {
+          article_id: string
+          content: string
+          created_at?: string
+          id?: string
+          likes_count?: number | null
+          parent_id?: string | null
+          updated_at?: string
+          user_email?: string | null
+          user_name: string
+        }
+        Update: {
+          article_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          likes_count?: number | null
+          parent_id?: string | null
+          updated_at?: string
+          user_email?: string | null
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_article_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "blog_article_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_articles: {
+        Row: {
+          author: string
+          category: string
+          content: string
+          created_at: string
+          excerpt: string | null
+          id: string
+          image_url: string | null
+          published_date: string | null
+          read_time: string | null
+          title: string
+          updated_at: string
+          views: number | null
+        }
+        Insert: {
+          author: string
+          category: string
+          content: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          published_date?: string | null
+          read_time?: string | null
+          title: string
+          updated_at?: string
+          views?: number | null
+        }
+        Update: {
+          author?: string
+          category?: string
+          content?: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          published_date?: string | null
+          read_time?: string | null
+          title?: string
+          updated_at?: string
+          views?: number | null
+        }
+        Relationships: []
+      }
+      blog_comment_likes: {
+        Row: {
+          comment_id: string | null
+          created_at: string
+          id: string
+          user_ip: string
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          user_ip: string
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string
+          id?: string
+          user_ip?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "blog_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_comment_user_likes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_ip: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_ip: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_ip?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_comment_user_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "blog_article_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_comments: {
+        Row: {
+          article_id: string | null
+          content: string
+          created_at: string
+          id: string
+          likes_count: number | null
+          parent_id: string | null
+          updated_at: string
+          user_email: string | null
+          user_name: string
+        }
+        Insert: {
+          article_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          likes_count?: number | null
+          parent_id?: string | null
+          updated_at?: string
+          user_email?: string | null
+          user_name: string
+        }
+        Update: {
+          article_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          likes_count?: number | null
+          parent_id?: string | null
+          updated_at?: string
+          user_email?: string | null
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_comments_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "blog_articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "blog_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       book_assistant_history: {
         Row: {
           book_id: number
@@ -3921,6 +4119,7 @@ export type Database = {
           email: string
           id: string
           onboarding_completed: boolean | null
+          premium_until: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -3929,6 +4128,7 @@ export type Database = {
           email: string
           id: string
           onboarding_completed?: boolean | null
+          premium_until?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -3937,6 +4137,7 @@ export type Database = {
           email?: string
           id?: string
           onboarding_completed?: boolean | null
+          premium_until?: string | null
         }
         Relationships: []
       }
@@ -5609,6 +5810,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_reading_progress: {
+        Row: {
+          book_id: number
+          created_at: string | null
+          current_page: number | null
+          id: string
+          is_favorite: boolean | null
+          last_position: string | null
+          notes: string | null
+          progress_percent: number | null
+          reading_time_minutes: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          book_id: number
+          created_at?: string | null
+          current_page?: number | null
+          id?: string
+          is_favorite?: boolean | null
+          last_position?: string | null
+          notes?: string | null
+          progress_percent?: number | null
+          reading_time_minutes?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          book_id?: number
+          created_at?: string | null
+          current_page?: number | null
+          id?: string
+          is_favorite?: boolean | null
+          last_position?: string | null
+          notes?: string | null
+          progress_percent?: number | null
+          reading_time_minutes?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_statistics: {
         Row: {
           created_at: string | null
@@ -5639,6 +5882,42 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           videos_assistidos?: number | null
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          books_read: number | null
+          created_at: string | null
+          id: string
+          last_activity_date: string | null
+          pages_read: number | null
+          reading_streak_days: number | null
+          total_reading_time_minutes: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          books_read?: number | null
+          created_at?: string | null
+          id?: string
+          last_activity_date?: string | null
+          pages_read?: number | null
+          reading_streak_days?: number | null
+          total_reading_time_minutes?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          books_read?: number | null
+          created_at?: string | null
+          id?: string
+          last_activity_date?: string | null
+          pages_read?: number | null
+          reading_streak_days?: number | null
+          total_reading_time_minutes?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
