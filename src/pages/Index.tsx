@@ -1,16 +1,15 @@
 
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, Search, BarChart3, User, BookOpen, Trophy } from 'lucide-react';
+import { Home, Search, BarChart3, User, BookOpen, Target } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import WelcomeScreen from '@/components/WelcomeScreen';
-import HomeSection from '@/components/HomeSection';
+import QuestionsHome from '@/components/QuestionsHome';
 import StudyAreas from '@/components/StudyAreas';
 import SearchSection from '@/components/SearchSection';
 import PerformanceSection from '@/components/PerformanceSection';
 import ProfileSection from '@/components/ProfileSection';
-import SimuladoSection from '@/components/SimuladoSection';
 
 const Index = () => {
   const [showWelcome, setShowWelcome] = useState(true);
@@ -44,7 +43,7 @@ const Index = () => {
           <div className="bg-netflix-card border-b border-netflix-border px-6 py-4 fixed top-0 z-30 w-full">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
               <div className="flex items-center gap-8">
-                <h1 className="text-xl font-bold text-netflix-red">OAB Questões</h1>
+                <h1 className="text-xl font-bold text-netflix-red">Questões Comentadas</h1>
                 <TabsList className="bg-transparent h-auto p-0 space-x-6">
                   <TabsTrigger 
                     value="home" 
@@ -55,11 +54,11 @@ const Index = () => {
                   </TabsTrigger>
                   
                   <TabsTrigger 
-                    value="simulado" 
+                    value="practice" 
                     className="bg-transparent text-netflix-text-secondary hover:text-white data-[state=active]:text-netflix-red data-[state=active]:bg-transparent border-b-2 border-transparent data-[state=active]:border-netflix-red rounded-none px-4 py-2 transition-all duration-200"
                   >
-                    <Trophy size={18} className="mr-2" />
-                    Simulado
+                    <Target size={18} className="mr-2" />
+                    Praticar
                   </TabsTrigger>
                   
                   <TabsTrigger 
@@ -68,6 +67,14 @@ const Index = () => {
                   >
                     <BookOpen size={18} className="mr-2" />
                     Áreas
+                  </TabsTrigger>
+                  
+                  <TabsTrigger 
+                    value="search" 
+                    className="bg-transparent text-netflix-text-secondary hover:text-white data-[state=active]:text-netflix-red data-[state=active]:bg-transparent border-b-2 border-transparent data-[state=active]:border-netflix-red rounded-none px-4 py-2 transition-all duration-200"
+                  >
+                    <Search size={18} className="mr-2" />
+                    Buscar
                   </TabsTrigger>
                   
                   <TabsTrigger 
@@ -105,9 +112,9 @@ const Index = () => {
                 <span className="text-xs sm:text-sm font-medium">Início</span>
               </TabsTrigger>
               
-              <TabsTrigger value="simulado" className="flex flex-col gap-1 h-full data-[state=active]:bg-netflix-red data-[state=active]:text-white transition-all duration-200 active:scale-95">
-                <Trophy size={22} className="sm:size-24" />
-                <span className="text-xs sm:text-sm font-medium">Simulado</span>
+              <TabsTrigger value="practice" className="flex flex-col gap-1 h-full data-[state=active]:bg-netflix-red data-[state=active]:text-white transition-all duration-200 active:scale-95">
+                <Target size={22} className="sm:size-24" />
+                <span className="text-xs sm:text-sm font-medium">Praticar</span>
               </TabsTrigger>
               
               <TabsTrigger value="areas" className="flex flex-col gap-1 h-full data-[state=active]:bg-netflix-red data-[state=active]:text-white transition-all duration-200 active:scale-95">
@@ -132,16 +139,20 @@ const Index = () => {
         <div className={`flex-1 overflow-hidden ${!isMobile ? 'pt-20' : hideNavigation ? 'pt-0' : 'pt-16 sm:pt-20'}`}>
           <TabsContent value="home" className="h-full mt-0">
             <div className="h-full overflow-y-auto">
-              <HomeSection onHideNavigation={setHideNavigation} />
+              <QuestionsHome onHideNavigation={setHideNavigation} />
             </div>
           </TabsContent>
           
-          <TabsContent value="simulado" className="h-full mt-0">
-            <SimuladoSection onHideNavigation={setHideNavigation} />
+          <TabsContent value="practice" className="h-full mt-0">
+            <QuestionsHome onHideNavigation={setHideNavigation} />
           </TabsContent>
           
           <TabsContent value="areas" className="h-full mt-0">
             <StudyAreas onHideNavigation={setHideNavigation} />
+          </TabsContent>
+          
+          <TabsContent value="search" className="h-full mt-0">
+            <SearchSection />
           </TabsContent>
           
           <TabsContent value="performance" className="h-full mt-0">

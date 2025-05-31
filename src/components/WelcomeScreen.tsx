@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Scale, BookOpen, Trophy } from 'lucide-react';
+import { Scale, BookOpen, Filter, Target } from 'lucide-react';
 
 interface WelcomeScreenProps {
   onStart: () => void;
@@ -16,10 +16,10 @@ const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
             <Scale size={40} className="text-white" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">
-            OAB Questões
+            Questões Comentadas
           </h1>
           <p className="text-xl text-netflix-text-secondary">
-            Comentadas
+            Direito de forma completa e organizada
           </p>
         </div>
 
@@ -28,19 +28,29 @@ const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
           <div className="flex items-center gap-3 text-left">
             <BookOpen className="text-netflix-red flex-shrink-0" size={24} />
             <div>
-              <h3 className="text-white font-semibold">Questões Atualizadas</h3>
+              <h3 className="text-white font-semibold">Questões de Direito</h3>
               <p className="text-netflix-text-secondary text-sm">
-                Banco com milhares de questões comentadas
+                Banco completo com questões comentadas e justificativas
               </p>
             </div>
           </div>
           
           <div className="flex items-center gap-3 text-left">
-            <Trophy className="text-netflix-red flex-shrink-0" size={24} />
+            <Filter className="text-netflix-red flex-shrink-0" size={24} />
             <div>
-              <h3 className="text-white font-semibold">Organizado por Disciplina</h3>
+              <h3 className="text-white font-semibold">Filtros Avançados</h3>
               <p className="text-netflix-text-secondary text-sm">
-                Estude de forma direcionada e eficiente
+                Filtre por área, tema, assunto e número de alternativas
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 text-left">
+            <Target className="text-netflix-red flex-shrink-0" size={24} />
+            <div>
+              <h3 className="text-white font-semibold">Estudo Direcionado</h3>
+              <p className="text-netflix-text-secondary text-sm">
+                Estude de forma focada nas áreas que mais precisa
               </p>
             </div>
           </div>
@@ -55,7 +65,7 @@ const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
         </Button>
 
         <p className="text-netflix-text-secondary text-sm mt-6">
-          Prepare-se para o exame da OAB com confiança
+          Prepare-se com questões de direito comentadas e organizadas
         </p>
       </div>
     </div>

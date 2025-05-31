@@ -1,0 +1,179 @@
+
+import React, { useState } from 'react';
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Scale, CheckCircle, XCircle, BookOpen } from 'lucide-react';
+import { QuestionFinal } from '@/types/questionFinal';
+
+interface QuestionCardFinalProps {
+  question: QuestionFinal;
+  onAnswer?: (questionId: number, selectedAnswer: string, isCorrect: boolean) => void;
+  showQuestionNumber?: boolean;
+  currentQuestion?: number;
+  totalQuestions?: number;
+}
+
+const QuestionCardFinal = ({
+  question,
+  onAnswer,
+  showQuestionNumber = false,
+  currentQuestion,
+  totalQuestions
+}: QuestionCardFinalProps) => {
+  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
+  const [showResult, setShowResult] = useState(false);
+  const [answered, setAnswered] = useState(false);
+
+  const alternatives = [
+    { key: 'A', value: question.A },
+    { key: 'B', value: question.B },
+    { key: 'C', value: question.C },
+    { key: 'D', value: question.D },
+    { key: 'E', value: question.E },
+  ].filter(alt => alt.value && alt.value.trim() !== '');
+
+  const handleAnswerSelect = (answer: string) => {
+    if (answered) return;
+    setSelectedAnswer(answer);
+  };
+
+  const handleSubmitAnswer = () => {
+    if (!selectedAnswer || answered) return;
+
+    const isCorrect = selectedAnswer === question.resposta_correta;
+    setAnswered(true);
+    setShowResult(true);
+
+    if (onAnswer) {
+      onAnswer(question.id, selectedAnswer, isCorrect);
+    }
+  };
+
+  const getAlternativeStyle = (key: string) => {
+    if (!answered) {
+      if (selectedAnswer === key) {
+        return 'bg-blue-600 border-blue-500 text-white shadow-lg transform scale-[1.02]';
+      }
+      return 'bg-netflix-card border-netflix-border text-gray-100 hover:bg-gray-700 hover:border-gray-500 hover:scale-[1.01] cursor-pointer';
+    }
+    
+    if (key === question.resposta_correta) {
+      return 'bg-green-600 border-green-500 text-white shadow-lg shadow-green-500/20';
+    }
+    
+    if (key === selectedAnswer && key !== question.resposta_correta) {
+      return 'bg-red-600 border-red-500 text-white shadow-lg shadow-red-500/20';
+    }
+    
+    return 'bg-gray-800/60 border-gray-700/60 text-gray-400/70 opacity-50';
+  };
+
+  return (
+    <Card className="bg-netflix-card border-netflix-border p-4 sm:p-6 max-w-4xl mx-auto shadow-xl">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="bg-netflix-red rounded-lg p-2 sm:p-3">
+            <Scale className="text-white" size={16} />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs">
+                {question.area}
+              </Badge>
+              <Badge variant="outline" className="border-blue-600 text-blue-400 bg-blue-900/20 text-xs">
+                {question.tema}
+              </Badge>
+              <Badge variant="outline" className="border-green-600 text-green-400 bg-green-900/20 text-xs">
+                {question.assunto}
+              </Badge>
+              {showQuestionNumber && currentQuestion && totalQuestions && (
+                <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs font-bold">
+                  {currentQuestion}/{totalQuestions}
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <BookOpen size={12} />
+              <span>Aplicada em: {question.aplicada_em}</span>
+              <span>•</span>
+              <span>Questão {question.numero_questao}</span>
+              <span>•</span>
+              <span>{alternatives.length} alternativas</span>
+            </div>
+          </div>
+        </div>
+        
+        {answered && (
+          <div className="flex items-center gap-2">
+            {selectedAnswer === question.resposta_correta ? (
+              <CheckCircle className="text-green-500 animate-bounce" size={20} />
+            ) : (
+              <XCircle className="text-red-500 animate-pulse" size={20} />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Question text */}
+      <div className="mb-4 sm:mb-6">
+        <div className="text-gray-100 text-base sm:text-xl leading-relaxed whitespace-pre-wrap">
+          {question.enunciado}
+        </div>
+      </div>
+
+      {/* Alternatives */}
+      <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+        {alternatives.map((alternative, index) => (
+          <button
+            key={alternative.key}
+            onClick={() => handleAnswerSelect(alternative.key)}
+            disabled={answered}
+            className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] ${getAlternativeStyle(alternative.key)}`}
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <div className="flex items-start gap-2 sm:gap-3">
+              <span className="font-bold text-sm min-w-[18px] flex-shrink-0 bg-black/20 rounded-full w-5 h-5 sm:w-7 sm:h-7 flex items-center justify-center">
+                {alternative.key}
+              </span>
+              <span className="flex-1 text-sm sm:text-lg whitespace-pre-wrap">
+                {alternative.value}
+              </span>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Submit Button */}
+      {!answered && (
+        <Button
+          onClick={handleSubmitAnswer}
+          disabled={!selectedAnswer}
+          className="w-full bg-netflix-red hover:bg-red-700 text-white py-3 sm:py-4 text-base sm:text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg"
+        >
+          Responder
+        </Button>
+      )}
+
+      {/* Justification */}
+      {showResult && (
+        <div className="mt-6 p-4 bg-netflix-black/50 rounded-lg border border-netflix-border">
+          <div className="flex items-center gap-2 mb-2">
+            <BookOpen className="text-netflix-red" size={16} />
+            <span className="font-semibold text-white">Justificativa</span>
+          </div>
+          <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+            {question.justificativa}
+          </p>
+          <div className="mt-3 text-xs text-gray-400">
+            <span>Resposta correta: </span>
+            <span className="font-bold text-green-400">{question.resposta_correta}</span>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+};
+
+export default QuestionCardFinal;
