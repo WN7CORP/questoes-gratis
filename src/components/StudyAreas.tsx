@@ -77,22 +77,35 @@ const StudyAreas = ({
     return (
       <div className="h-full overflow-y-auto bg-netflix-black">
         <div className="p-3 sm:p-6">
-          {/* Header mais discreto */}
-          <div className="flex items-center gap-3 mb-4 p-2 sm:p-3 rounded-lg bg-gray-800/30 border border-gray-700/50 animate-fade-in">
+          {/* Header mais elegante e responsivo */}
+          <div className="flex items-center gap-2 sm:gap-4 mb-4 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-gray-800/40 to-gray-700/20 border border-gray-600/30 backdrop-blur-sm animate-fade-in shadow-lg">
             <button 
               onClick={handleBackToAreas} 
-              className="text-gray-400 hover:text-white transition-colors duration-200 text-sm flex items-center gap-1"
+              className="group flex items-center gap-2 text-gray-400 hover:text-white transition-all duration-300 text-sm sm:text-base bg-gray-700/50 hover:bg-gray-600/50 px-3 py-2 rounded-lg border border-gray-600/50 hover:border-gray-500/50 hover:scale-105"
             >
-              ← Voltar às Áreas
+              <svg 
+                className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="hidden sm:inline">Voltar às Áreas</span>
+              <span className="sm:hidden">Voltar</span>
             </button>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <Play className="text-gray-400" size={16} />
-                <h2 className="text-base font-medium text-gray-300">
-                  Estudando: {selectedArea}
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-1.5 flex-shrink-0">
+                  <Play className="text-white" size={14} />
+                </div>
+                <h2 className="text-base sm:text-lg font-semibold text-white truncate">
+                  {selectedArea}
                 </h2>
               </div>
-              <p className="text-gray-500 text-xs mt-1">
+              <p className="text-gray-400 text-xs sm:text-sm flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
                 Questões em ordem aleatória
               </p>
             </div>
