@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -26,10 +25,38 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [questionCount, setQuestionCount] = useState(10);
   const [isCreating, setIsCreating] = useState(false);
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
   const { toast } = useToast();
 
-  const exams = ['OAB', 'ENEM', 'Concurso', 'Vestibular'];
+  const exams = ['OAB'];
   const years = ['2023', '2022', '2021', '2020', '2019', '2018'];
+
+  useEffect(() => {
+    if (isVisible) {
+      fetchAvailableYears();
+    }
+  }, [isVisible]);
+
+  const fetchAvailableYears = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('Questoes_Comentadas')
+        .select('ano')
+        .eq('exame', 'OAB')
+        .not('ano', 'is', null);
+      
+      if (error) {
+        console.error('Error fetching years:', error);
+      } else {
+        const uniqueYears = [...new Set(data?.map(item => item.ano) || [])]
+          .filter(Boolean)
+          .sort((a, b) => parseInt(b) - parseInt(a)); // Ordem decrescente
+        setAvailableYears(uniqueYears);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
   const handleAreaToggle = (area: string) => {
     setSelectedAreas(prev => 
@@ -140,7 +167,7 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
             <List size={20} className="text-blue-500" />
-            Criar Nova Playlist
+            Criar Nova Playlist - OAB
           </DialogTitle>
         </DialogHeader>
 
@@ -154,7 +181,7 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ex: Direito Constitucional - Revisão"
+                placeholder="Ex: Direito Constitucional - Revisão OAB"
                 className="bg-gray-800 border-gray-600 text-white"
                 maxLength={50}
               />
@@ -167,7 +194,7 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descreva o objetivo desta playlist..."
+                placeholder="Descreva o objetivo desta playlist para o exame da OAB..."
                 className="bg-gray-800 border-gray-600 text-white resize-none"
                 rows={3}
                 maxLength={200}
@@ -237,58 +264,39 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
             )}
           </Card>
 
-          {/* Exames */}
+          {/* Exame - Apenas OAB */}
           <Card className="bg-gray-800/50 border-gray-700 p-4">
             <h3 className="text-white font-medium mb-3 flex items-center gap-2">
-              Tipos de Exame
-              <Badge variant="outline" className="text-xs">
-                {selectedExams.length} selecionados
+              Exame
+              <Badge variant="outline" className="text-xs bg-green-900/30 border-green-600 text-green-300">
+                OAB Selecionado
               </Badge>
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {exams.map((exam) => (
-                <div key={exam} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`exam-${exam}`}
-                    checked={selectedExams.includes(exam)}
-                    onCheckedChange={() => handleExamToggle(exam)}
-                  />
-                  <label
-                    htmlFor={`exam-${exam}`}
-                    className="text-sm text-gray-300 cursor-pointer hover:text-white transition-colors"
-                  >
-                    {exam}
-                  </label>
-                </div>
-              ))}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="exam-oab"
+                checked={selectedExams.includes('OAB')}
+                onCheckedChange={() => handleExamToggle('OAB')}
+              />
+              <label
+                htmlFor="exam-oab"
+                className="text-sm text-gray-300 cursor-pointer hover:text-white transition-colors"
+              >
+                Ordem dos Advogados do Brasil (OAB)
+              </label>
             </div>
-            {selectedExams.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1">
-                {selectedExams.map((exam) => (
-                  <Badge
-                    key={exam}
-                    variant="outline"
-                    className="text-xs bg-green-900/30 border-green-600 text-green-300 cursor-pointer hover:bg-green-900/50"
-                    onClick={() => handleExamToggle(exam)}
-                  >
-                    {exam}
-                    <X size={12} className="ml-1" />
-                  </Badge>
-                ))}
-              </div>
-            )}
           </Card>
 
-          {/* Anos */}
+          {/* Anos - Baseados no OAB */}
           <Card className="bg-gray-800/50 border-gray-700 p-4">
             <h3 className="text-white font-medium mb-3 flex items-center gap-2">
-              Anos
+              Anos (OAB)
               <Badge variant="outline" className="text-xs">
                 {selectedYears.length} selecionados
               </Badge>
             </h3>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-              {years.map((year) => (
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 max-h-32 overflow-y-auto">
+              {availableYears.map((year) => (
                 <div key={year} className="flex items-center space-x-2">
                   <Checkbox
                     id={`year-${year}`}

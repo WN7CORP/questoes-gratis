@@ -8,11 +8,12 @@ import QuestionJustification from './QuestionJustification';
 import SimuladoResults from './SimuladoResults';
 import PlaylistCreator from './PlaylistCreator';
 import PlaylistManager from './PlaylistManager';
+import StudySession from './StudySession';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Scale, Target, Zap, Clock, Pause, Square, GraduationCap, List, Shuffle } from 'lucide-react';
+import { Scale, Target, Zap, Clock, Pause, Square, GraduationCap, List, Shuffle, CheckCircle } from 'lucide-react';
 import { getAreaColors } from '../utils/areaColors';
 
 interface Question {
@@ -87,6 +88,9 @@ const QuestionsSection = ({
   const [showPlaylistCreator, setShowPlaylistCreator] = useState(false);
   const [showPlaylistManager, setShowPlaylistManager] = useState(false);
   const [activePlaylist, setActivePlaylist] = useState<any>(null);
+  const [showStudySession, setShowStudySession] = useState(false);
+  const [sessionQuestions, setSessionQuestions] = useState<Question[]>([]);
+  const [showAreaResults, setShowAreaResults] = useState(false);
   const questionCardRef = useRef<HTMLDivElement>(null);
   const areaColorScheme = selectedAreaFilter ? getAreaColors(selectedAreaFilter) : null;
 
@@ -306,27 +310,41 @@ const QuestionsSection = ({
     setLoading(true);
     try {
       let query = supabase.from('Questoes_Comentadas').select('*');
+      
       if (selectedAreaFilter) {
         query = query.eq('area', selectedAreaFilter);
-      }
-      if (selectedExam) {
-        query = query.eq('exame', selectedExam);
-      }
-      if (selectedYear) {
-        query = query.eq('ano', selectedYear);
+        // Para questões de área, buscar TODAS as questões disponíveis
+        query = query.limit(1000); // Aumentar limite significativamente
+      } else {
+        if (selectedExam) {
+          query = query.eq('exame', selectedExam);
+        }
+        if (selectedYear) {
+          query = query.eq('ano', selectedYear);
+        }
+        
+        if (isDailyChallenge) {
+          query = query.not('resposta_correta', 'eq', 'ANULADA').limit(20);
+        } else if (isSimulado && selectedExam) {
+          query = query.order('numero', { ascending: true });
+        }
+        query = query.limit(limit);
       }
 
-      if (isDailyChallenge) {
-        query = query.not('resposta_correta', 'eq', 'ANULADA').limit(20);
-      } else if (isSimulado && selectedExam) {
-        query = query.order('numero', { ascending: true });
-      }
-      query = query.limit(limit);
       const { data, error } = await query;
       if (error) {
         console.error('Error fetching questions:', error);
       } else {
-        setQuestions(data || []);
+        const questionsData = data || [];
+        setQuestions(questionsData);
+        
+        // Se for área específica e tiver muitas questões, iniciar sessão de estudo
+        if (selectedAreaFilter && questionsData.length > 10) {
+          setSessionQuestions(questionsData);
+          setShowStudySession(true);
+          return;
+        }
+        
         setAnswers({});
         setCurrentQuestionIndex(0);
         setStreak(0);
@@ -616,6 +634,35 @@ const QuestionsSection = ({
   const isQuestionAnnulled = currentQuestion?.resposta_correta === 'ANULADA';
   const isQuestionAnswered = !!answers[currentQuestion.id];
 
+  // Se estiver na sessão de estudo de área
+  if (showStudySession && sessionQuestions.length > 0) {
+    return (
+      <StudySession
+        questions={sessionQuestions}
+        onExit={handleStudySessionExit}
+        title={`Estudo de ${selectedAreaFilter || 'Questões'}`}
+        mode="practice"
+      />
+    );
+  }
+
+  // Se estiver mostrando resultados da área
+  if (showAreaResults) {
+    return (
+      <SimuladoResults 
+        sessionStats={sessionStats} 
+        areaStats={areaStats} 
+        previousAttempts={[]} 
+        examInfo={{
+          exame: 'Área de Estudo',
+          ano: selectedAreaFilter
+        }} 
+        totalTime={Math.floor((Date.now() - sessionStats.startTime) / 1000)} 
+        onClose={handleAreaResultsClose}
+      />
+    );
+  }
+
   return (
     <div id="questions-container" className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-0 py-0 px-0">
       {/* Simulado Controls - Timer and Pause/Finish buttons */}
@@ -754,7 +801,21 @@ const QuestionsSection = ({
             )}
           </div>
           
-          <StreakCounter streak={streak} showAnimation={showStreakAnimation} />
+          <div className="flex items-center gap-2">
+            <StreakCounter streak={streak} showAnimation={showStreakAnimation} />
+            
+            {/* Botão Finalizar para estudos de área */}
+            {selectedAreaFilter && stats.answeredQuestions > 5 && (
+              <Button
+                onClick={finishAreaStudy}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+              >
+                <CheckCircle size={16} />
+                Finalizar
+              </Button>
+            )}
+          </div>
         </div>
       </Card>
 
