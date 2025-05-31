@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -65,7 +64,18 @@ const PlaylistManager = ({ isVisible, onClose, onPlaylistStart }: PlaylistManage
           variant: "destructive"
         });
       } else {
-        setPlaylists((data || []) as Playlist[]);
+        // Properly type the data without casting to Playlist[] directly
+        const typedPlaylists: Playlist[] = (data || []).map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          description: item.description || '',
+          areas: item.areas,
+          exams: item.exams,
+          years: item.years,
+          question_count: item.question_count,
+          created_at: item.created_at
+        }));
+        setPlaylists(typedPlaylists);
       }
     } catch (error) {
       console.error('Error:', error);
