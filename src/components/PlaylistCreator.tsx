@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -25,10 +25,35 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [questionCount, setQuestionCount] = useState(20);
   const [isCreating, setIsCreating] = useState(false);
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
   const { toast } = useToast();
 
-  // Anos do OAB (baseado nos dados históricos)
-  const oabYears = ['2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'];
+  useEffect(() => {
+    if (isVisible) {
+      fetchAvailableYears();
+    }
+  }, [isVisible]);
+
+  const fetchAvailableYears = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('Questoes_Comentadas')
+        .select('ano')
+        .eq('exame', 'OAB')
+        .not('ano', 'is', null);
+
+      if (error) {
+        console.error('Error fetching years:', error);
+        return;
+      }
+
+      const uniqueYears = [...new Set(data?.map(item => item.ano).filter(Boolean))];
+      const sortedYears = uniqueYears.sort((a, b) => parseInt(b) - parseInt(a));
+      setAvailableYears(sortedYears);
+    } catch (error) {
+      console.error('Error fetching years:', error);
+    }
+  };
 
   const handleAreaToggle = (area: string) => {
     setSelectedAreas(prev => 
@@ -85,7 +110,7 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
           name: name.trim(),
           description: description.trim() || null,
           areas: selectedAreas,
-          exams: ['OAB'], // Sempre OAB
+          exams: ['OAB'],
           years: selectedYears.length > 0 ? selectedYears : null,
           question_count: questionCount
         });
@@ -135,10 +160,10 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
   };
 
   const handleSelectAllYears = () => {
-    if (selectedYears.length === oabYears.length) {
+    if (selectedYears.length === availableYears.length) {
       setSelectedYears([]);
     } else {
-      setSelectedYears([...oabYears]);
+      setSelectedYears([...availableYears]);
     }
   };
 
@@ -285,11 +310,11 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
                 size="sm"
                 className="text-orange-400 hover:text-orange-300 text-xs"
               >
-                {selectedYears.length === oabYears.length ? 'Desmarcar Todos' : 'Selecionar Todos'}
+                {selectedYears.length === availableYears.length ? 'Desmarcar Todos' : 'Selecionar Todos'}
               </Button>
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-              {oabYears.map((year) => (
+              {availableYears.map((year) => (
                 <div key={year} className="flex items-center space-x-2">
                   <Checkbox
                     id={`year-${year}`}
@@ -331,7 +356,7 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
               <h4 className="text-green-300 font-medium mb-2">Resumo da Playlist:</h4>
               <ul className="text-green-400 text-sm space-y-1">
                 <li>• {selectedAreas.length} área(s) do direito selecionada(s)</li>
-                <li>• {selectedYears.length > 0 ? selectedYears.length : 'Todos os'} ano(s) do OAB</li>
+                <li>• {selectedYears.length > 0 ? selectedYears.length : 'Todos os'} ano(s) do OAB disponíveis</li>
                 <li>• {questionCount} questões por sessão de estudo</li>
               </ul>
             </Card>
