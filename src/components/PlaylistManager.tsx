@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Shuffle, Play, Trash2, Edit, Calendar, Hash, MapPin } from 'lucide-react';
+import { Shuffle, Play, Trash2, Calendar, Hash, MapPin } from 'lucide-react';
 
 interface Playlist {
   id: string;
@@ -52,7 +52,7 @@ const PlaylistManager = ({ isVisible, onClose, onPlaylistStart }: PlaylistManage
       }
 
       const { data, error } = await supabase
-        .from('user_playlists')
+        .from('user_playlists' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -65,7 +65,7 @@ const PlaylistManager = ({ isVisible, onClose, onPlaylistStart }: PlaylistManage
           variant: "destructive"
         });
       } else {
-        setPlaylists(data || []);
+        setPlaylists((data || []) as Playlist[]);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -78,7 +78,7 @@ const PlaylistManager = ({ isVisible, onClose, onPlaylistStart }: PlaylistManage
     setDeletingId(playlistId);
     try {
       const { error } = await supabase
-        .from('user_playlists')
+        .from('user_playlists' as any)
         .delete()
         .eq('id', playlistId);
 

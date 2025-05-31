@@ -513,6 +513,63 @@ const QuestionsSection = ({
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handlePlaylistStart = (playlist: any) => {
+    console.log('Starting playlist:', playlist);
+    setActivePlaylist(playlist);
+    
+    // Apply playlist filters and fetch questions
+    setSelectedAreaFilter(playlist.areas?.[0] || '');
+    setStudyMode('all');
+    
+    // Update the limit based on playlist settings
+    const playlistLimit = playlist.question_count || 10;
+    
+    // Fetch questions with playlist criteria
+    fetchQuestionsWithPlaylistFilters(playlist, playlistLimit);
+  };
+
+  const fetchQuestionsWithPlaylistFilters = async (playlist: any, playlistLimit: number) => {
+    setLoading(true);
+    try {
+      let query = supabase.from('Questoes_Comentadas').select('*');
+      
+      // Apply playlist filters
+      if (playlist.areas && playlist.areas.length > 0) {
+        query = query.in('area', playlist.areas);
+      }
+      
+      if (playlist.exams && playlist.exams.length > 0) {
+        query = query.in('exame', playlist.exams);
+      }
+      
+      if (playlist.years && playlist.years.length > 0) {
+        query = query.in('ano', playlist.years);
+      }
+
+      query = query.limit(playlistLimit);
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching playlist questions:', error);
+      } else {
+        setQuestions(data || []);
+        setAnswers({});
+        setCurrentQuestionIndex(0);
+        setStreak(0);
+        setSessionStats({
+          correct: 0,
+          total: 0,
+          startTime: Date.now()
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (showResults && (isSimulado || isDailyChallenge)) {
     return <SimuladoResults 
       sessionStats={sessionStats} 

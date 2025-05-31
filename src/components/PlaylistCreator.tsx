@@ -78,8 +78,9 @@ const PlaylistCreator = ({ isVisible, onClose, areas }: PlaylistCreatorProps) =>
         return;
       }
 
+      // Use a generic query to avoid TypeScript issues with new tables
       const { error } = await supabase
-        .from('user_playlists')
+        .from('user_playlists' as any)
         .insert({
           user_id: user.id,
           name: name.trim(),

@@ -5558,6 +5558,45 @@ export type Database = {
           },
         ]
       }
+      user_playlists: {
+        Row: {
+          areas: string[] | null
+          created_at: string
+          description: string | null
+          exams: string[] | null
+          id: string
+          name: string
+          question_count: number
+          updated_at: string
+          user_id: string
+          years: string[] | null
+        }
+        Insert: {
+          areas?: string[] | null
+          created_at?: string
+          description?: string | null
+          exams?: string[] | null
+          id?: string
+          name: string
+          question_count?: number
+          updated_at?: string
+          user_id: string
+          years?: string[] | null
+        }
+        Update: {
+          areas?: string[] | null
+          created_at?: string
+          description?: string | null
+          exams?: string[] | null
+          id?: string
+          name?: string
+          question_count?: number
+          updated_at?: string
+          user_id?: string
+          years?: string[] | null
+        }
+        Relationships: []
+      }
       user_podcast_favorites: {
         Row: {
           created_at: string | null
