@@ -1,0 +1,197 @@
+
+import { useState, useEffect } from 'react';
+import MinimalQuestionCard from './MinimalQuestionCard';
+import ProgressBar from './ProgressBar';
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, RotateCcw, Star } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+
+interface Question {
+  id: number;
+  ano: string;
+  exame: string;
+  area: string;
+  numero: string;
+  enunciado: string;
+  alternativa_a: string;
+  alternativa_b: string;
+  alternativa_c: string;
+  alternativa_d: string;
+  resposta_correta: string;
+  justificativa: string;
+  banca: string;
+}
+
+interface StudySessionProps {
+  questions: Question[];
+  onExit: () => void;
+  title?: string;
+  mode?: 'practice' | 'favorites' | 'review';
+}
+
+const StudySession = ({ 
+  questions, 
+  onExit, 
+  title = "Sessão de Estudo",
+  mode = 'practice'
+}: StudySessionProps) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<number, { answer: string; correct: boolean; timeSpent: number }>>({});
+  const [sessionStartTime] = useState(Date.now());
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+  const { toast } = useToast();
+
+  const currentQuestion = questions[currentIndex];
+  const isLastQuestion = currentIndex === questions.length - 1;
+  const answeredCount = Object.keys(answers).length;
+  const correctCount = Object.values(answers).filter(a => a.correct).length;
+  const totalTimeSpent = Math.floor((Date.now() - sessionStartTime) / 1000);
+
+  useEffect(() => {
+    setQuestionStartTime(Date.now());
+  }, [currentIndex]);
+
+  const handleAnswer = (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
+    const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
+    
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: {
+        answer: selectedAnswer,
+        correct: isCorrect,
+        timeSpent
+      }
+    }));
+
+    // Auto-advance after 2 seconds
+    setTimeout(() => {
+      if (!isLastQuestion) {
+        setCurrentIndex(prev => prev + 1);
+      } else {
+        handleSessionComplete();
+      }
+    }, 2000);
+  };
+
+  const handleSessionComplete = () => {
+    const accuracy = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+    
+    toast({
+      title: "Sessão Concluída!",
+      description: `Você acertou ${correctCount} de ${answeredCount} questões (${accuracy}%)`,
+    });
+
+    // Save session stats
+    saveSessionStats();
+  };
+
+  const saveSessionStats = async () => {
+    // This would integrate with Supabase to save session statistics
+    console.log('Session stats:', {
+      mode,
+      totalQuestions: questions.length,
+      answeredCount,
+      correctCount,
+      totalTimeSpent,
+      accuracy: answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0
+    });
+  };
+
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+    }
+  };
+
+  const getModeIcon = () => {
+    switch (mode) {
+      case 'favorites':
+        return <Star className="text-yellow-500" size={20} />;
+      case 'review':
+        return <RotateCcw className="text-blue-500" size={20} />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-netflix-black text-white p-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <Button
+            variant="ghost"
+            onClick={onExit}
+            className="text-netflix-text-secondary hover:text-white"
+          >
+            <ArrowLeft size={20} className="mr-2" />
+            Voltar
+          </Button>
+          
+          <div className="flex items-center gap-2">
+            {getModeIcon()}
+            <h1 className="text-xl font-bold text-white">{title}</h1>
+          </div>
+          
+          <div className="text-netflix-text-secondary text-sm">
+            Questão {currentIndex + 1} de {questions.length}
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <ProgressBar
+          current={answeredCount}
+          total={questions.length}
+          correct={correctCount}
+          timeSpent={totalTimeSpent}
+        />
+
+        {/* Question Card */}
+        {currentQuestion && (
+          <div className="mb-6">
+            <MinimalQuestionCard
+              question={currentQuestion}
+              onAnswer={handleAnswer}
+              isAnswered={!!answers[currentQuestion.id]}
+            />
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div className="flex justify-between items-center">
+          <Button
+            variant="outline"
+            onClick={handlePrevious}
+            disabled={currentIndex === 0}
+            className="border-netflix-border text-gray-300 hover:bg-gray-800"
+          >
+            Anterior
+          </Button>
+
+          <div className="text-center">
+            <div className="text-netflix-text-secondary text-sm">
+              Progresso: {Math.round(((currentIndex + 1) / questions.length) * 100)}%
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={handleNext}
+            disabled={isLastQuestion}
+            className="border-netflix-border text-gray-300 hover:bg-gray-800"
+          >
+            Próxima
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default StudySession;
