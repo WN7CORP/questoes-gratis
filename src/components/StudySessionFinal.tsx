@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { QuestionFinal, QuestionFilters } from '@/types/questionFinal';
 import { transformSupabaseToQuestionsFinal } from '@/utils/questionFinalTransform';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 import QuestionCardFinal from './QuestionCardFinal';
 import ProgressBar from './ProgressBar';
 import QuestionJustification from './QuestionJustification';
