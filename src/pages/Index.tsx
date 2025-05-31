@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Home, Search, BarChart3, User, BookOpen, Target } from 'lucide-react';
@@ -16,6 +15,7 @@ const Index = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const [user, setUser] = useState(null);
   const [hideNavigation, setHideNavigation] = useState(false);
+  const [activeTab, setActiveTab] = useState('home');
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -32,13 +32,17 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const handleNavigateToTab = (tab: string) => {
+    setActiveTab(tab);
+  };
+
   if (showWelcome) {
     return <WelcomeScreen onStart={() => setShowWelcome(false)} />;
   }
 
   return (
     <div className="min-h-screen bg-netflix-black text-white">
-      <Tabs defaultValue="home" className="h-screen flex flex-col">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="h-screen flex flex-col">
         {/* Desktop Navigation - Horizontal Top Bar */}
         {!isMobile ? (
           <div className="bg-netflix-card border-b border-netflix-border px-6 py-4 fixed top-0 z-30 w-full">
@@ -140,7 +144,10 @@ const Index = () => {
         <div className={`flex-1 overflow-hidden ${!isMobile ? 'pt-20' : hideNavigation ? 'pt-0' : 'pt-16 sm:pt-20'}`}>
           <TabsContent value="home" className="h-full mt-0">
             <div className="h-full overflow-y-auto">
-              <HomeSection onHideNavigation={setHideNavigation} />
+              <HomeSection 
+                onHideNavigation={setHideNavigation} 
+                onNavigateToTab={handleNavigateToTab}
+              />
             </div>
           </TabsContent>
           

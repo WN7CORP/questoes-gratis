@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, X, Target } from 'lucide-react';
+import { Filter, X, Target, Settings } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { QuestionFilters as QuestionFiltersType } from '@/types/questionFinal';
 
@@ -18,18 +18,17 @@ interface QuestionFiltersProps {
 const QuestionFilters = ({ onFiltersChange, totalQuestions, onStartStudy }: QuestionFiltersProps) => {
   const [areas, setAreas] = useState<string[]>([]);
   const [temas, setTemas] = useState<string[]>([]);
-  const [assuntos, setAssuntos] = useState<string[]>([]);
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [selectedTema, setSelectedTema] = useState<string>('');
-  const [selectedAssunto, setSelectedAssunto] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [showCustomFilters, setShowCustomFilters] = useState(false);
 
   useEffect(() => {
     fetchFilterOptions();
   }, []);
 
   useEffect(() => {
-    if (selectedArea) {
+    if (selectedArea && selectedArea !== 'todos') {
       fetchTemas(selectedArea);
     } else {
       setTemas([]);
@@ -38,22 +37,12 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions, onStartStudy }: Ques
   }, [selectedArea]);
 
   useEffect(() => {
-    if (selectedTema) {
-      fetchAssuntos(selectedArea, selectedTema);
-    } else {
-      setAssuntos([]);
-      setSelectedAssunto('');
-    }
-  }, [selectedTema, selectedArea]);
-
-  useEffect(() => {
     const filters: QuestionFiltersType = {};
-    if (selectedArea) filters.area = selectedArea;
-    if (selectedTema) filters.tema = selectedTema;
-    if (selectedAssunto) filters.assunto = selectedAssunto;
+    if (selectedArea && selectedArea !== 'todos') filters.area = selectedArea;
+    if (selectedTema && selectedTema !== 'todos') filters.tema = selectedTema;
     
     onFiltersChange(filters);
-  }, [selectedArea, selectedTema, selectedAssunto, onFiltersChange]);
+  }, [selectedArea, selectedTema, onFiltersChange]);
 
   const fetchFilterOptions = async () => {
     try {
@@ -94,33 +83,12 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions, onStartStudy }: Ques
     }
   };
 
-  const fetchAssuntos = async (area: string, tema: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('QUESTOES_FINAL')
-        .select('assunto')
-        .eq('area', area)
-        .eq('tema', tema)
-        .not('assunto', 'is', null);
-
-      if (error) {
-        console.error('Error fetching assuntos:', error);
-      } else {
-        const uniqueAssuntos = Array.from(new Set(data?.map(item => item.assunto).filter(Boolean))).sort();
-        setAssuntos(uniqueAssuntos);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
   const clearFilters = () => {
     setSelectedArea('');
     setSelectedTema('');
-    setSelectedAssunto('');
   };
 
-  const hasActiveFilters = selectedArea || selectedTema || selectedAssunto;
+  const hasActiveFilters = selectedArea || selectedTema;
 
   if (loading) {
     return (
@@ -142,15 +110,26 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions, onStartStudy }: Ques
             </Badge>
           )}
         </div>
-        {hasActiveFilters && (
-          <Button onClick={clearFilters} variant="outline" size="sm">
-            <X className="mr-2 h-4 w-4" />
-            Limpar
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={() => setShowCustomFilters(!showCustomFilters)} 
+            variant="outline" 
+            size="sm"
+            className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"
+          >
+            <Settings className="mr-2 h-4 w-4" />
+            Filtros Personalizados
           </Button>
-        )}
+          {hasActiveFilters && (
+            <Button onClick={clearFilters} variant="outline" size="sm">
+              <X className="mr-2 h-4 w-4" />
+              Limpar
+            </Button>
+          )}
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4 mb-6">
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
         {/* Área */}
         <div className="space-y-2">
           <Label htmlFor="area" className="text-gray-300">Área</Label>
@@ -159,6 +138,7 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions, onStartStudy }: Ques
               <SelectValue placeholder="Selecione uma área" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="todos">Todas as áreas</SelectItem>
               {areas.map(area => (
                 <SelectItem key={area} value={area}>{area}</SelectItem>
               ))}
@@ -169,33 +149,29 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions, onStartStudy }: Ques
         {/* Tema */}
         <div className="space-y-2">
           <Label htmlFor="tema" className="text-gray-300">Tema</Label>
-          <Select value={selectedTema} onValueChange={setSelectedTema} disabled={!selectedArea}>
+          <Select value={selectedTema} onValueChange={setSelectedTema} disabled={!selectedArea || selectedArea === 'todos'}>
             <SelectTrigger className="bg-netflix-card border-netflix-border text-white disabled:opacity-50">
               <SelectValue placeholder="Selecione um tema" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="todos">Todos os temas</SelectItem>
               {temas.map(tema => (
                 <SelectItem key={tema} value={tema}>{tema}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-
-        {/* Assunto */}
-        <div className="space-y-2">
-          <Label htmlFor="assunto" className="text-gray-300">Assunto</Label>
-          <Select value={selectedAssunto} onValueChange={setSelectedAssunto} disabled={!selectedTema}>
-            <SelectTrigger className="bg-netflix-card border-netflix-border text-white disabled:opacity-50">
-              <SelectValue placeholder="Selecione um assunto" />
-            </SelectTrigger>
-            <SelectContent>
-              {assuntos.map(assunto => (
-                <SelectItem key={assunto} value={assunto}>{assunto}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
+
+      {/* Custom Filters Section */}
+      {showCustomFilters && (
+        <div className="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-600">
+          <h3 className="text-lg font-semibold text-white mb-4">Filtros Avançados</h3>
+          <p className="text-gray-400 text-sm">
+            Filtros personalizados estarão disponíveis em breve. Por enquanto, use os filtros básicos de Área e Tema.
+          </p>
+        </div>
+      )}
 
       {/* Start Study Button */}
       <div className="flex items-center justify-between pt-4 border-t border-netflix-border">

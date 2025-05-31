@@ -12,10 +12,12 @@ import { useToast } from "@/hooks/use-toast";
 
 interface HomeSectionProps {
   onHideNavigation?: (hide: boolean) => void;
+  onNavigateToTab?: (tab: string) => void;
 }
 
 const HomeSection = ({
-  onHideNavigation
+  onHideNavigation,
+  onNavigateToTab
 }: HomeSectionProps) => {
   const [showStudySession, setShowStudySession] = useState(false);
   const [selectedArea, setSelectedArea] = useState<string>('');
@@ -24,6 +26,8 @@ const HomeSection = ({
   const [showDailyChallenge, setShowDailyChallenge] = useState(false);
   const [stats, setStats] = useState({
     totalQuestions: 0,
+    totalTemas: 0,
+    totalAssuntos: 0,
     totalAreas: 0,
     totalExams: 0
   });
@@ -35,22 +39,49 @@ const HomeSection = ({
 
   const fetchStats = async () => {
     try {
-      const { data, error } = await supabase
+      // Count total questions
+      const { count: total } = await supabase
         .from('QUESTOES_FINAL')
-        .select('area, aplicada_em');
+        .select('*', { count: 'exact', head: true });
 
-      if (error) {
-        console.error('Error fetching stats:', error);
-      } else {
-        const uniqueAreas = new Set(data?.map(item => item.area).filter(Boolean));
-        const uniqueExams = new Set(data?.map(item => item.aplicada_em).filter(item => item && !item.includes('null')));
+      // Count distinct areas
+      const { data: areasData } = await supabase
+        .from('QUESTOES_FINAL')
+        .select('area')
+        .not('area', 'is', null);
 
-        setStats({
-          totalQuestions: data?.length || 0,
-          totalAreas: uniqueAreas.size,
-          totalExams: uniqueExams.size
-        });
-      }
+      const uniqueAreas = areasData ? new Set(areasData.map(item => item.area)).size : 0;
+
+      // Count distinct themes
+      const { data: temasData } = await supabase
+        .from('QUESTOES_FINAL')
+        .select('tema')
+        .not('tema', 'is', null);
+
+      const uniqueTemas = temasData ? new Set(temasData.map(item => item.tema)).size : 0;
+
+      // Count distinct subjects
+      const { data: assuntosData } = await supabase
+        .from('QUESTOES_FINAL')
+        .select('assunto')
+        .not('assunto', 'is', null);
+
+      const uniqueAssuntos = assuntosData ? new Set(assuntosData.map(item => item.assunto)).size : 0;
+
+      // Count unique exams
+      const { data: examsData } = await supabase
+        .from('QUESTOES_FINAL')
+        .select('aplicada_em');
+
+      const uniqueExams = examsData ? new Set(examsData.map(item => item.aplicada_em).filter(item => item && !item.includes('null'))).size : 0;
+
+      setStats({
+        totalQuestions: total || 0,
+        totalTemas: uniqueTemas,
+        totalAssuntos: uniqueAssuntos,
+        totalAreas: uniqueAreas,
+        totalExams: uniqueExams
+      });
     } catch (error) {
       console.error('Error:', error);
     }
@@ -63,6 +94,10 @@ const HomeSection = ({
     setShowSimulado(false);
     setShowDailyChallenge(false);
     onHideNavigation?.(true);
+  };
+
+  const handleInitiarQuestoes = () => {
+    onNavigateToTab?.('practice');
   };
 
   const handleRandomQuestions = () => {
@@ -126,7 +161,7 @@ const HomeSection = ({
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-netflix-black">
+    <div className="h-full overflow-y-auto bg-netflix-black pb-8">
       {/* Hero Section */}
       <div className="relative p-6 pb-8 animate-fade-in">
         <div className="max-w-4xl mx-auto text-center">
@@ -142,22 +177,22 @@ const HomeSection = ({
             Prepare-se para concursos jurídicos com questões comentadas, simulados e conteúdo atualizado
           </p>
           
-          {/* Hero CTA Button - Destacado */}
+          {/* Hero CTA Button - Remove pulse animation */}
           <div className="mb-8">
             <Button 
-              onClick={handleRandomQuestions}
-              className="bg-gradient-to-r from-netflix-red to-red-700 hover:from-red-700 hover:to-red-800 text-white px-12 py-6 text-xl font-bold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105 hover:shadow-red-500/25 animate-pulse"
+              onClick={handleInitiarQuestoes}
+              className="bg-gradient-to-r from-netflix-red to-red-700 hover:from-red-700 hover:to-red-800 text-white px-12 py-6 text-xl font-bold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105 hover:shadow-red-500/25"
             >
               <Target className="mr-3 h-6 w-6" />
               Iniciar Questões
               <ChevronRight className="ml-3 h-6 w-6" />
             </Button>
             <p className="text-netflix-text-secondary text-sm mt-3">
-              Comece a estudar agora com questões aleatórias
+              Comece a estudar agora com questões organizadas
             </p>
           </div>
           
-          {/* Quick Stats */}
+          {/* Quick Stats - Reordered: Questões, Temas, Assuntos */}
           <div className="grid grid-cols-3 gap-4 mb-8">
             <div className="bg-netflix-card border border-netflix-border rounded-lg p-4 transition-all duration-200 hover:scale-105">
               <div className="text-2xl font-bold text-netflix-red mb-1">
@@ -169,18 +204,18 @@ const HomeSection = ({
             </div>
             <div className="bg-netflix-card border border-netflix-border rounded-lg p-4 transition-all duration-200 hover:scale-105">
               <div className="text-2xl font-bold text-green-400 mb-1">
-                {stats.totalAreas}
+                {stats.totalTemas}
               </div>
               <div className="text-sm text-netflix-text-secondary">
-                Áreas do Direito
+                Temas
               </div>
             </div>
             <div className="bg-netflix-card border border-netflix-border rounded-lg p-4 transition-all duration-200 hover:scale-105">
               <div className="text-2xl font-bold text-blue-400 mb-1">
-                {stats.totalExams}
+                {stats.totalAssuntos}
               </div>
               <div className="text-sm text-netflix-text-secondary">
-                Concursos Passados
+                Assuntos
               </div>
             </div>
           </div>
