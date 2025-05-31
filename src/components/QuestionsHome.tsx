@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Target, TrendingUp, Play } from 'lucide-react';
+import { BookOpen, Target, TrendingUp, Play, Hash, FileText } from 'lucide-react';
 import { QuestionFilters } from '@/types/questionFinal';
 import { supabase } from '@/integrations/supabase/client';
 import QuestionFiltersComponent from './QuestionFilters';
@@ -20,8 +20,8 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
   const [selectedFilters, setSelectedFilters] = useState<QuestionFilters>({});
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [questionStats, setQuestionStats] = useState({
-    totalWith4Alternatives: 0,
-    totalWith5Alternatives: 0,
+    totalTemas: 0,
+    totalAssuntos: 0,
     totalAreas: 0
   });
 
@@ -40,18 +40,6 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
         .from('QUESTOES_FINAL')
         .select('*', { count: 'exact', head: true });
 
-      // Count questions with 4 alternatives (without E)
-      const { count: with4 } = await supabase
-        .from('QUESTOES_FINAL')
-        .select('*', { count: 'exact', head: true })
-        .is('E', null);
-
-      // Count questions with 5 alternatives (with E)
-      const { count: with5 } = await supabase
-        .from('QUESTOES_FINAL')
-        .select('*', { count: 'exact', head: true })
-        .not('E', 'is', null);
-
       // Count distinct areas
       const { data: areasData } = await supabase
         .from('QUESTOES_FINAL')
@@ -60,9 +48,25 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
 
       const uniqueAreas = areasData ? new Set(areasData.map(item => item.area)).size : 0;
 
+      // Count distinct themes
+      const { data: temasData } = await supabase
+        .from('QUESTOES_FINAL')
+        .select('tema')
+        .not('tema', 'is', null);
+
+      const uniqueTemas = temasData ? new Set(temasData.map(item => item.tema)).size : 0;
+
+      // Count distinct subjects
+      const { data: assuntosData } = await supabase
+        .from('QUESTOES_FINAL')
+        .select('assunto')
+        .not('assunto', 'is', null);
+
+      const uniqueAssuntos = assuntosData ? new Set(assuntosData.map(item => item.assunto)).size : 0;
+
       setQuestionStats({
-        totalWith4Alternatives: with4 || 0,
-        totalWith5Alternatives: with5 || 0,
+        totalTemas: uniqueTemas,
+        totalAssuntos: uniqueAssuntos,
         totalAreas: uniqueAreas
       });
 
@@ -87,16 +91,6 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
       }
       if (selectedFilters.assunto) {
         query = query.eq('assunto', selectedFilters.assunto);
-      }
-      if (selectedFilters.aplicadaEm) {
-        query = query.eq('aplicada_em', selectedFilters.aplicadaEm);
-      }
-      if (selectedFilters.numAlternativas) {
-        if (selectedFilters.numAlternativas === '4') {
-          query = query.is('E', null);
-        } else if (selectedFilters.numAlternativas === '5') {
-          query = query.not('E', 'is', null);
-        }
       }
 
       const { count } = await query;
@@ -143,15 +137,7 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
         {/* User Stats Card */}
         <UserStatsCard />
 
-        {/* Filters at the top */}
-        <div className="mb-6">
-          <QuestionFiltersComponent
-            onFiltersChange={setSelectedFilters}
-            totalQuestions={totalQuestions}
-          />
-        </div>
-
-        {/* Stats Cards */}
+        {/* Stats Cards - Showing Questions, Themes, and Subjects */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <Card className="bg-netflix-card border-netflix-border p-3 sm:p-4">
             <div className="flex items-center gap-2 sm:gap-3">
@@ -160,7 +146,7 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
               </div>
               <div>
                 <div className="text-white font-semibold text-lg sm:text-xl">{totalQuestions}</div>
-                <div className="text-gray-400 text-xs sm:text-sm">Total de Questões</div>
+                <div className="text-gray-400 text-xs sm:text-sm">Questões</div>
               </div>
             </div>
           </Card>
@@ -172,7 +158,7 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
               </div>
               <div>
                 <div className="text-white font-semibold text-lg sm:text-xl">{questionStats.totalAreas}</div>
-                <div className="text-gray-400 text-xs sm:text-sm">Áreas do Direito</div>
+                <div className="text-gray-400 text-xs sm:text-sm">Áreas</div>
               </div>
             </div>
           </Card>
@@ -180,11 +166,11 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
           <Card className="bg-netflix-card border-netflix-border p-3 sm:p-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="bg-green-600 rounded-lg p-1.5 sm:p-2">
-                <TrendingUp className="text-white" size={16} />
+                <Hash className="text-white" size={16} />
               </div>
               <div>
-                <div className="text-white font-semibold text-lg sm:text-xl">{questionStats.totalWith4Alternatives}</div>
-                <div className="text-gray-400 text-xs sm:text-sm">4 Alternativas</div>
+                <div className="text-white font-semibold text-lg sm:text-xl">{questionStats.totalTemas}</div>
+                <div className="text-gray-400 text-xs sm:text-sm">Temas</div>
               </div>
             </div>
           </Card>
@@ -192,14 +178,22 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
           <Card className="bg-netflix-card border-netflix-border p-3 sm:p-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="bg-purple-600 rounded-lg p-1.5 sm:p-2">
-                <TrendingUp className="text-white" size={16} />
+                <FileText className="text-white" size={16} />
               </div>
               <div>
-                <div className="text-white font-semibold text-lg sm:text-xl">{questionStats.totalWith5Alternatives}</div>
-                <div className="text-gray-400 text-xs sm:text-sm">5 Alternativas</div>
+                <div className="text-white font-semibold text-lg sm:text-xl">{questionStats.totalAssuntos}</div>
+                <div className="text-gray-400 text-xs sm:text-sm">Assuntos</div>
               </div>
             </div>
           </Card>
+        </div>
+
+        {/* Filters at the top */}
+        <div className="mb-6">
+          <QuestionFiltersComponent
+            onFiltersChange={setSelectedFilters}
+            totalQuestions={totalQuestions}
+          />
         </div>
 
         {/* Start Study Button - Improved mobile responsiveness */}
@@ -213,7 +207,7 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
             Iniciar Sessão de Estudos
             {totalQuestions > 0 && (
               <Badge className="ml-2 bg-white text-netflix-red text-xs">
-                {Math.min(totalQuestions, 10)} questões
+                {totalQuestions} questões
               </Badge>
             )}
           </Button>

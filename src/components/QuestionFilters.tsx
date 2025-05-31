@@ -21,7 +21,6 @@ const QuestionFilters = ({
   const [areas, setAreas] = useState<string[]>([]);
   const [temas, setTemas] = useState<string[]>([]);
   const [assuntos, setAssuntos] = useState<string[]>([]);
-  const [aplicacoesEm, setAplicacoesEm] = useState<string[]>([]);
 
   useEffect(() => {
     fetchFilterOptions();
@@ -52,15 +51,6 @@ const QuestionFilters = ({
       if (areasData) {
         const uniqueAreas = [...new Set(areasData.map(item => item.area))].filter(Boolean) as string[];
         setAreas(uniqueAreas);
-      }
-
-      // Buscar todas as aplicações
-      const {
-        data: aplicacoesData
-      } = await supabase.from('QUESTOES_FINAL').select('aplicada_em').not('aplicada_em', 'is', null);
-      if (aplicacoesData) {
-        const uniqueAplicacoes = [...new Set(aplicacoesData.map(item => item.aplicada_em))].filter(Boolean) as string[];
-        setAplicacoesEm(uniqueAplicacoes);
       }
     } catch (error) {
       console.error('Erro ao buscar opções de filtro:', error);
@@ -99,14 +89,10 @@ const QuestionFilters = ({
     const newFilters = {
       ...filters
     };
-    if (value === 'todas' || value === 'todos' || value === 'todas-areas' || value === 'todos-temas' || value === 'todos-assuntos' || value === 'todas-aplicacoes') {
+    if (value === 'todas' || value === 'todos' || value === 'todas-areas' || value === 'todos-temas' || value === 'todos-assuntos') {
       delete newFilters[key];
     } else {
-      if (key === 'numAlternativas') {
-        newFilters[key] = value as 'todas' | '4' | '5';
-      } else {
-        newFilters[key] = value;
-      }
+      newFilters[key] = value;
     }
 
     // Limpar filtros dependentes quando mudamos um filtro pai
@@ -152,8 +138,8 @@ const QuestionFilters = ({
           )}
         </div>
 
-        {/* Filters Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {/* Filters Grid - Only showing Area, Tema, and Assunto */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {/* Área */}
           <div>
             <label className="text-gray-400 text-sm mb-1 block">Área</label>
@@ -212,39 +198,6 @@ const QuestionFilters = ({
                     {assunto}
                   </SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Aplicada Em */}
-          <div>
-            <label className="text-gray-400 text-sm mb-1 block">Aplicada Em</label>
-            <Select value={filters.aplicadaEm || 'todas-aplicacoes'} onValueChange={(value) => updateFilter('aplicadaEm', value)}>
-              <SelectTrigger className="bg-netflix-card border-netflix-border text-white">
-                <SelectValue placeholder="Todas as aplicações" />
-              </SelectTrigger>
-              <SelectContent className="bg-netflix-card border-netflix-border">
-                <SelectItem value="todas-aplicacoes" className="text-white hover:bg-netflix-red">Todas as aplicações</SelectItem>
-                {aplicacoesEm.map((aplicacao) => (
-                  <SelectItem key={aplicacao} value={aplicacao} className="text-white hover:bg-netflix-red">
-                    {aplicacao}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Número de Alternativas */}
-          <div>
-            <label className="text-gray-400 text-sm mb-1 block">Alternativas</label>
-            <Select value={filters.numAlternativas || 'todas'} onValueChange={(value) => updateFilter('numAlternativas', value)}>
-              <SelectTrigger className="bg-netflix-card border-netflix-border text-white">
-                <SelectValue placeholder="Todas" />
-              </SelectTrigger>
-              <SelectContent className="bg-netflix-card border-netflix-border">
-                <SelectItem value="todas" className="text-white hover:bg-netflix-red">Todas</SelectItem>
-                <SelectItem value="4" className="text-white hover:bg-netflix-red">4 alternativas</SelectItem>
-                <SelectItem value="5" className="text-white hover:bg-netflix-red">5 alternativas</SelectItem>
               </SelectContent>
             </Select>
           </div>

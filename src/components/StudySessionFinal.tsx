@@ -12,13 +12,11 @@ import { ArrowLeft, ArrowRight, Loader2, RotateCcw, MessageSquare } from 'lucide
 interface StudySessionFinalProps {
   filters: QuestionFilters;
   onExit: () => void;
-  maxQuestions?: number;
 }
 
 const StudySessionFinal = ({
   filters,
-  onExit,
-  maxQuestions = 10
+  onExit
 }: StudySessionFinalProps) => {
   const [questions, setQuestions] = useState<QuestionFinal[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -59,24 +57,15 @@ const StudySessionFinal = ({
       if (filters.assunto) {
         query = query.eq('assunto', filters.assunto);
       }
-      if (filters.aplicadaEm) {
-        query = query.eq('aplicada_em', filters.aplicadaEm);
-      }
-      if (filters.numAlternativas) {
-        if (filters.numAlternativas === '4') {
-          query = query.is('E', null);
-        } else if (filters.numAlternativas === '5') {
-          query = query.not('E', 'is', null);
-        }
-      }
 
-      const { data, error } = await query.limit(maxQuestions * 2);
+      // Remove the limit to allow all questions
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching questions:', error);
       } else {
         const transformedQuestions = transformSupabaseToQuestionsFinal(data || []);
-        const shuffledQuestions = transformedQuestions.sort(() => Math.random() - 0.5).slice(0, maxQuestions);
+        const shuffledQuestions = transformedQuestions.sort(() => Math.random() - 0.5);
         setQuestions(shuffledQuestions);
       }
     } catch (error) {
