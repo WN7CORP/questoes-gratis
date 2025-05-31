@@ -22,12 +22,24 @@ interface SessionStats {
 }
 
 interface StudySessionProps {
-  selectedArea: string;
+  selectedArea?: string;
+  questions?: Question[];
   onComplete: () => void;
-  onChooseNewArea: () => void;
+  onChooseNewArea?: () => void;
+  onExit?: () => void;
+  title?: string;
+  mode?: string;
 }
 
-const StudySession = ({ selectedArea, onComplete, onChooseNewArea }: StudySessionProps) => {
+const StudySession = ({ 
+  selectedArea, 
+  questions: providedQuestions, 
+  onComplete, 
+  onChooseNewArea,
+  onExit,
+  title,
+  mode 
+}: StudySessionProps) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -40,10 +52,17 @@ const StudySession = ({ selectedArea, onComplete, onChooseNewArea }: StudySessio
   const confetti = useConfettiStore()
 
   useEffect(() => {
-    fetchQuestions();
-  }, [selectedArea]);
+    if (providedQuestions && providedQuestions.length > 0) {
+      setQuestions(providedQuestions);
+      setLoading(false);
+    } else if (selectedArea) {
+      fetchQuestions();
+    }
+  }, [selectedArea, providedQuestions]);
 
   const fetchQuestions = async () => {
+    if (!selectedArea) return;
+    
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -94,9 +113,10 @@ const StudySession = ({ selectedArea, onComplete, onChooseNewArea }: StudySessio
     }));
 
     setAreaStats(prevStats => {
-      const areaIndex = prevStats.findIndex(stat => stat.area === selectedArea);
+      const areaIndex = prevStats.findIndex(stat => stat.area === (selectedArea || currentQuestion.area));
+      const area = selectedArea || currentQuestion.area;
       if (areaIndex === -1) {
-        return [...prevStats, { area: selectedArea, correct: isAnswerCorrect ? 1 : 0, total: 1 }];
+        return [...prevStats, { area, correct: isAnswerCorrect ? 1 : 0, total: 1 }];
       } else {
         const updatedAreaStats = [...prevStats];
         updatedAreaStats[areaIndex] = {
@@ -148,7 +168,9 @@ const StudySession = ({ selectedArea, onComplete, onChooseNewArea }: StudySessio
     setAreaStats([]);
     setSessionStats({ correct: 0, total: 0, startTime: Date.now() });
     setStreak(0);
-    fetchQuestions();
+    if (selectedArea && !providedQuestions) {
+      fetchQuestions();
+    }
   };
 
   if (loading) {
@@ -168,6 +190,19 @@ const StudySession = ({ selectedArea, onComplete, onChooseNewArea }: StudySessio
 
   return (
     <div className="flex flex-col h-full">
+      {/* Header with title and exit button */}
+      {(title || onExit) && (
+        <div className="flex justify-between items-center mb-4 p-4 bg-netflix-card rounded-lg">
+          {title && <h2 className="text-white text-xl font-semibold">{title}</h2>}
+          {onExit && (
+            <Button onClick={onExit} variant="outline" size="sm">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Sair
+            </Button>
+          )}
+        </div>
+      )}
+
       {/* Question Card */}
       <div className="mb-4">
         <QuestionCard
@@ -217,20 +252,20 @@ const StudySession = ({ selectedArea, onComplete, onChooseNewArea }: StudySessio
       )}
 
       {/* Celebration Modal */}
-        <CelebrationModal
-          isVisible={showCelebration}
-          onClose={() => {
-            setShowCelebration(false);
-            if (sessionStats.total >= 10) {
-              onComplete();
-            }
-          }}
-          onChooseNewArea={onChooseNewArea}
-          isAreaStudy={true}
-          streak={streak}
-          percentage={sessionStats.total > 0 ? Math.round((sessionStats.correct / sessionStats.total) * 100) : 0}
-          questionsAnswered={sessionStats.total}
-        />
+      <CelebrationModal
+        isVisible={showCelebration}
+        onClose={() => {
+          setShowCelebration(false);
+          if (sessionStats.total >= 10) {
+            onComplete();
+          }
+        }}
+        onChooseNewArea={onChooseNewArea}
+        isAreaStudy={true}
+        streak={streak}
+        percentage={sessionStats.total > 0 ? Math.round((sessionStats.correct / sessionStats.total) * 100) : 0}
+        questionsAnswered={sessionStats.total}
+      />
     </div>
   );
 };
