@@ -10,6 +10,7 @@ import StudyAreas from '@/components/StudyAreas';
 import SearchSection from '@/components/SearchSection';
 import PerformanceSection from '@/components/PerformanceSection';
 import ProfileSection from '@/components/ProfileSection';
+import HomeSection from '@/components/HomeSection';
 
 const Index = () => {
   const [showWelcome, setShowWelcome] = useState(true);
@@ -139,7 +140,7 @@ const Index = () => {
         <div className={`flex-1 overflow-hidden ${!isMobile ? 'pt-20' : hideNavigation ? 'pt-0' : 'pt-16 sm:pt-20'}`}>
           <TabsContent value="home" className="h-full mt-0">
             <div className="h-full overflow-y-auto">
-              <QuestionsHome onHideNavigation={setHideNavigation} />
+              <HomeSection />
             </div>
           </TabsContent>
           

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +32,17 @@ const QuestionCardFinal = ({
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrectAnswer, setIsCorrectAnswer] = useState(false);
 
+  // Reset state completely when question changes
+  useEffect(() => {
+    console.log('Question changed - resetting state for question:', question.id);
+    setSelectedAnswer('');
+    setShowResult(false);
+    setAnswered(false);
+    setShowJustification(false);
+    setShowFeedback(false);
+    setIsCorrectAnswer(false);
+  }, [question.id]);
+
   const alternatives = [
     { key: 'A', value: question.A },
     { key: 'B', value: question.B },
@@ -41,23 +52,31 @@ const QuestionCardFinal = ({
   ].filter(alt => alt.value && alt.value.trim() !== '');
 
   const handleAnswerSelect = (answer: string) => {
-    if (answered) return;
+    if (answered) {
+      console.log('Question already answered, ignoring click');
+      return;
+    }
+    console.log('Answer selected:', answer);
     setSelectedAnswer(answer);
   };
 
   const handleSubmitAnswer = () => {
-    if (!selectedAnswer || answered) return;
+    if (!selectedAnswer || answered) {
+      console.log('Cannot submit - no answer selected or already answered');
+      return;
+    }
 
+    console.log('Submitting answer:', selectedAnswer);
     const isCorrect = selectedAnswer === question.resposta_correta;
     setIsCorrectAnswer(isCorrect);
     setAnswered(true);
     setShowResult(true);
     setShowFeedback(true);
 
-    // Hide feedback after 1 second (more subtle)
+    // Hide feedback after 600ms (more subtle)
     setTimeout(() => {
       setShowFeedback(false);
-    }, 1000);
+    }, 600);
 
     if (onAnswer) {
       onAnswer(question.id, selectedAnswer, isCorrect);
@@ -75,9 +94,9 @@ const QuestionCardFinal = ({
   const getAlternativeStyle = (key: string) => {
     if (!answered) {
       if (selectedAnswer === key) {
-        return 'bg-blue-600 border-blue-500 text-white shadow-lg transform scale-[1.02]';
+        return 'bg-blue-600 border-blue-500 text-white shadow-lg transform scale-[1.01] transition-all duration-200';
       }
-      return 'bg-netflix-card border-netflix-border text-gray-100 hover:bg-gray-700 hover:border-gray-500 hover:scale-[1.01] cursor-pointer';
+      return 'bg-netflix-card border-netflix-border text-gray-100 hover:bg-gray-700 hover:border-gray-500 hover:scale-[1.005] cursor-pointer transition-all duration-200';
     }
     
     if (key === question.resposta_correta) {
@@ -93,7 +112,7 @@ const QuestionCardFinal = ({
 
   return (
     <>
-      <Card className="bg-netflix-card border-netflix-border p-4 sm:p-6 max-w-4xl mx-auto shadow-xl transition-all duration-300">
+      <Card className="bg-netflix-card border-netflix-border p-4 sm:p-6 max-w-4xl mx-auto shadow-xl transition-all duration-200">
         {/* Header */}
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <div className="flex items-center gap-3 sm:gap-4">
@@ -153,7 +172,7 @@ const QuestionCardFinal = ({
               key={alternative.key}
               onClick={() => handleAnswerSelect(alternative.key)}
               disabled={answered}
-              className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] ${getAlternativeStyle(alternative.key)}`}
+              className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-200 hover:scale-[1.005] active:scale-[0.99] ${getAlternativeStyle(alternative.key)}`}
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="flex items-start gap-2 sm:gap-3">
@@ -173,24 +192,10 @@ const QuestionCardFinal = ({
           <Button
             onClick={handleSubmitAnswer}
             disabled={!selectedAnswer}
-            className="w-full bg-netflix-red hover:bg-red-700 text-white py-3 sm:py-4 text-base sm:text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg"
+            className="w-full bg-netflix-red hover:bg-red-700 text-white py-3 sm:py-4 text-base sm:text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] hover:shadow-lg"
           >
             Responder
           </Button>
-        )}
-
-        {/* Comment Button - Now at bottom after answering */}
-        {answered && (
-          <div className="mt-4 flex justify-center">
-            <Button
-              variant="ghost"
-              onClick={handleShowJustification}
-              className="text-gray-400 hover:text-gray-300 transition-colors flex items-center gap-2"
-            >
-              <MessageSquare size={20} />
-              Ver Comentário
-            </Button>
-          </div>
         )}
       </Card>
 

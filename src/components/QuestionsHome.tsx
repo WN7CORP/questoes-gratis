@@ -132,10 +132,10 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
             Questões Comentadas
           </h1>
-          <p className="text-netflix-text-secondary text-lg">
+          <p className="text-netflix-text-secondary text-sm sm:text-base lg:text-lg">
             Resolva questões de direito organizadas por área, tema e assunto
           </p>
         </div>
@@ -152,73 +152,73 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card className="bg-netflix-card border-netflix-border p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-netflix-red rounded-lg p-2">
-                <BookOpen className="text-white" size={20} />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+          <Card className="bg-netflix-card border-netflix-border p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-netflix-red rounded-lg p-1.5 sm:p-2">
+                <BookOpen className="text-white" size={16} />
               </div>
               <div>
-                <div className="text-white font-semibold text-xl">{totalQuestions}</div>
-                <div className="text-gray-400 text-sm">Total de Questões</div>
+                <div className="text-white font-semibold text-lg sm:text-xl">{totalQuestions}</div>
+                <div className="text-gray-400 text-xs sm:text-sm">Total de Questões</div>
               </div>
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-600 rounded-lg p-2">
-                <Target className="text-white" size={20} />
+          <Card className="bg-netflix-card border-netflix-border p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-blue-600 rounded-lg p-1.5 sm:p-2">
+                <Target className="text-white" size={16} />
               </div>
               <div>
-                <div className="text-white font-semibold text-xl">{questionStats.totalAreas}</div>
-                <div className="text-gray-400 text-sm">Áreas do Direito</div>
+                <div className="text-white font-semibold text-lg sm:text-xl">{questionStats.totalAreas}</div>
+                <div className="text-gray-400 text-xs sm:text-sm">Áreas do Direito</div>
               </div>
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-green-600 rounded-lg p-2">
-                <TrendingUp className="text-white" size={20} />
+          <Card className="bg-netflix-card border-netflix-border p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-green-600 rounded-lg p-1.5 sm:p-2">
+                <TrendingUp className="text-white" size={16} />
               </div>
               <div>
-                <div className="text-white font-semibold text-xl">{questionStats.totalWith4Alternatives}</div>
-                <div className="text-gray-400 text-sm">4 Alternativas</div>
+                <div className="text-white font-semibold text-lg sm:text-xl">{questionStats.totalWith4Alternatives}</div>
+                <div className="text-gray-400 text-xs sm:text-sm">4 Alternativas</div>
               </div>
             </div>
           </Card>
 
-          <Card className="bg-netflix-card border-netflix-border p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-purple-600 rounded-lg p-2">
-                <TrendingUp className="text-white" size={20} />
+          <Card className="bg-netflix-card border-netflix-border p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-purple-600 rounded-lg p-1.5 sm:p-2">
+                <TrendingUp className="text-white" size={16} />
               </div>
               <div>
-                <div className="text-white font-semibold text-xl">{questionStats.totalWith5Alternatives}</div>
-                <div className="text-gray-400 text-sm">5 Alternativas</div>
+                <div className="text-white font-semibold text-lg sm:text-xl">{questionStats.totalWith5Alternatives}</div>
+                <div className="text-gray-400 text-xs sm:text-sm">5 Alternativas</div>
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Start Study Button */}
-        <div className="text-center">
+        {/* Start Study Button - Improved mobile responsiveness */}
+        <div className="text-center px-4">
           <Button
             onClick={handleStartStudy}
             disabled={totalQuestions === 0}
-            className="bg-netflix-red hover:bg-red-700 text-white px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300 hover:scale-105"
+            className="bg-netflix-red hover:bg-red-700 text-white px-4 py-3 sm:px-8 sm:py-4 text-sm sm:text-lg font-semibold rounded-lg transition-all duration-200 hover:scale-[1.02] w-full sm:w-auto max-w-md"
           >
-            <Play className="mr-2" size={20} />
+            <Play className="mr-2" size={16} />
             Iniciar Sessão de Estudos
             {totalQuestions > 0 && (
-              <Badge className="ml-2 bg-white text-netflix-red">
+              <Badge className="ml-2 bg-white text-netflix-red text-xs">
                 {Math.min(totalQuestions, 10)} questões
               </Badge>
             )}
           </Button>
           {totalQuestions === 0 && (
-            <p className="text-gray-400 text-sm mt-2">
+            <p className="text-gray-400 text-xs sm:text-sm mt-2">
               Ajuste os filtros para encontrar questões
             </p>
           )}

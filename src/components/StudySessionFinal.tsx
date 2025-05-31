@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import QuestionCardFinal from './QuestionCardFinal';
 import ProgressBar from './ProgressBar';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, RotateCcw, MessageSquare } from 'lucide-react';
 
 interface StudySessionFinalProps {
   filters: QuestionFilters;
@@ -29,6 +29,7 @@ const StudySessionFinal = ({
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
   const [timeSpent, setTimeSpent] = useState(0);
   const [sessionStartTime] = useState(Date.now());
+  const [showJustification, setShowJustification] = useState(false);
 
   useEffect(() => {
     fetchQuestions();
@@ -87,6 +88,7 @@ const StudySessionFinal = ({
   const handleAnswer = useCallback((questionId: number, selectedAnswer: string, isCorrect: boolean) => {
     if (answeredQuestions.has(questionId)) return;
     
+    console.log('Handling answer for question:', questionId, 'Answer:', selectedAnswer, 'Correct:', isCorrect);
     setAnsweredQuestions(prev => new Set(prev).add(questionId));
     setSessionStats(prev => ({
       total: prev.total + 1,
@@ -97,12 +99,14 @@ const StudySessionFinal = ({
   const goToNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setShowJustification(false);
     }
   };
 
   const goToPreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
+      setShowJustification(false);
     }
   };
 
@@ -113,7 +117,16 @@ const StudySessionFinal = ({
       total: 0
     });
     setAnsweredQuestions(new Set());
+    setShowJustification(false);
     fetchQuestions();
+  };
+
+  const handleShowJustification = () => {
+    setShowJustification(true);
+  };
+
+  const isCurrentQuestionAnswered = () => {
+    return answeredQuestions.has(questions[currentQuestionIndex]?.id);
   };
 
   if (loading) {
@@ -155,43 +168,56 @@ const StudySessionFinal = ({
       />
 
       {/* Question Card */}
-      <div className="flex-grow">
+      <div className="flex-grow mb-6">
         <QuestionCardFinal 
           question={currentQuestion} 
           onAnswer={handleAnswer} 
           showQuestionNumber={true} 
           currentQuestion={currentQuestionIndex + 1} 
-          totalQuestions={questions.length} 
+          totalQuestions={questions.length}
+          onShowJustification={handleShowJustification}
         />
       </div>
 
-      {/* Navigation */}
-      <div className="flex justify-between mt-6">
+      {/* Navigation with Comment Button */}
+      <div className="flex justify-between items-center">
         <Button 
           onClick={goToPreviousQuestion} 
           disabled={currentQuestionIndex === 0} 
           variant="outline" 
-          className="w-32"
+          className="w-24 sm:w-32"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Anterior
         </Button>
 
-        <div className="flex items-center gap-2">
-          <span className="text-gray-400 text-sm">
-            {currentQuestionIndex + 1} de {questions.length}
-          </span>
-        </div>
+        {/* Blue Comment Button - Only show if question is answered */}
+        {isCurrentQuestionAnswered() && (
+          <Button
+            onClick={handleShowJustification}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:scale-[1.02]"
+          >
+            <MessageSquare size={16} className="mr-2" />
+            Ver Comentário
+          </Button>
+        )}
 
         <Button 
           onClick={goToNextQuestion} 
           disabled={isLastQuestion} 
           variant="outline" 
-          className="w-32"
+          className="w-24 sm:w-32"
         >
           Próxima
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
+      </div>
+
+      {/* Question Counter */}
+      <div className="text-center mt-4">
+        <span className="text-gray-400 text-sm">
+          {currentQuestionIndex + 1} de {questions.length}
+        </span>
       </div>
     </div>
   );
