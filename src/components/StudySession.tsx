@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Question } from '@/types/question';
 import { supabase } from '@/integrations/supabase/client';
 import QuestionCard from './QuestionCard';
 import Options from './Options';
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ArrowRight, CheckCircle2, Confetti, Loader2, BookOpen } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, BookOpen } from 'lucide-react';
 import { useConfettiStore } from '@/stores/confettiStore';
 import CelebrationModal from './CelebrationModal';
 
@@ -54,7 +55,16 @@ const StudySession = ({ selectedArea, onComplete, onChooseNewArea }: StudySessio
       if (error) {
         console.error('Error fetching questions:', error);
       } else {
-        setQuestions(data);
+        // Transform data to match Question interface
+        const transformedData = data?.map(item => ({
+          ...item,
+          resposta: item.resposta_correta,
+          opcoes: [item.alternativa_a, item.alternativa_b, item.alternativa_c, item.alternativa_d]
+        })) || [];
+        
+        // Randomize questions
+        const shuffledQuestions = transformedData.sort(() => Math.random() - 0.5);
+        setQuestions(shuffledQuestions);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -74,7 +84,7 @@ const StudySession = ({ selectedArea, onComplete, onChooseNewArea }: StudySessio
     }
 
     const currentQuestion = questions[currentQuestionIndex];
-    const isAnswerCorrect = selectedOption === currentQuestion.resposta;
+    const isAnswerCorrect = selectedOption === currentQuestion.resposta_correta;
     setIsCorrect(isAnswerCorrect);
 
     setSessionStats(prevStats => ({
@@ -162,7 +172,6 @@ const StudySession = ({ selectedArea, onComplete, onChooseNewArea }: StudySessio
       <div className="mb-4">
         <QuestionCard
           question={currentQuestion}
-          questionNumber={currentQuestionIndex + 1}
           totalQuestions={questions.length}
         />
       </div>
@@ -174,7 +183,7 @@ const StudySession = ({ selectedArea, onComplete, onChooseNewArea }: StudySessio
           selectedOption={selectedOption}
           onSelect={handleOptionSelect}
           isCorrect={isCorrect}
-          correctAnswer={currentQuestion.resposta}
+          correctAnswer={currentQuestion.resposta_correta}
         />
       </div>
 

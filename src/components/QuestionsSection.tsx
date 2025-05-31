@@ -595,12 +595,20 @@ const QuestionsSection = ({
     }
   };
 
-  const handleAreaStudyComplete = (results: any) => {
-    setAreaStudyResults(results);
+  const handleAreaStudyComplete = () => {
     setShowAreaStudySession(false);
     setShowAreaResults(true);
     
-    // Salvar estatísticas
+    // Calculate results
+    const results = {
+      sessionStats,
+      areaStats: calculateAreaStats(),
+      totalTime: Math.floor((Date.now() - sessionStats.startTime) / 1000)
+    };
+    
+    setAreaStudyResults(results);
+    
+    // Save statistics
     saveAreaStudySession(results);
   };
 
