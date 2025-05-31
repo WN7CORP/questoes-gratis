@@ -8,6 +8,7 @@ import { QuestionFilters } from '@/types/questionFinal';
 import { supabase } from '@/integrations/supabase/client';
 import QuestionFiltersComponent from './QuestionFilters';
 import StudySessionFinal from './StudySessionFinal';
+import UserStatsCard from './UserStatsCard';
 
 interface QuestionsHomeProps {
   onHideNavigation?: (hide: boolean) => void;
@@ -34,24 +35,24 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
 
   const fetchQuestionStats = async () => {
     try {
-      // Contar total de questões
+      // Count total questions
       const { count: total } = await supabase
         .from('QUESTOES_FINAL')
         .select('*', { count: 'exact', head: true });
 
-      // Contar questões com 4 alternativas (sem E)
+      // Count questions with 4 alternatives (without E)
       const { count: with4 } = await supabase
         .from('QUESTOES_FINAL')
         .select('*', { count: 'exact', head: true })
         .is('E', null);
 
-      // Contar questões com 5 alternativas (com E)
+      // Count questions with 5 alternatives (with E)
       const { count: with5 } = await supabase
         .from('QUESTOES_FINAL')
         .select('*', { count: 'exact', head: true })
         .not('E', 'is', null);
 
-      // Contar áreas distintas
+      // Count distinct areas
       const { data: areasData } = await supabase
         .from('QUESTOES_FINAL')
         .select('area')
@@ -67,7 +68,7 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
 
       setTotalQuestions(total || 0);
     } catch (error) {
-      console.error('Erro ao buscar estatísticas:', error);
+      console.error('Error fetching stats:', error);
     }
   };
 
@@ -77,7 +78,7 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
         .from('QUESTOES_FINAL')
         .select('*', { count: 'exact', head: true });
 
-      // Aplicar filtros
+      // Apply filters
       if (selectedFilters.area) {
         query = query.eq('area', selectedFilters.area);
       }
@@ -101,7 +102,7 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
       const { count } = await query;
       setTotalQuestions(count || 0);
     } catch (error) {
-      console.error('Erro ao contar questões filtradas:', error);
+      console.error('Error counting filtered questions:', error);
     }
   };
 
@@ -130,7 +131,7 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
     <div className="min-h-screen bg-netflix-black p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
             Questões Comentadas
           </h1>
@@ -139,8 +140,19 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
           </p>
         </div>
 
+        {/* User Stats Card */}
+        <UserStatsCard />
+
+        {/* Filters at the top */}
+        <div className="mb-6">
+          <QuestionFiltersComponent
+            onFiltersChange={setSelectedFilters}
+            totalQuestions={totalQuestions}
+          />
+        </div>
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card className="bg-netflix-card border-netflix-border p-4">
             <div className="flex items-center gap-3">
               <div className="bg-netflix-red rounded-lg p-2">
@@ -189,12 +201,6 @@ const QuestionsHome = ({ onHideNavigation }: QuestionsHomeProps) => {
             </div>
           </Card>
         </div>
-
-        {/* Filters */}
-        <QuestionFiltersComponent
-          onFiltersChange={setSelectedFilters}
-          totalQuestions={totalQuestions}
-        />
 
         {/* Start Study Button */}
         <div className="text-center">

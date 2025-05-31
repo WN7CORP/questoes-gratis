@@ -14,6 +14,7 @@ interface QuestionCardFinalProps {
   showQuestionNumber?: boolean;
   currentQuestion?: number;
   totalQuestions?: number;
+  onShowJustification?: () => void;
 }
 
 const QuestionCardFinal = ({
@@ -21,7 +22,8 @@ const QuestionCardFinal = ({
   onAnswer,
   showQuestionNumber = false,
   currentQuestion,
-  totalQuestions
+  totalQuestions,
+  onShowJustification
 }: QuestionCardFinalProps) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [showResult, setShowResult] = useState(false);
@@ -52,13 +54,21 @@ const QuestionCardFinal = ({
     setShowResult(true);
     setShowFeedback(true);
 
-    // Ocultar feedback após 2 segundos
+    // Hide feedback after 1 second (more subtle)
     setTimeout(() => {
       setShowFeedback(false);
-    }, 2000);
+    }, 1000);
 
     if (onAnswer) {
       onAnswer(question.id, selectedAnswer, isCorrect);
+    }
+  };
+
+  const handleShowJustification = () => {
+    if (onShowJustification) {
+      onShowJustification();
+    } else {
+      setShowJustification(true);
     }
   };
 
@@ -71,11 +81,11 @@ const QuestionCardFinal = ({
     }
     
     if (key === question.resposta_correta) {
-      return 'bg-green-600 border-green-500 text-white shadow-lg shadow-green-500/20 animate-scale-in';
+      return 'bg-green-600 border-green-500 text-white shadow-lg shadow-green-500/20';
     }
     
     if (key === selectedAnswer && key !== question.resposta_correta) {
-      return 'bg-red-600 border-red-500 text-white shadow-lg shadow-red-500/20 animate-scale-in';
+      return 'bg-red-600 border-red-500 text-white shadow-lg shadow-red-500/20';
     }
     
     return 'bg-gray-800/60 border-gray-700/60 text-gray-400/70 opacity-50';
@@ -120,22 +130,11 @@ const QuestionCardFinal = ({
           
           <div className="flex items-center gap-2">
             {answered && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowJustification(true)}
-                  className="text-gray-400 hover:text-gray-300 transition-colors"
-                >
-                  <MessageSquare size={20} />
-                  <span className="ml-1 hidden sm:inline">Comentário</span>
-                </Button>
-                {selectedAnswer === question.resposta_correta ? (
-                  <CheckCircle className="text-green-500 animate-bounce" size={20} />
-                ) : (
-                  <XCircle className="text-red-500 animate-pulse" size={20} />
-                )}
-              </>
+              selectedAnswer === question.resposta_correta ? (
+                <CheckCircle className="text-green-500" size={20} />
+              ) : (
+                <XCircle className="text-red-500" size={20} />
+              )
             )}
           </div>
         </div>
@@ -179,9 +178,23 @@ const QuestionCardFinal = ({
             Responder
           </Button>
         )}
+
+        {/* Comment Button - Now at bottom after answering */}
+        {answered && (
+          <div className="mt-4 flex justify-center">
+            <Button
+              variant="ghost"
+              onClick={handleShowJustification}
+              className="text-gray-400 hover:text-gray-300 transition-colors flex items-center gap-2"
+            >
+              <MessageSquare size={20} />
+              Ver Comentário
+            </Button>
+          </div>
+        )}
       </Card>
 
-      {/* Answer Feedback Animation */}
+      {/* Answer Feedback Animation - More subtle */}
       <AnswerFeedback 
         isCorrect={isCorrectAnswer} 
         show={showFeedback} 
