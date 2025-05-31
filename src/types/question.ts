@@ -15,4 +15,5 @@ export interface Question {
   resposta_correta: string;
   justificativa: string;
   banca: string;
+  questao?: string; // Optional property for compatibility
 }
