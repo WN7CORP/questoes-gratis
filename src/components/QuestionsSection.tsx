@@ -94,6 +94,39 @@ const QuestionsSection = ({
   const questionCardRef = useRef<HTMLDivElement>(null);
   const areaColorScheme = selectedAreaFilter ? getAreaColors(selectedAreaFilter) : null;
 
+  // Move function declarations to the top, before they are used
+  const handleStudySessionExit = () => {
+    setShowStudySession(false);
+    setSessionQuestions([]);
+    // Reset to show area selection or go back to main view
+    if (onHideNavigation) {
+      onHideNavigation(false);
+    }
+  };
+
+  const handleAreaResultsClose = () => {
+    setShowAreaResults(false);
+    if (onHideNavigation) {
+      onHideNavigation(false);
+    }
+    // Reset session
+    setCurrentQuestionIndex(0);
+    setAnswers({});
+    setSessionStats({
+      correct: 0,
+      total: 0,
+      startTime: Date.now()
+    });
+    setStreak(0);
+  };
+
+  const finishAreaStudy = async () => {
+    const totalTime = Math.floor((Date.now() - sessionStats.startTime) / 1000);
+    await saveSessionProgress();
+    const finalAreaStats = calculateAreaStats();
+    setShowAreaResults(true);
+  };
+
   // Função aprimorada para scroll suave para o topo
   const scrollToTop = () => {
     // Método principal usando scrollIntoView
@@ -662,38 +695,6 @@ const QuestionsSection = ({
       />
     );
   }
-
-  const handleStudySessionExit = () => {
-    setShowStudySession(false);
-    setSessionQuestions([]);
-    // Reset to show area selection or go back to main view
-    if (onHideNavigation) {
-      onHideNavigation(false);
-    }
-  };
-
-  const handleAreaResultsClose = () => {
-    setShowAreaResults(false);
-    if (onHideNavigation) {
-      onHideNavigation(false);
-    }
-    // Reset session
-    setCurrentQuestionIndex(0);
-    setAnswers({});
-    setSessionStats({
-      correct: 0,
-      total: 0,
-      startTime: Date.now()
-    });
-    setStreak(0);
-  };
-
-  const finishAreaStudy = async () => {
-    const totalTime = Math.floor((Date.now() - sessionStats.startTime) / 1000);
-    await saveSessionProgress();
-    const finalAreaStats = calculateAreaStats();
-    setShowAreaResults(true);
-  };
 
   return (
     <div id="questions-container" className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-0 py-0 px-0">
