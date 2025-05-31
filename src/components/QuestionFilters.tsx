@@ -106,10 +106,14 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions }: QuestionFiltersPro
   const updateFilter = (key: keyof Filters, value: string) => {
     const newFilters = { ...filters };
     
-    if (value === 'todas' || value === '') {
+    if (value === 'todas' || value === 'todos' || value === 'todas-areas' || value === 'todos-temas' || value === 'todos-assuntos' || value === 'todas-aplicacoes') {
       delete newFilters[key];
     } else {
-      newFilters[key] = value;
+      if (key === 'numAlternativas') {
+        newFilters[key] = value as 'todas' | '4' | '5';
+      } else {
+        newFilters[key] = value;
+      }
     }
 
     // Limpar filtros dependentes quando mudamos um filtro pai
@@ -145,12 +149,12 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions }: QuestionFiltersPro
         {/* Filtro por Área */}
         <div>
           <label className="text-sm text-gray-300 mb-2 block">Área do Direito</label>
-          <Select value={filters.area || ''} onValueChange={(value) => updateFilter('area', value)}>
+          <Select value={filters.area || 'todas-areas'} onValueChange={(value) => updateFilter('area', value)}>
             <SelectTrigger className="bg-netflix-black border-netflix-border">
               <SelectValue placeholder="Todas as áreas" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas as áreas</SelectItem>
+              <SelectItem value="todas-areas">Todas as áreas</SelectItem>
               {areas.map(area => (
                 <SelectItem key={area} value={area}>{area}</SelectItem>
               ))}
@@ -162,7 +166,7 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions }: QuestionFiltersPro
         <div>
           <label className="text-sm text-gray-300 mb-2 block">Tema</label>
           <Select 
-            value={filters.tema || ''} 
+            value={filters.tema || 'todos-temas'} 
             onValueChange={(value) => updateFilter('tema', value)}
             disabled={!filters.area}
           >
@@ -170,7 +174,7 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions }: QuestionFiltersPro
               <SelectValue placeholder="Todos os temas" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os temas</SelectItem>
+              <SelectItem value="todos-temas">Todos os temas</SelectItem>
               {temas.map(tema => (
                 <SelectItem key={tema} value={tema}>{tema}</SelectItem>
               ))}
@@ -182,7 +186,7 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions }: QuestionFiltersPro
         <div>
           <label className="text-sm text-gray-300 mb-2 block">Assunto</label>
           <Select 
-            value={filters.assunto || ''} 
+            value={filters.assunto || 'todos-assuntos'} 
             onValueChange={(value) => updateFilter('assunto', value)}
             disabled={!filters.tema}
           >
@@ -190,7 +194,7 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions }: QuestionFiltersPro
               <SelectValue placeholder="Todos os assuntos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os assuntos</SelectItem>
+              <SelectItem value="todos-assuntos">Todos os assuntos</SelectItem>
               {assuntos.map(assunto => (
                 <SelectItem key={assunto} value={assunto}>{assunto}</SelectItem>
               ))}
@@ -201,12 +205,12 @@ const QuestionFilters = ({ onFiltersChange, totalQuestions }: QuestionFiltersPro
         {/* Filtro por Aplicação */}
         <div>
           <label className="text-sm text-gray-300 mb-2 block">Aplicada em</label>
-          <Select value={filters.aplicadaEm || ''} onValueChange={(value) => updateFilter('aplicadaEm', value)}>
+          <Select value={filters.aplicadaEm || 'todas-aplicacoes'} onValueChange={(value) => updateFilter('aplicadaEm', value)}>
             <SelectTrigger className="bg-netflix-black border-netflix-border">
               <SelectValue placeholder="Todas as aplicações" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas as aplicações</SelectItem>
+              <SelectItem value="todas-aplicacoes">Todas as aplicações</SelectItem>
               {aplicacoesEm.map(aplicacao => (
                 <SelectItem key={aplicacao} value={aplicacao}>{aplicacao}</SelectItem>
               ))}
