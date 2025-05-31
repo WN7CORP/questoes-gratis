@@ -8,12 +8,11 @@ import QuestionJustification from './QuestionJustification';
 import SimuladoResults from './SimuladoResults';
 import PlaylistCreator from './PlaylistCreator';
 import PlaylistManager from './PlaylistManager';
-import StudySession from './StudySession';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Scale, Target, Zap, Clock, Pause, Square, GraduationCap, List, Shuffle, CheckCircle } from 'lucide-react';
+import { Scale, Target, Zap, Clock, Pause, Square, GraduationCap, List, Shuffle } from 'lucide-react';
 import { getAreaColors } from '../utils/areaColors';
 
 interface Question {
@@ -88,44 +87,8 @@ const QuestionsSection = ({
   const [showPlaylistCreator, setShowPlaylistCreator] = useState(false);
   const [showPlaylistManager, setShowPlaylistManager] = useState(false);
   const [activePlaylist, setActivePlaylist] = useState<any>(null);
-  const [showStudySession, setShowStudySession] = useState(false);
-  const [sessionQuestions, setSessionQuestions] = useState<Question[]>([]);
-  const [showAreaResults, setShowAreaResults] = useState(false);
   const questionCardRef = useRef<HTMLDivElement>(null);
   const areaColorScheme = selectedAreaFilter ? getAreaColors(selectedAreaFilter) : null;
-
-  // Move function declarations to the top, before they are used
-  const handleStudySessionExit = () => {
-    setShowStudySession(false);
-    setSessionQuestions([]);
-    // Reset to show area selection or go back to main view
-    if (onHideNavigation) {
-      onHideNavigation(false);
-    }
-  };
-
-  const handleAreaResultsClose = () => {
-    setShowAreaResults(false);
-    if (onHideNavigation) {
-      onHideNavigation(false);
-    }
-    // Reset session
-    setCurrentQuestionIndex(0);
-    setAnswers({});
-    setSessionStats({
-      correct: 0,
-      total: 0,
-      startTime: Date.now()
-    });
-    setStreak(0);
-  };
-
-  const finishAreaStudy = async () => {
-    const totalTime = Math.floor((Date.now() - sessionStats.startTime) / 1000);
-    await saveSessionProgress();
-    const finalAreaStats = calculateAreaStats();
-    setShowAreaResults(true);
-  };
 
   // Função aprimorada para scroll suave para o topo
   const scrollToTop = () => {
@@ -343,41 +306,27 @@ const QuestionsSection = ({
     setLoading(true);
     try {
       let query = supabase.from('Questoes_Comentadas').select('*');
-      
       if (selectedAreaFilter) {
         query = query.eq('area', selectedAreaFilter);
-        // Para questões de área, buscar TODAS as questões disponíveis
-        query = query.limit(1000); // Aumentar limite significativamente
-      } else {
-        if (selectedExam) {
-          query = query.eq('exame', selectedExam);
-        }
-        if (selectedYear) {
-          query = query.eq('ano', selectedYear);
-        }
-        
-        if (isDailyChallenge) {
-          query = query.not('resposta_correta', 'eq', 'ANULADA').limit(20);
-        } else if (isSimulado && selectedExam) {
-          query = query.order('numero', { ascending: true });
-        }
-        query = query.limit(limit);
+      }
+      if (selectedExam) {
+        query = query.eq('exame', selectedExam);
+      }
+      if (selectedYear) {
+        query = query.eq('ano', selectedYear);
       }
 
+      if (isDailyChallenge) {
+        query = query.not('resposta_correta', 'eq', 'ANULADA').limit(20);
+      } else if (isSimulado && selectedExam) {
+        query = query.order('numero', { ascending: true });
+      }
+      query = query.limit(limit);
       const { data, error } = await query;
       if (error) {
         console.error('Error fetching questions:', error);
       } else {
-        const questionsData = data || [];
-        setQuestions(questionsData);
-        
-        // Se for área específica e tiver muitas questões, iniciar sessão de estudo
-        if (selectedAreaFilter && questionsData.length > 10) {
-          setSessionQuestions(questionsData);
-          setShowStudySession(true);
-          return;
-        }
-        
+        setQuestions(data || []);
         setAnswers({});
         setCurrentQuestionIndex(0);
         setStreak(0);
@@ -667,35 +616,6 @@ const QuestionsSection = ({
   const isQuestionAnnulled = currentQuestion?.resposta_correta === 'ANULADA';
   const isQuestionAnswered = !!answers[currentQuestion.id];
 
-  // Se estiver na sessão de estudo de área
-  if (showStudySession && sessionQuestions.length > 0) {
-    return (
-      <StudySession
-        questions={sessionQuestions}
-        onExit={handleStudySessionExit}
-        title={`Estudo de ${selectedAreaFilter || 'Questões'}`}
-        mode="practice"
-      />
-    );
-  }
-
-  // Se estiver mostrando resultados da área
-  if (showAreaResults) {
-    return (
-      <SimuladoResults 
-        sessionStats={sessionStats} 
-        areaStats={areaStats} 
-        previousAttempts={[]} 
-        examInfo={{
-          exame: 'Área de Estudo',
-          ano: selectedAreaFilter
-        }} 
-        totalTime={Math.floor((Date.now() - sessionStats.startTime) / 1000)} 
-        onClose={handleAreaResultsClose}
-      />
-    );
-  }
-
   return (
     <div id="questions-container" className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-0 py-0 px-0">
       {/* Simulado Controls - Timer and Pause/Finish buttons */}
@@ -834,21 +754,7 @@ const QuestionsSection = ({
             )}
           </div>
           
-          <div className="flex items-center gap-2">
-            <StreakCounter streak={streak} showAnimation={showStreakAnimation} />
-            
-            {/* Botão Finalizar para estudos de área */}
-            {selectedAreaFilter && stats.answeredQuestions > 5 && (
-              <Button
-                onClick={finishAreaStudy}
-                size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
-              >
-                <CheckCircle size={16} />
-                Finalizar
-              </Button>
-            )}
-          </div>
+          <StreakCounter streak={streak} showAnimation={showStreakAnimation} />
         </div>
       </Card>
 
@@ -862,7 +768,7 @@ const QuestionsSection = ({
         />
       </div>
 
-      {/* Ver Comentário Button - Restaurado */}
+      {/* Ver Comentário Button */}
       {isQuestionAnswered && !isQuestionAnnulled && currentQuestion?.justificativa && (
         <div className="flex justify-center animate-fade-in">
           <Button 
@@ -875,13 +781,13 @@ const QuestionsSection = ({
         </div>
       )}
 
-      {/* Enhanced Navigation com cores restauradas */}
+      {/* Enhanced Navigation */}
       <div className="flex justify-between items-center gap-4 animate-fade-in mt-4">
         <Button 
           onClick={previousQuestion} 
           disabled={currentQuestionIndex === 0} 
           variant="outline" 
-          className="border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 transition-all duration-200 hover:scale-105 text-sm px-4 py-3"
+          className={`border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 transition-all duration-200 hover:scale-105 ${areaColorScheme ? `${areaColorScheme.hover} ${areaColorScheme.border} border` : 'bg-gray-800'} text-sm px-4 py-3`}
         >
           Anterior
         </Button>
@@ -902,8 +808,8 @@ const QuestionsSection = ({
         
         <Button 
           onClick={nextQuestion} 
-          disabled={currentQuestionIndex === questions.length - 1 && !answers[currentQuestion.id] && !isQuestionAnnulled} 
-          className="bg-netflix-red hover:bg-red-700 text-white disabled:opacity-50 transition-all duration-200 hover:scale-105 text-sm px-4 py-3"
+          disabled={!isQuestionAnnulled && currentQuestionIndex === questions.length - 1 && !answers[currentQuestion.id]} 
+          className={`${areaColorScheme ? `${areaColorScheme.primary} ${areaColorScheme.hover}` : 'bg-netflix-red hover:bg-red-700'} text-white disabled:opacity-50 transition-all duration-200 hover:scale-105 text-sm px-4 py-3`}
         >
           {currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Próxima'}
         </Button>

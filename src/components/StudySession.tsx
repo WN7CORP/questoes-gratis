@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import MinimalQuestionCard from './MinimalQuestionCard';
 import ProgressBar from './ProgressBar';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RotateCcw, Star, CheckCircle } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Star } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface Question {
@@ -121,14 +121,8 @@ const StudySession = ({
       description: `Você acertou ${correctCount} de ${answeredCount} questões (${accuracy}%)`,
     });
 
+    // Save session stats
     saveSessionStats();
-    
-    // Para sessões de área, mostrar opção de continuar ou finalizar
-    if (mode === 'practice') {
-      setTimeout(() => {
-        onExit();
-      }, 2000);
-    }
   };
 
   const saveSessionStats = async () => {
@@ -156,10 +150,6 @@ const StudySession = ({
       setCurrentIndex(prev => prev + 1);
       setTimeout(() => scrollToTop(), 50);
     }
-  };
-
-  const handleForceFinish = () => {
-    handleSessionComplete();
   };
 
   const getModeIcon = () => {
@@ -192,22 +182,8 @@ const StudySession = ({
             <h1 className="text-xl font-bold text-white">{title}</h1>
           </div>
           
-          <div className="flex items-center gap-2">
-            <div className="text-netflix-text-secondary text-sm">
-              Questão {currentIndex + 1} de {questions.length}
-            </div>
-            
-            {/* Botão para finalizar antecipadamente */}
-            {answeredCount > 5 && (
-              <Button
-                onClick={handleForceFinish}
-                size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
-              >
-                <CheckCircle size={16} />
-                Finalizar
-              </Button>
-            )}
+          <div className="text-netflix-text-secondary text-sm">
+            Questão {currentIndex + 1} de {questions.length}
           </div>
         </div>
 
@@ -246,9 +222,6 @@ const StudySession = ({
             <div className="text-netflix-text-secondary text-sm">
               Progresso: {Math.round(((currentIndex + 1) / questions.length) * 100)}%
             </div>
-            <div className="text-netflix-text-secondary text-xs mt-1">
-              {correctCount} acertos de {answeredCount} respondidas
-            </div>
           </div>
 
           <Button
@@ -257,7 +230,7 @@ const StudySession = ({
             disabled={isLastQuestion}
             className="border-netflix-border text-gray-300 hover:bg-gray-800"
           >
-            {isLastQuestion ? 'Finalizar' : 'Próxima'}
+            Próxima
           </Button>
         </div>
       </div>
