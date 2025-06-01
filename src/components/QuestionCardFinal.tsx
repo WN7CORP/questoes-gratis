@@ -178,7 +178,7 @@ const QuestionCardFinal = ({
         </div>
 
         {/* Submit Button */}
-        {!answered && <Button onClick={handleSubmitAnswer} disabled={!selectedAnswer} className="w-full bg-netflix-red hover:bg-red-700 text-white py-3 sm:py-4 text-base sm:text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] hover:shadow-lg">
+        {!answered && <Button onClick={handleSubmitAnswer} disabled={!selectedAnswer} className="w-full bg-netflix-red hover:bg-red-700 text-white sm:py-4 text-base sm:text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] hover:shadow-lg py-[14px] my-[24px]">
             Responder
           </Button>}
       </Card>
