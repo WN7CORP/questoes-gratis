@@ -6,8 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import QuestionCardFinal from './QuestionCardFinal';
 import ProgressBar from './ProgressBar';
 import QuestionJustification from './QuestionJustification';
+import SessionResults from './SessionResults';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Loader2, RotateCcw, MessageSquare } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, RotateCcw, MessageSquare, Flag } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface StudySessionFinalProps {
@@ -30,10 +31,14 @@ const StudySessionFinal = ({
   const [timeSpent, setTimeSpent] = useState(0);
   const [sessionStartTime] = useState(Date.now());
   const [showJustification, setShowJustification] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [previousSessionStats, setPreviousSessionStats] = useState<any>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const questionHeaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchQuestions();
+    fetchPreviousSessionStats();
   }, [filters]);
 
   useEffect(() => {
@@ -43,18 +48,72 @@ const StudySessionFinal = ({
     return () => clearInterval(timer);
   }, [sessionStartTime]);
 
-  // Scroll to top when question changes
+  // Scroll to question header when question changes
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (viewport) {
-        viewport.scrollTo({
-          top: 0,
-          behavior: 'smooth'
+    scrollToQuestionHeader();
+  }, [currentQuestionIndex]);
+
+  const scrollToQuestionHeader = () => {
+    setTimeout(() => {
+      if (questionHeaderRef.current) {
+        questionHeaderRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      } else if (scrollAreaRef.current) {
+        const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        if (viewport) {
+          viewport.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        }
+      }
+    }, 100);
+  };
+
+  const fetchPreviousSessionStats = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      let query = supabase
+        .from('progresso_questos1')
+        .select('is_correct, answered_at')
+        .eq('user_id', user.id);
+
+      // Apply same filters as current session
+      if (filters.area) {
+        query = query.eq('area', filters.area);
+      }
+      if (filters.tema) {
+        query = query.eq('tema', filters.tema);
+      }
+      if (filters.assunto) {
+        query = query.eq('assunto', filters.assunto);
+      }
+
+      const { data, error } = await query
+        .order('answered_at', { ascending: false })
+        .limit(20); // Last 20 questions from previous sessions
+
+      if (error) {
+        console.error('Error fetching previous stats:', error);
+      } else if (data && data.length > 0) {
+        const correct = data.filter(item => item.is_correct).length;
+        const total = data.length;
+        const accuracy = Math.round((correct / total) * 100);
+        
+        setPreviousSessionStats({
+          correct,
+          total,
+          accuracy
         });
       }
+    } catch (error) {
+      console.error('Error:', error);
     }
-  }, [currentQuestionIndex]);
+  };
 
   const fetchQuestions = async () => {
     setLoading(true);
@@ -137,7 +196,7 @@ const StudySessionFinal = ({
       correct: isCorrect ? prev.correct + 1 : prev.correct
     }));
 
-    // Save progress to new table
+    // Save progress to database
     await saveQuestionProgress(questionId, selectedAnswer, isCorrect);
   }, [answeredQuestions, sessionStartTime, questions]);
 
@@ -153,6 +212,30 @@ const StudySessionFinal = ({
       setCurrentQuestionIndex(currentQuestionIndex - 1);
       setShowJustification(false);
     }
+  };
+
+  const finishSession = () => {
+    setShowResults(true);
+  };
+
+  const handleSessionComplete = () => {
+    setShowResults(false);
+    onExit();
+  };
+
+  const handleContinueStudying = () => {
+    setShowResults(false);
+    // Continue with current session
+  };
+
+  const handleNewSession = () => {
+    setShowResults(false);
+    setCurrentQuestionIndex(0);
+    setSessionStats({ correct: 0, total: 0 });
+    setAnsweredQuestions(new Set());
+    setShowJustification(false);
+    fetchQuestions();
+    fetchPreviousSessionStats();
   };
 
   const restartSession = () => {
@@ -172,6 +255,10 @@ const StudySessionFinal = ({
 
   const isCurrentQuestionAnswered = () => {
     return answeredQuestions.has(questions[currentQuestionIndex]?.id);
+  };
+
+  const canFinishSession = () => {
+    return sessionStats.total > 0;
   };
 
   if (loading) {
@@ -202,8 +289,8 @@ const StudySessionFinal = ({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header with Back Button */}
-      <div className="bg-netflix-card border-b border-netflix-border p-4 flex items-center justify-between">
+      {/* Header with Back Button and Finish Button */}
+      <div className="bg-netflix-card border-b border-netflix-border p-4 flex items-center justify-between" ref={questionHeaderRef}>
         <Button onClick={onExit} variant="ghost" className="text-white hover:text-netflix-red">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
@@ -211,6 +298,15 @@ const StudySessionFinal = ({
         <div className="text-white font-semibold">
           Questão {currentQuestionIndex + 1} de {questions.length}
         </div>
+        {canFinishSession() && (
+          <Button 
+            onClick={finishSession} 
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <Flag className="mr-2 h-4 w-4" />
+            Finalizar
+          </Button>
+        )}
       </div>
 
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
@@ -280,6 +376,20 @@ const StudySessionFinal = ({
         justification={currentQuestion?.justificativa || ''} 
         isVisible={showJustification} 
         onClose={() => setShowJustification(false)} 
+      />
+
+      {/* Session Results */}
+      <SessionResults
+        isVisible={showResults}
+        onClose={handleSessionComplete}
+        sessionStats={{
+          correct: sessionStats.correct,
+          total: sessionStats.total,
+          startTime: sessionStartTime
+        }}
+        previousStats={previousSessionStats}
+        onContinue={handleContinueStudying}
+        onNewSession={handleNewSession}
       />
     </div>
   );
