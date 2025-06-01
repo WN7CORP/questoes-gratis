@@ -117,7 +117,7 @@ const QuestionCardFinal = ({
         __html: content
       }} className="whitespace-pre-wrap my-[32px]" />;
     }
-    return <div className="whitespace-pre-wrap">{content}</div>;
+    return <div className="whitespace-pre-wrap my-0">{content}</div>;
   };
   return <>
       <Card className="bg-netflix-card border-netflix-border p-4 sm:p-6 max-w-4xl mx-auto shadow-xl transition-all duration-200">
@@ -142,7 +142,7 @@ const QuestionCardFinal = ({
                     {currentQuestion}/{totalQuestions}
                   </Badge>}
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-400">
+              <div className="flex items-center gap-2 text-xs text-gray-400 py-[8px]">
                 <BookOpen size={12} />
                 <span>Aplicada em: {question.aplicada_em}</span>
               </div>
@@ -162,7 +162,7 @@ const QuestionCardFinal = ({
         </div>
 
         {/* Alternatives */}
-        <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+        <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6 py-[8px]">
           {alternatives.map((alternative, index) => <button key={alternative.key} onClick={() => handleAnswerSelect(alternative.key)} disabled={answered} className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-200 hover:scale-[1.005] active:scale-[0.99] ${getAlternativeStyle(alternative.key)}`} style={{
           animationDelay: `${index * 50}ms`
         }}>
