@@ -6,8 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import QuestionCardFinal from './QuestionCardFinal';
 import ProgressBar from './ProgressBar';
 import QuestionJustification from './QuestionJustification';
+import SessionResults from './SessionResults';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Loader2, RotateCcw, MessageSquare } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, MessageSquare, Flag } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface StudySessionFinalProps {
@@ -30,6 +31,7 @@ const StudySessionFinal = ({
   const [timeSpent, setTimeSpent] = useState(0);
   const [sessionStartTime] = useState(Date.now());
   const [showJustification, setShowJustification] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -163,7 +165,12 @@ const StudySessionFinal = ({
     });
     setAnsweredQuestions(new Set());
     setShowJustification(false);
+    setShowResults(false);
     fetchQuestions();
+  };
+
+  const finishSession = () => {
+    setShowResults(true);
   };
 
   const handleShowJustification = () => {
@@ -197,12 +204,29 @@ const StudySessionFinal = ({
     );
   }
 
+  // Show results if session is finished
+  if (showResults) {
+    return (
+      <SessionResults 
+        sessionStats={{
+          ...sessionStats,
+          timeSpent,
+          area: filters.area,
+          tema: filters.tema,
+          assunto: filters.assunto
+        }}
+        onRestart={restartSession}
+        onHome={onExit}
+      />
+    );
+  }
+
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header with Back Button */}
+      {/* Header with Back Button and Finish Button */}
       <div className="bg-netflix-card border-b border-netflix-border p-4 flex items-center justify-between">
         <Button onClick={onExit} variant="ghost" className="text-white hover:text-netflix-red">
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -211,6 +235,14 @@ const StudySessionFinal = ({
         <div className="text-white font-semibold">
           Questão {currentQuestionIndex + 1} de {questions.length}
         </div>
+        <Button 
+          onClick={finishSession} 
+          variant="outline" 
+          className="border-netflix-red text-netflix-red hover:bg-netflix-red hover:text-white"
+        >
+          <Flag className="mr-2 h-4 w-4" />
+          Finalizar
+        </Button>
       </div>
 
       <ScrollArea className="flex-1" ref={scrollAreaRef}>

@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, GraduationCap } from 'lucide-react';
+import { Card } from "@/components/ui/card";
+import { X, MessageSquare } from 'lucide-react';
 
 interface QuestionJustificationProps {
   justification: string;
@@ -11,70 +11,64 @@ interface QuestionJustificationProps {
 }
 
 const QuestionJustification = ({ justification, isVisible, onClose }: QuestionJustificationProps) => {
+  if (!isVisible) return null;
+
   // Function to safely render HTML content
   const renderHTMLContent = (content: string) => {
-    if (!content) return <p className="text-gray-400">Justificativa não disponível.</p>;
-    
+    if (!content) return 'Justificativa não disponível para esta questão.';
+
     // Check if content contains HTML tags
     const hasHTML = /<[^>]*>/g.test(content);
-    
     if (hasHTML) {
       return (
         <div 
-          dangerouslySetInnerHTML={{ __html: content }}
-          className="prose prose-invert max-w-none text-gray-100 leading-relaxed"
-          style={{
-            fontSize: '16px',
-            lineHeight: '1.6'
-          }}
+          dangerouslySetInnerHTML={{ __html: content }} 
+          className="text-gray-100 leading-relaxed [&>p]:mb-4 [&>ul]:list-disc [&>ul]:ml-6 [&>ol]:list-decimal [&>ol]:ml-6 [&>strong]:font-bold [&>em]:italic [&>u]:underline [&>br]:block [&>br]:my-2 [&>blockquote]:border-l-4 [&>blockquote]:border-blue-500 [&>blockquote]:pl-4 [&>blockquote]:italic [&>code]:bg-gray-800 [&>code]:px-2 [&>code]:py-1 [&>code]:rounded [&>pre]:bg-gray-800 [&>pre]:p-4 [&>pre]:rounded [&>pre]:overflow-x-auto"
         />
       );
     }
-    
-    return (
-      <div className="text-gray-100 leading-relaxed whitespace-pre-wrap" style={{
-        fontSize: '16px',
-        lineHeight: '1.6'
-      }}>
-        {content}
-      </div>
-    );
+    return <div className="text-gray-100 leading-relaxed whitespace-pre-wrap">{content}</div>;
   };
 
   return (
-    <Dialog open={isVisible} onOpenChange={onClose}>
-      <DialogContent className="bg-netflix-card border-netflix-border max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2 text-white text-xl">
-              <GraduationCap className="text-blue-500" size={24} />
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <Card className="bg-netflix-card border-netflix-border w-full max-w-4xl max-h-[80vh] overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-netflix-border">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-600 rounded-lg p-2">
+              <MessageSquare className="text-white" size={20} />
+            </div>
+            <h3 className="text-white text-lg sm:text-xl font-semibold">
               Comentário da Questão
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="text-gray-400 hover:text-white hover:bg-gray-700 rounded-full p-2"
-            >
-              <X size={20} />
-            </Button>
+            </h3>
           </div>
-        </DialogHeader>
-        
-        <div className="mt-4 space-y-4">
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            size="sm"
+            className="text-gray-400 hover:text-white hover:bg-gray-700"
+          >
+            <X size={20} />
+          </Button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 sm:p-6 max-h-[60vh] overflow-y-auto">
           {renderHTMLContent(justification)}
         </div>
-        
-        <div className="flex justify-end mt-6 pt-4 border-t border-netflix-border">
-          <Button 
+
+        {/* Footer */}
+        <div className="flex justify-end p-4 sm:p-6 border-t border-netflix-border">
+          <Button
             onClick={onClose}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+            className="bg-netflix-red hover:bg-red-700 text-white px-6"
           >
             Fechar
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </Card>
+    </div>
   );
 };
 
