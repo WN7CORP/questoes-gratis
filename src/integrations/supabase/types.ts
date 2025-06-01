@@ -417,36 +417,75 @@ export type Database = {
           area: string | null
           created_at: string
           download: string | null
-          favorito: boolean | null
+          favorito: string | null
           id: number
           imagem: string | null
           link: string | null
           livro: string | null
-          progresso: number | null
+          progresso: string | null
           sobre: string | null
         }
         Insert: {
           area?: string | null
           created_at?: string
           download?: string | null
-          favorito?: boolean | null
+          favorito?: string | null
           id?: number
           imagem?: string | null
           link?: string | null
           livro?: string | null
-          progresso?: number | null
+          progresso?: string | null
           sobre?: string | null
         }
         Update: {
           area?: string | null
           created_at?: string
           download?: string | null
-          favorito?: boolean | null
+          favorito?: string | null
           id?: number
           imagem?: string | null
           link?: string | null
           livro?: string | null
-          progresso?: number | null
+          progresso?: string | null
+          sobre?: string | null
+        }
+        Relationships: []
+      }
+      biblioteca_juridica_duplicate: {
+        Row: {
+          area: string | null
+          created_at: string
+          download: string | null
+          favorito: string | null
+          id: number
+          imagem: string | null
+          link: string | null
+          livro: string | null
+          progresso: string | null
+          sobre: string | null
+        }
+        Insert: {
+          area?: string | null
+          created_at?: string
+          download?: string | null
+          favorito?: string | null
+          id?: number
+          imagem?: string | null
+          link?: string | null
+          livro?: string | null
+          progresso?: string | null
+          sobre?: string | null
+        }
+        Update: {
+          area?: string | null
+          created_at?: string
+          download?: string | null
+          favorito?: string | null
+          id?: number
+          imagem?: string | null
+          link?: string | null
+          livro?: string | null
+          progresso?: string | null
           sobre?: string | null
         }
         Relationships: []
@@ -951,15 +990,7 @@ export type Database = {
           id?: string
           user_ip?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "book_favorites_book_id_fkey"
-            columns: ["book_id"]
-            isOneToOne: false
-            referencedRelation: "biblioteca_juridica"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       book_notes: {
         Row: {
@@ -4138,6 +4169,54 @@ export type Database = {
           id?: string
           onboarding_completed?: boolean | null
           premium_until?: string | null
+        }
+        Relationships: []
+      }
+      progresso_questos1: {
+        Row: {
+          answered_at: string
+          area: string | null
+          assunto: string | null
+          created_at: string
+          id: string
+          is_correct: boolean
+          question_id: number
+          selected_answer: string | null
+          session_id: string | null
+          tema: string | null
+          time_spent: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answered_at?: string
+          area?: string | null
+          assunto?: string | null
+          created_at?: string
+          id?: string
+          is_correct: boolean
+          question_id: number
+          selected_answer?: string | null
+          session_id?: string | null
+          tema?: string | null
+          time_spent?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answered_at?: string
+          area?: string | null
+          assunto?: string | null
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          question_id?: number
+          selected_answer?: string | null
+          session_id?: string | null
+          tema?: string | null
+          time_spent?: number | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

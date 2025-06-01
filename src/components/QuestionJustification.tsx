@@ -1,9 +1,8 @@
 
-import { useState } from 'react';
-import { Card } from "@/components/ui/card";
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { MessageSquare, X } from 'lucide-react';
+import { X, GraduationCap } from 'lucide-react';
 
 interface QuestionJustificationProps {
   justification: string;
@@ -12,79 +11,70 @@ interface QuestionJustificationProps {
 }
 
 const QuestionJustification = ({ justification, isVisible, onClose }: QuestionJustificationProps) => {
-  if (!isVisible) return null;
+  // Function to safely render HTML content
+  const renderHTMLContent = (content: string) => {
+    if (!content) return <p className="text-gray-400">Justificativa não disponível.</p>;
+    
+    // Check if content contains HTML tags
+    const hasHTML = /<[^>]*>/g.test(content);
+    
+    if (hasHTML) {
+      return (
+        <div 
+          dangerouslySetInnerHTML={{ __html: content }}
+          className="prose prose-invert max-w-none text-gray-100 leading-relaxed"
+          style={{
+            fontSize: '16px',
+            lineHeight: '1.6'
+          }}
+        />
+      );
+    }
+    
+    return (
+      <div className="text-gray-100 leading-relaxed whitespace-pre-wrap" style={{
+        fontSize: '16px',
+        lineHeight: '1.6'
+      }}>
+        {content}
+      </div>
+    );
+  };
 
   return (
-    <>
-      {/* Mobile version using Drawer */}
-      <div className="block sm:hidden">
-        <Drawer open={isVisible} onOpenChange={onClose}>
-          <DrawerContent className="bg-netflix-card border-netflix-border max-h-[85vh]">
-            <DrawerHeader className="pb-4">
-              <DrawerTitle className="text-white text-xl font-semibold flex items-center gap-2">
-                <MessageSquare size={20} className="text-netflix-red" />
-                Comentário da Questão
-              </DrawerTitle>
-              <DrawerDescription className="text-gray-400">
-                Entenda melhor a resposta correta
-              </DrawerDescription>
-            </DrawerHeader>
-            
-            <div className="p-4 overflow-y-auto max-h-[60vh]">
-              <div className="text-gray-300 leading-relaxed text-base whitespace-pre-wrap">
-                {justification || 'Justificativa não disponível para esta questão.'}
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-netflix-border">
-              <Button
-                onClick={onClose}
-                className="w-full bg-netflix-red hover:bg-red-700 text-white py-4 text-base rounded-xl active:scale-95 transition-all duration-200"
-              >
-                Fechar
-              </Button>
-            </div>
-          </DrawerContent>
-        </Drawer>
-      </div>
-
-      {/* Desktop version (existing sliding panel) */}
-      <div className="hidden sm:block">
-        {/* Backdrop */}
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-          onClick={onClose}
-        />
-        
-        {/* Sliding Panel */}
-        <div className={`
-          fixed top-0 right-0 h-full w-full max-w-md bg-netflix-card border-l border-netflix-border z-50
-          transform transition-transform duration-300 ease-out
-          ${isVisible ? 'translate-x-0' : 'translate-x-full'}
-        `}>
-          <div className="p-6 h-full overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="text-white font-semibold flex items-center gap-2">
-                <MessageSquare size={16} className="text-netflix-red" />
-                Comentário da Questão
-              </h4>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="text-gray-400 hover:text-white"
-              >
-                <X size={16} />
-              </Button>
-            </div>
-            
-            <div className="text-gray-300 leading-relaxed text-sm whitespace-pre-wrap">
-              {justification || 'Justificativa não disponível para esta questão.'}
-            </div>
+    <Dialog open={isVisible} onOpenChange={onClose}>
+      <DialogContent className="bg-netflix-card border-netflix-border max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2 text-white text-xl">
+              <GraduationCap className="text-blue-500" size={24} />
+              Comentário da Questão
+            </DialogTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="text-gray-400 hover:text-white hover:bg-gray-700 rounded-full p-2"
+            >
+              <X size={20} />
+            </Button>
           </div>
+        </DialogHeader>
+        
+        <div className="mt-4 space-y-4">
+          {renderHTMLContent(justification)}
         </div>
-      </div>
-    </>
+        
+        <div className="flex justify-end mt-6 pt-4 border-t border-netflix-border">
+          <Button 
+            onClick={onClose}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+          >
+            Fechar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
