@@ -3466,6 +3466,36 @@ export type Database = {
         }
         Relationships: []
       }
+      livros_de_sucesso: {
+        Row: {
+          capa_area: string | null
+          capa_livros: string | null
+          categoria: string | null
+          id: number
+          link: string | null
+          livro: string | null
+          sinopse: string | null
+        }
+        Insert: {
+          capa_area?: string | null
+          capa_livros?: string | null
+          categoria?: string | null
+          id?: number
+          link?: string | null
+          livro?: string | null
+          sinopse?: string | null
+        }
+        Update: {
+          capa_area?: string | null
+          capa_livros?: string | null
+          categoria?: string | null
+          id?: number
+          link?: string | null
+          livro?: string | null
+          sinopse?: string | null
+        }
+        Relationships: []
+      }
       livros_historico_visualizacao: {
         Row: {
           id: string
@@ -4142,6 +4172,39 @@ export type Database = {
         }
         Relationships: []
       }
+      premium_orders: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          id: string
+          status: string | null
+          stripe_session_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          status?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          status?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -4149,7 +4212,9 @@ export type Database = {
           display_name: string | null
           email: string
           id: string
+          is_premium: boolean | null
           onboarding_completed: boolean | null
+          premium_expires_at: string | null
           premium_until: string | null
         }
         Insert: {
@@ -4158,7 +4223,9 @@ export type Database = {
           display_name?: string | null
           email: string
           id: string
+          is_premium?: boolean | null
           onboarding_completed?: boolean | null
+          premium_expires_at?: string | null
           premium_until?: string | null
         }
         Update: {
@@ -4167,7 +4234,9 @@ export type Database = {
           display_name?: string | null
           email?: string
           id?: string
+          is_premium?: boolean | null
           onboarding_completed?: boolean | null
+          premium_expires_at?: string | null
           premium_until?: string | null
         }
         Relationships: []
@@ -4634,6 +4703,39 @@ export type Database = {
           resumo?: string | null
           tema?: string
           topico?: string
+        }
+        Relationships: []
+      }
+      search_analytics: {
+        Row: {
+          article_number: string | null
+          code_id: string | null
+          created_at: string
+          id: string
+          result_count: number | null
+          search_term: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          article_number?: string | null
+          code_id?: string | null
+          created_at?: string
+          id?: string
+          result_count?: number | null
+          search_term: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          article_number?: string | null
+          code_id?: string | null
+          created_at?: string
+          id?: string
+          result_count?: number | null
+          search_term?: string
+          session_id?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -5324,6 +5426,54 @@ export type Database = {
           subscription_tier?: string | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      success_book_favorites: {
+        Row: {
+          book_id: number
+          created_at: string | null
+          id: string
+          user_ip: string
+        }
+        Insert: {
+          book_id: number
+          created_at?: string | null
+          id?: string
+          user_ip: string
+        }
+        Update: {
+          book_id?: number
+          created_at?: string | null
+          id?: string
+          user_ip?: string
+        }
+        Relationships: []
+      }
+      success_book_notes: {
+        Row: {
+          book_id: number
+          created_at: string | null
+          id: string
+          note_text: string
+          updated_at: string | null
+          user_ip: string
+        }
+        Insert: {
+          book_id: number
+          created_at?: string | null
+          id?: string
+          note_text: string
+          updated_at?: string | null
+          user_ip: string
+        }
+        Update: {
+          book_id?: number
+          created_at?: string | null
+          id?: string
+          note_text?: string
+          updated_at?: string | null
+          user_ip?: string
         }
         Relationships: []
       }
@@ -6526,6 +6676,10 @@ export type Database = {
       }
     }
     Functions: {
+      activate_premium: {
+        Args: { user_uuid: string }
+        Returns: undefined
+      }
       calculate_user_progress: {
         Args: { user_uuid: string }
         Returns: number
