@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { QuestionFinal, QuestionFilters } from '@/types/questionFinal';
 import { transformSupabaseToQuestionsFinal } from '@/utils/questionFinalTransform';
@@ -8,8 +7,9 @@ import ProgressBar from './ProgressBar';
 import QuestionJustification from './QuestionJustification';
 import SessionResults from './SessionResults';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Loader2, MessageSquare, Flag } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, MessageSquare, Flag, Crown } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useCommentLimits } from '@/hooks/useCommentLimits';
 
 interface StudySessionFinalProps {
   filters: QuestionFilters;
@@ -33,6 +33,7 @@ const StudySessionFinal = ({
   const [showJustification, setShowJustification] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { usage, loading: usageLoading } = useCommentLimits();
 
   useEffect(() => {
     fetchQuestions();
@@ -181,6 +182,39 @@ const StudySessionFinal = ({
     return answeredQuestions.has(questions[currentQuestionIndex]?.id);
   };
 
+  const getCommentButtonText = () => {
+    if (usageLoading) return "Carregando...";
+    
+    if (usage.isPremium) {
+      return "Ver Comentário";
+    }
+    
+    if (usage.remainingComments > 0) {
+      return `Ver Comentário (${usage.remainingComments}/3)`;
+    }
+    
+    return "Ver Comentário Premium";
+  };
+
+  const getCommentButtonIcon = () => {
+    if (usage.isPremium || usage.remainingComments > 0) {
+      return <MessageSquare size={18} />;
+    }
+    return <Crown size={18} />;
+  };
+
+  const getCommentButtonStyle = () => {
+    if (usage.isPremium) {
+      return "bg-blue-500 hover:bg-blue-600 text-white";
+    }
+    
+    if (usage.remainingComments > 0) {
+      return "bg-blue-500 hover:bg-blue-600 text-white";
+    }
+    
+    return "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white";
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -294,15 +328,16 @@ const StudySessionFinal = ({
         </div>
       </ScrollArea>
 
-      {/* Blue Comment Button - Fixed position at bottom */}
+      {/* Comment Button - Fixed position at bottom */}
       {isCurrentQuestionAnswered() && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
           <Button 
             onClick={handleShowJustification} 
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-200 hover:scale-[1.02] flex items-center gap-2"
+            disabled={usageLoading}
+            className={`${getCommentButtonStyle()} px-6 py-3 rounded-full shadow-lg transition-all duration-200 hover:scale-[1.02] flex items-center gap-2`}
           >
-            <MessageSquare size={18} />
-            Ver Comentário
+            {getCommentButtonIcon()}
+            {getCommentButtonText()}
           </Button>
         </div>
       )}

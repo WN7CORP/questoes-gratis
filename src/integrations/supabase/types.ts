@@ -1544,6 +1544,33 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_comment_usage: {
+        Row: {
+          comment_count: number
+          created_at: string
+          date: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment_count?: number
+          created_at?: string
+          date?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment_count?: number
+          created_at?: string
+          date?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dicionario_juridico: {
         Row: {
           area_direito: string | null

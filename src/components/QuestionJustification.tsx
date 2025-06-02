@@ -1,8 +1,10 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { X, MessageSquare } from 'lucide-react';
+import { X, MessageSquare, Crown } from 'lucide-react';
+import { useCommentLimits } from '@/hooks/useCommentLimits';
+import PremiumUpgradeModal from './PremiumUpgradeModal';
 
 interface QuestionJustificationProps {
   justification: string;
@@ -11,7 +13,55 @@ interface QuestionJustificationProps {
 }
 
 const QuestionJustification = ({ justification, isVisible, onClose }: QuestionJustificationProps) => {
-  if (!isVisible) return null;
+  const { usage, incrementCommentCount } = useCommentLimits();
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [canShowContent, setCanShowContent] = useState(false);
+
+  useEffect(() => {
+    if (isVisible && !usage.isPremium) {
+      // Verificar se pode incrementar o contador
+      if (usage.canViewMore) {
+        incrementCommentCount().then((success) => {
+          if (success) {
+            setCanShowContent(true);
+          } else {
+            setShowPremiumModal(true);
+          }
+        });
+      } else {
+        setShowPremiumModal(true);
+      }
+    } else if (isVisible && usage.isPremium) {
+      setCanShowContent(true);
+    }
+  }, [isVisible, usage.canViewMore, usage.isPremium]);
+
+  useEffect(() => {
+    if (!isVisible) {
+      setCanShowContent(false);
+      setShowPremiumModal(false);
+    }
+  }, [isVisible]);
+
+  const handleClose = () => {
+    setCanShowContent(false);
+    setShowPremiumModal(false);
+    onClose();
+  };
+
+  // Mostrar modal premium se necessário
+  if (showPremiumModal) {
+    return (
+      <PremiumUpgradeModal
+        isVisible={true}
+        onClose={handleClose}
+        remainingComments={usage.remainingComments}
+      />
+    );
+  }
+
+  // Só mostrar conteúdo se autorizado
+  if (!isVisible || !canShowContent) return null;
 
   // Function to safely render HTML content
   const renderHTMLContent = (content: string) => {
@@ -39,12 +89,33 @@ const QuestionJustification = ({ justification, isVisible, onClose }: QuestionJu
             <div className="bg-blue-600 rounded-lg p-2">
               <MessageSquare className="text-white" size={20} />
             </div>
-            <h3 className="text-white text-lg sm:text-xl font-semibold">
-              Comentário da Questão
-            </h3>
+            <div className="flex-1">
+              <h3 className="text-white text-lg sm:text-xl font-semibold">
+                Comentário da Questão
+              </h3>
+              {!usage.isPremium && (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs text-gray-400">
+                    {usage.remainingComments > 0 
+                      ? `${usage.remainingComments} comentário${usage.remainingComments === 1 ? '' : 's'} restante${usage.remainingComments === 1 ? '' : 's'} hoje`
+                      : 'Último comentário gratuito do dia'
+                    }
+                  </span>
+                  {usage.remainingComments === 0 && (
+                    <Crown className="text-yellow-500" size={12} />
+                  )}
+                </div>
+              )}
+              {usage.isPremium && (
+                <div className="flex items-center gap-1 mt-1">
+                  <Crown className="text-yellow-500" size={12} />
+                  <span className="text-xs text-yellow-400">Premium - Ilimitado</span>
+                </div>
+              )}
+            </div>
           </div>
           <Button
-            onClick={onClose}
+            onClick={handleClose}
             variant="ghost"
             size="sm"
             className="text-gray-400 hover:text-white hover:bg-gray-700"
@@ -59,9 +130,16 @@ const QuestionJustification = ({ justification, isVisible, onClose }: QuestionJu
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end p-4 sm:p-6 border-t border-netflix-border">
+        <div className="flex justify-between items-center p-4 sm:p-6 border-t border-netflix-border">
+          {!usage.isPremium && usage.remainingComments === 0 && (
+            <div className="flex items-center gap-2 text-yellow-400 text-sm">
+              <Crown size={14} />
+              <span>Quer comentários ilimitados? Seja Premium!</span>
+            </div>
+          )}
+          <div className="flex-1"></div>
           <Button
-            onClick={onClose}
+            onClick={handleClose}
             className="bg-netflix-red hover:bg-red-700 text-white px-6"
           >
             Fechar
