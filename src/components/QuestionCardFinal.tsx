@@ -100,7 +100,7 @@ const QuestionCardFinal = ({
   const getAlternativeStyle = (key: string) => {
     if (!answered) {
       if (selectedAnswer === key) {
-        return 'bg-blue-600 border-blue-500 text-white shadow-lg transform scale-[1.01] transition-all duration-200 ring-1 ring-blue-300';
+        return 'bg-red-600 border-red-500 text-white shadow-lg transform scale-[1.01] transition-all duration-200 ring-1 ring-red-300';
       }
       return 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-700 hover:border-gray-500 hover:scale-[1.005] cursor-pointer transition-all duration-200 hover:shadow-md';
     }
@@ -127,12 +127,12 @@ const QuestionCardFinal = ({
 
   return (
     <>
-      <Card className="bg-gray-900 border-gray-700 shadow-xl transition-all duration-200">
+      <Card className="bg-black border-gray-700 shadow-xl transition-all duration-200">
         {/* Header */}
-        <div className="bg-gray-800 border-b border-gray-700 p-3 sm:p-4">
+        <div className="bg-gray-900 border-b border-gray-700 p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="bg-blue-600 rounded-lg p-2 shadow-md">
+              <div className="bg-red-600 rounded-lg p-2 shadow-md">
                 <Scale className="text-white" size={16} />
               </div>
               <div className="flex-1">
@@ -141,7 +141,7 @@ const QuestionCardFinal = ({
                     {question.area}
                   </Badge>
                   {showQuestionNumber && currentQuestion && totalQuestions && (
-                    <Badge variant="outline" className="border-blue-600 text-blue-400 bg-blue-900/30 text-xs font-medium px-2 py-1">
+                    <Badge variant="outline" className="border-red-600 text-red-400 bg-red-900/30 text-xs font-medium px-2 py-1">
                       {currentQuestion}/{totalQuestions}
                     </Badge>
                   )}
@@ -170,14 +170,14 @@ const QuestionCardFinal = ({
         </div>
 
         {/* Question Content */}
-        <div className="p-4 sm:p-6 bg-gray-900">
+        <div className="p-4 sm:p-6 bg-black">
           {/* Topic and Subject Info */}
-          <div className="mb-4 sm:mb-6 bg-gray-800/60 border border-gray-700 rounded-lg p-3 sm:p-4">
+          <div className="mb-4 sm:mb-6 bg-gray-900/60 border border-gray-700 rounded-lg p-3 sm:p-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {question.tema && (
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
-                  <span className="text-blue-400 font-semibold text-xs uppercase tracking-wide">TEMA:</span>
+                  <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></div>
+                  <span className="text-red-400 font-semibold text-xs uppercase tracking-wide">TEMA:</span>
                   <span className="text-white text-sm font-medium truncate">{question.tema}</span>
                 </div>
               )}
@@ -203,10 +203,10 @@ const QuestionCardFinal = ({
           {/* Question Statement */}
           <div className="mb-6 sm:mb-8">
             <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-              <BookOpen className="text-blue-400" size={16} />
-              <h3 className="text-blue-400 font-semibold text-sm sm:text-base">Enunciado da Questão</h3>
+              <BookOpen className="text-red-400" size={16} />
+              <h3 className="text-red-400 font-semibold text-sm sm:text-base">Enunciado da Questão</h3>
             </div>
-            <div className="bg-gray-800/60 border-l-4 border-blue-500 p-4 sm:p-5 rounded-lg">
+            <div className="bg-gray-900/60 border-l-4 border-red-500 p-4 sm:p-5 rounded-lg">
               <div className="text-white text-base sm:text-lg leading-relaxed font-normal">
                 {renderHTMLContent(question.enunciado)}
               </div>
@@ -216,7 +216,7 @@ const QuestionCardFinal = ({
           {/* Alternatives */}
           <div className="space-y-3 mb-6 sm:mb-8">
             <h4 className="text-gray-300 font-semibold text-sm mb-3 flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+              <div className="w-2 h-2 bg-red-600 rounded-full"></div>
               Alternativas
             </h4>
             {alternatives.map((alternative, index) => (
@@ -246,7 +246,7 @@ const QuestionCardFinal = ({
             <Button
               onClick={handleSubmitAnswer}
               disabled={!selectedAnswer}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 sm:py-4 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] hover:shadow-lg"
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-3 sm:py-4 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] hover:shadow-lg"
             >
               Confirmar Resposta
             </Button>
@@ -254,7 +254,7 @@ const QuestionCardFinal = ({
 
           {/* Correct Answer Display */}
           {answered && (
-            <div className="mt-4 sm:mt-6 p-4 bg-gray-800/60 rounded-lg border border-gray-700">
+            <div className="mt-4 sm:mt-6 p-4 bg-gray-900/60 rounded-lg border border-gray-700">
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
                 <CheckCircle className="text-green-500" size={16} />
                 <span className="text-green-400 font-semibold text-sm">Resposta Correta:</span>
@@ -270,12 +270,12 @@ const QuestionCardFinal = ({
             </div>
           )}
 
-          {/* Comment Button - Destacado */}
+          {/* Comment Button - Destacado sem piscar */}
           {answered && (
             <div className="mt-4 sm:mt-6">
               <Button
                 onClick={handleShowJustification}
-                className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white py-4 sm:py-5 text-base sm:text-lg font-bold transition-all duration-200 hover:scale-[1.02] flex items-center justify-center gap-3 shadow-2xl border-2 border-orange-500 hover:border-orange-400 hover:shadow-orange-500/25 animate-pulse"
+                className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white py-4 sm:py-5 text-base sm:text-lg font-bold transition-all duration-200 hover:scale-[1.02] flex items-center justify-center gap-3 shadow-2xl border-2 border-orange-500 hover:border-orange-400 hover:shadow-orange-500/25"
               >
                 <MessageSquare size={20} />
                 <span className="font-black tracking-wide">VER COMENTÁRIO DA QUESTÃO</span>
