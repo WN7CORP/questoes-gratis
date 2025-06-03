@@ -1,8 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Heart, Loader2 } from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
+import { Heart } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 interface EnhancedFavoritesManagerProps {
@@ -18,7 +17,6 @@ const EnhancedFavoritesManager = ({
 }: EnhancedFavoritesManagerProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
 
   const sizeClasses = {
@@ -27,82 +25,26 @@ const EnhancedFavoritesManager = ({
     lg: 'w-6 h-6'
   };
 
-  useEffect(() => {
-    checkAuthAndFavoriteStatus();
-  }, [questionId]);
-
-  const checkAuthAndFavoriteStatus = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsAuthenticated(false);
-        return;
-      }
-
-      setIsAuthenticated(true);
-      
-      // Check if question is already favorited
-      const { data, error } = await supabase
-        .from('question_favorites')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('question_id', questionId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error checking favorite status:', error);
-        return;
-      }
-
-      setIsFavorite(!!data);
-    } catch (error) {
-      console.error('Error in checkAuthAndFavoriteStatus:', error);
-    }
-  };
-
   const toggleFavorite = async () => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Login necessário",
-        description: "Faça login para salvar questões como favoritas",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (loading) return;
 
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      if (isFavorite) {
-        // Remove from favorites
-        const { error } = await supabase
-          .from('question_favorites')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('question_id', questionId);
-
-        if (error) throw error;
-
+      // Temporarily toggle favorite state in local storage
+      const favorites = JSON.parse(localStorage.getItem('questionFavorites') || '[]');
+      const isCurrentlyFavorite = favorites.includes(questionId);
+      
+      if (isCurrentlyFavorite) {
+        const newFavorites = favorites.filter((id: number) => id !== questionId);
+        localStorage.setItem('questionFavorites', JSON.stringify(newFavorites));
         setIsFavorite(false);
         toast({
           title: "Removido dos favoritos",
           description: "Questão removida da sua lista de favoritos",
         });
       } else {
-        // Add to favorites
-        const { error } = await supabase
-          .from('question_favorites')
-          .insert({
-            user_id: user.id,
-            question_id: questionId
-          });
-
-        if (error) throw error;
-
+        favorites.push(questionId);
+        localStorage.setItem('questionFavorites', JSON.stringify(favorites));
         setIsFavorite(true);
         toast({
           title: "Adicionado aos favoritos",
@@ -133,14 +75,10 @@ const EnhancedFavoritesManager = ({
           : 'text-gray-400 hover:text-gray-300'
       }`}
     >
-      {loading ? (
-        <Loader2 className={`${sizeClasses[size]} animate-spin`} />
-      ) : (
-        <Heart 
-          className={sizeClasses[size]} 
-          fill={isFavorite ? 'currentColor' : 'none'} 
-        />
-      )}
+      <Heart 
+        className={sizeClasses[size]} 
+        fill={isFavorite ? 'currentColor' : 'none'} 
+      />
       {showText && (
         <span className="ml-2 text-sm">
           {isFavorite ? 'Favorito' : 'Favoritar'}

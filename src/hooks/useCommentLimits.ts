@@ -80,7 +80,7 @@ export const useCommentLimits = () => {
     }
   };
 
-  const incrementCommentCount = async () => {
+  const consumeComment = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || usage.isPremium) return true;
@@ -125,14 +125,19 @@ export const useCommentLimits = () => {
 
       return true;
     } catch (error) {
-      console.error('Error incrementing comment count:', error);
+      console.error('Error consuming comment:', error);
       return false;
     }
+  };
+
+  const incrementCommentCount = async () => {
+    return await consumeComment();
   };
 
   return {
     usage,
     loading,
+    consumeComment,
     incrementCommentCount,
     refreshUsage: checkCommentUsage
   };
