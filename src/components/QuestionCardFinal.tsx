@@ -109,7 +109,7 @@ const QuestionCardFinal = ({
         __html: content
       }} className="whitespace-pre-wrap leading-relaxed [&>p]:mb-4 [&>ul]:list-disc [&>ul]:ml-6 [&>ol]:list-decimal [&>ol]:ml-6 [&>strong]:font-bold [&>em]:italic [&>u]:underline [&>br]:block [&>br]:my-2" />;
     }
-    return <div className="whitespace-pre-wrap leading-relaxed rounded-md">{content}</div>;
+    return <div className="whitespace-pre-wrap leading-relaxed rounded-none px-0">{content}</div>;
   };
   return <>
       <Card className="bg-gradient-to-br from-netflix-card to-gray-900 border-netflix-border shadow-2xl transition-all duration-300 hover:shadow-3xl">
