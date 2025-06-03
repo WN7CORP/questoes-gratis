@@ -18,7 +18,7 @@ const PremiumUpgradeModal = ({ isVisible, onClose, remainingComments = 0 }: Prem
 
   const benefits = [
     "Comentários ilimitados em todas as questões",
-    "Acesso a todas as funcionalidades exclusivas",
+    "Acesso a todas as funcionalidades exclusivas", 
     "Sem limitações de uso diário",
     "Suporte prioritário",
     "Conteúdo premium atualizado constantemente",
@@ -42,7 +42,7 @@ const PremiumUpgradeModal = ({ isVisible, onClose, remainingComments = 0 }: Prem
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="bg-netflix-card border-netflix-border w-full max-w-2xl max-h-[80vh] overflow-hidden">
+      <Card className="bg-netflix-card border-netflix-border w-full max-w-2xl max-h-[85vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-netflix-border">
           <div className="flex items-center gap-3">
@@ -54,7 +54,7 @@ const PremiumUpgradeModal = ({ isVisible, onClose, remainingComments = 0 }: Prem
                 Upgrade para Premium
               </h3>
               <p className="text-gray-400 text-sm">
-                Você tem direito a 5 questões com comentário por dia, ou seja premium para questões ilimitadas
+                Você esgotou seus comentários gratuitos diários
               </p>
             </div>
           </div>
@@ -70,21 +70,24 @@ const PremiumUpgradeModal = ({ isVisible, onClose, remainingComments = 0 }: Prem
 
         {/* Content */}
         <div className="p-4 sm:p-6 max-h-[60vh] overflow-y-auto">
-          <div className="text-center mb-6">
-            <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-lg p-4 mb-4">
-              <h4 className="text-white text-lg font-semibold mb-2">
+          {/* Info Box */}
+          <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Crown className="text-yellow-500" size={20} />
+              <h4 className="text-white text-lg font-semibold">
                 🎯 Desbloqueie Todo o Potencial dos Seus Estudos!
               </h4>
-              <p className="text-gray-300 text-sm">
-                Com o plano Premium, você terá acesso ilimitado a todos os comentários e funcionalidades exclusivas.
-              </p>
             </div>
+            <p className="text-gray-300 text-sm">
+              Você tem direito a <strong>5 comentários gratuitos por dia</strong>. Seja Premium para comentários ilimitados e muito mais!
+            </p>
           </div>
 
           {/* Benefits List */}
           <div className="space-y-3 mb-6">
-            <h5 className="text-white font-semibold text-base mb-3">
-              ✨ Vantagens do Premium:
+            <h5 className="text-white font-semibold text-base mb-3 flex items-center gap-2">
+              <CheckCircle className="text-green-500" size={18} />
+              Vantagens do Premium:
             </h5>
             {benefits.map((benefit, index) => (
               <div key={index} className="flex items-start gap-3">
@@ -95,7 +98,7 @@ const PremiumUpgradeModal = ({ isVisible, onClose, remainingComments = 0 }: Prem
           </div>
 
           {/* Platform Info */}
-          <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-4 mb-6">
+          <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               {getPlatformIcon()}
               <span className="text-blue-400 font-medium text-sm">
@@ -111,21 +114,24 @@ const PremiumUpgradeModal = ({ isVisible, onClose, remainingComments = 0 }: Prem
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex flex-col sm:flex-row gap-3 p-4 sm:p-6 border-t border-netflix-border">
+        {/* Footer with Clear Action Buttons */}
+        <div className="flex flex-col gap-3 p-4 sm:p-6 border-t border-netflix-border">
+          <Button
+            onClick={handleUpgrade}
+            size="lg"
+            className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold text-base py-3"
+          >
+            <Crown className="mr-2" size={18} />
+            Ser Premium Agora
+          </Button>
+          
           <Button
             onClick={onClose}
             variant="outline"
-            className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white"
+            size="lg"
+            className="w-full border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white text-base py-3"
           >
-            Continuar Grátis
-          </Button>
-          <Button
-            onClick={handleUpgrade}
-            className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold"
-          >
-            <Crown className="mr-2" size={16} />
-            Ser Premium Agora
+            Continuar Grátis (voltar amanhã)
           </Button>
         </div>
       </Card>

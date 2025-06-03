@@ -266,27 +266,34 @@ const StudySessionFinal = ({
           {/* Progress Bar */}
           <ProgressBar current={sessionStats.total} total={questions.length} correct={sessionStats.correct} timeSpent={timeSpent} showStats={true} streak={0} />
 
-          {/* Question Info - Show tema and assunto when aplicada_em is empty */}
+          {/* Question Info Card - Reorganized */}
           {currentQuestion && (
-            <div className="mb-4 bg-netflix-card border border-netflix-border rounded-lg p-3">
-              <div className="flex flex-wrap gap-3 items-center">
-                {currentQuestion.aplicada_em ? (
-                  <div className="text-gray-300 text-sm">
-                    <span className="text-gray-400 font-medium">Aplicada em:</span> {currentQuestion.aplicada_em}
+            <div className="mb-4 bg-netflix-card border border-netflix-border rounded-lg p-4">
+              <div className="space-y-2">
+                {/* Show "Aplicada em" if available */}
+                {currentQuestion.aplicada_em && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-400 font-medium text-sm">Aplicada em:</span>
+                    <span className="text-gray-300 text-sm">{currentQuestion.aplicada_em}</span>
                   </div>
-                ) : (
-                  <>
+                )}
+                
+                {/* Show Tema and Assunto when "Aplicada em" is NOT available */}
+                {!currentQuestion.aplicada_em && (
+                  <div className="flex flex-wrap gap-4">
                     {currentQuestion.tema && (
-                      <div className="text-gray-300 text-sm">
-                        <span className="text-blue-400 font-medium">Tema:</span> {currentQuestion.tema}
+                      <div className="flex items-center gap-2">
+                        <span className="text-blue-400 font-medium text-sm">Tema:</span>
+                        <span className="text-gray-300 text-sm">{currentQuestion.tema}</span>
                       </div>
                     )}
                     {currentQuestion.assunto && (
-                      <div className="text-gray-300 text-sm">
-                        <span className="text-green-400 font-medium">Assunto:</span> {currentQuestion.assunto}
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-400 font-medium text-sm">Assunto:</span>
+                        <span className="text-gray-300 text-sm">{currentQuestion.assunto}</span>
                       </div>
                     )}
-                  </>
+                  </div>
                 )}
               </div>
             </div>
