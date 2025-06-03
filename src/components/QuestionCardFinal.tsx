@@ -147,13 +147,13 @@ const QuestionCardFinal = ({
         </div>
 
         {/* Strategically highlighted Question Statement */}
-        <div className="p-6">
+        <div className="p-6 px-[8px]">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <BookOpen className="text-blue-400" size={20} />
               <h3 className="text-blue-400 font-semibold text-lg">Enunciado da Questão</h3>
             </div>
-            <div className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 border-l-4 border-blue-500 p-6 rounded-lg shadow-inner">
+            <div className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 border-l-4 border-blue-500 p-6 rounded-lg shadow-inner px-[13px]">
               <div className="text-white text-lg sm:text-xl leading-relaxed font-medium">
                 {renderHTMLContent(question.enunciado)}
               </div>
