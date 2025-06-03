@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,6 @@ import { Scale, CheckCircle, XCircle, BookOpen, MessageSquare } from 'lucide-rea
 import { QuestionFinal } from '@/types/questionFinal';
 import QuestionJustification from './QuestionJustification';
 import AnswerFeedback from './AnswerFeedback';
-
 interface QuestionCardFinalProps {
   question: QuestionFinal;
   onAnswer?: (questionId: number, selectedAnswer: string, isCorrect: boolean) => void;
@@ -16,7 +14,6 @@ interface QuestionCardFinalProps {
   totalQuestions?: number;
   onShowJustification?: () => void;
 }
-
 const QuestionCardFinal = ({
   question,
   onAnswer,
@@ -31,7 +28,6 @@ const QuestionCardFinal = ({
   const [showJustification, setShowJustification] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrectAnswer, setIsCorrectAnswer] = useState(false);
-
   useEffect(() => {
     console.log('Question changed - resetting state for question:', question.id);
     setSelectedAnswer('');
@@ -41,7 +37,6 @@ const QuestionCardFinal = ({
     setShowFeedback(false);
     setIsCorrectAnswer(false);
   }, [question.id]);
-
   const alternatives = [{
     key: 'A',
     value: question.A
@@ -58,7 +53,6 @@ const QuestionCardFinal = ({
     key: 'E',
     value: question.E
   }].filter(alt => alt.value && alt.value.trim() !== '');
-
   const handleAnswerSelect = (answer: string) => {
     if (answered) {
       console.log('Question already answered, ignoring click');
@@ -67,7 +61,6 @@ const QuestionCardFinal = ({
     console.log('Answer selected:', answer);
     setSelectedAnswer(answer);
   };
-
   const handleSubmitAnswer = () => {
     if (!selectedAnswer || answered) {
       console.log('Cannot submit - no answer selected or already answered');
@@ -79,16 +72,13 @@ const QuestionCardFinal = ({
     setAnswered(true);
     setShowResult(true);
     setShowFeedback(true);
-
     setTimeout(() => {
       setShowFeedback(false);
     }, 600);
-
     if (onAnswer) {
       onAnswer(question.id, selectedAnswer, isCorrect);
     }
   };
-
   const handleShowJustification = () => {
     if (onShowJustification) {
       onShowJustification();
@@ -96,7 +86,6 @@ const QuestionCardFinal = ({
       setShowJustification(true);
     }
   };
-
   const getAlternativeStyle = (key: string) => {
     if (!answered) {
       if (selectedAnswer === key) {
@@ -104,7 +93,6 @@ const QuestionCardFinal = ({
       }
       return 'bg-netflix-card border-netflix-border text-gray-100 hover:bg-gray-700 hover:border-gray-500 hover:scale-[1.005] cursor-pointer transition-all duration-200 hover:shadow-md';
     }
-
     if (key === question.resposta_correta) {
       return 'bg-green-600 border-green-500 text-white shadow-lg ring-1 ring-green-300';
     }
@@ -113,7 +101,6 @@ const QuestionCardFinal = ({
     }
     return 'bg-netflix-card/60 border-netflix-border/60 text-gray-400/70 opacity-50';
   };
-
   const renderHTMLContent = (content: string) => {
     if (!content) return content;
     const hasHTML = /<[^>]*>/g.test(content);
@@ -124,9 +111,7 @@ const QuestionCardFinal = ({
     }
     return <div className="whitespace-pre-wrap leading-relaxed">{content}</div>;
   };
-
-  return (
-    <>
+  return <>
       <Card className="bg-netflix-black border-netflix-border shadow-xl transition-all duration-200">
         {/* Header */}
         <div className="bg-netflix-card border-b border-netflix-border p-3 sm:p-4">
@@ -140,64 +125,50 @@ const QuestionCardFinal = ({
                   <Badge variant="outline" className="border-netflix-border text-netflix-text-secondary bg-netflix-card/50 text-xs font-medium px-2 py-1">
                     {question.area}
                   </Badge>
-                  {showQuestionNumber && currentQuestion && totalQuestions && (
-                    <Badge variant="outline" className="border-netflix-red text-red-400 bg-red-900/30 text-xs font-medium px-2 py-1">
+                  {showQuestionNumber && currentQuestion && totalQuestions && <Badge variant="outline" className="border-netflix-red text-red-400 bg-red-900/30 text-xs font-medium px-2 py-1">
                       {currentQuestion}/{totalQuestions}
-                    </Badge>
-                  )}
+                    </Badge>}
                 </div>
               </div>
             </div>
             
             <div className="flex items-center gap-2 sm:gap-3">
-              {answered && (
-                <div className="flex items-center gap-2">
-                  {selectedAnswer === question.resposta_correta ? (
-                    <div className="flex items-center gap-2 bg-green-900/30 px-2 sm:px-3 py-1 rounded-full">
+              {answered && <div className="flex items-center gap-2">
+                  {selectedAnswer === question.resposta_correta ? <div className="flex items-center gap-2 bg-green-900/30 px-2 sm:px-3 py-1 rounded-full">
                       <CheckCircle className="text-green-500" size={16} />
                       <span className="text-green-400 text-xs font-medium hidden sm:inline">Correto</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 bg-red-900/30 px-2 sm:px-3 py-1 rounded-full">
+                    </div> : <div className="flex items-center gap-2 bg-red-900/30 px-2 sm:px-3 py-1 rounded-full">
                       <XCircle className="text-red-500" size={16} />
                       <span className="text-red-400 text-xs font-medium hidden sm:inline">Incorreto</span>
-                    </div>
-                  )}
-                </div>
-              )}
+                    </div>}
+                </div>}
             </div>
           </div>
         </div>
 
         {/* Question Content */}
-        <div className="p-4 sm:p-6 bg-netflix-black">
+        <div className="p-4 sm:p-6 bg-netflix-black px-[6px]">
           {/* Topic and Subject Info */}
           <div className="mb-4 sm:mb-6 bg-netflix-card/60 border border-netflix-border rounded-lg p-3 sm:p-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {question.tema && (
-                <div className="flex items-center gap-2">
+              {question.tema && <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-netflix-red rounded-full flex-shrink-0"></div>
                   <span className="text-red-400 font-semibold text-xs uppercase tracking-wide">TEMA:</span>
                   <span className="text-white text-sm font-medium truncate">{question.tema}</span>
-                </div>
-              )}
-              {question.assunto && (
-                <div className="flex items-center gap-2">
+                </div>}
+              {question.assunto && <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
                   <span className="text-green-400 font-semibold text-xs uppercase tracking-wide">ASSUNTO:</span>
                   <span className="text-white text-sm font-medium truncate">{question.assunto}</span>
-                </div>
-              )}
+                </div>}
             </div>
-            {question.aplicada_em && (
-              <div className="pt-3 border-t border-netflix-border mt-3">
+            {question.aplicada_em && <div className="pt-3 border-t border-netflix-border mt-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0"></div>
                   <span className="text-yellow-400 font-medium text-xs">Aplicada em:</span>
                   <span className="text-netflix-text-secondary text-xs">{question.aplicada_em}</span>
                 </div>
-              </div>
-            )}
+              </div>}
           </div>
 
           {/* Question Statement */}
@@ -219,16 +190,9 @@ const QuestionCardFinal = ({
               <div className="w-2 h-2 bg-netflix-red rounded-full"></div>
               Alternativas
             </h4>
-            {alternatives.map((alternative, index) => (
-              <button
-                key={alternative.key}
-                onClick={() => handleAnswerSelect(alternative.key)}
-                disabled={answered}
-                className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-200 ${getAlternativeStyle(alternative.key)}`}
-                style={{
-                  animationDelay: `${index * 50}ms`
-                }}
-              >
+            {alternatives.map((alternative, index) => <button key={alternative.key} onClick={() => handleAnswerSelect(alternative.key)} disabled={answered} className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-200 ${getAlternativeStyle(alternative.key)}`} style={{
+            animationDelay: `${index * 50}ms`
+          }}>
                 <div className="flex items-start gap-3">
                   <span className="font-bold text-sm min-w-[24px] flex-shrink-0 bg-black/30 rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center transition-transform duration-150">
                     {alternative.key}
@@ -237,24 +201,16 @@ const QuestionCardFinal = ({
                     {renderHTMLContent(alternative.value)}
                   </div>
                 </div>
-              </button>
-            ))}
+              </button>)}
           </div>
 
           {/* Submit Button */}
-          {!answered && (
-            <Button
-              onClick={handleSubmitAnswer}
-              disabled={!selectedAnswer}
-              className="w-full bg-netflix-red hover:bg-red-700 text-white py-3 sm:py-4 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] hover:shadow-lg"
-            >
+          {!answered && <Button onClick={handleSubmitAnswer} disabled={!selectedAnswer} className="w-full bg-netflix-red hover:bg-red-700 text-white py-3 sm:py-4 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] hover:shadow-lg">
               Confirmar Resposta
-            </Button>
-          )}
+            </Button>}
 
           {/* Correct Answer Display */}
-          {answered && (
-            <div className="mt-4 sm:mt-6 p-4 bg-netflix-card/60 rounded-lg border border-netflix-border">
+          {answered && <div className="mt-4 sm:mt-6 p-4 bg-netflix-card/60 rounded-lg border border-netflix-border">
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
                 <CheckCircle className="text-green-500" size={16} />
                 <span className="text-green-400 font-semibold text-sm">Resposta Correta:</span>
@@ -262,26 +218,18 @@ const QuestionCardFinal = ({
                   Alternativa {question.resposta_correta}
                 </Badge>
               </div>
-              {question.alternativa_correta && (
-                <div className="text-netflix-text-secondary text-sm leading-relaxed pl-6">
+              {question.alternativa_correta && <div className="text-netflix-text-secondary text-sm leading-relaxed pl-6">
                   {renderHTMLContent(question.alternativa_correta)}
-                </div>
-              )}
-            </div>
-          )}
+                </div>}
+            </div>}
 
           {/* Comment Button - Improved styling without bold */}
-          {answered && (
-            <div className="mt-4 sm:mt-6">
-              <Button
-                onClick={handleShowJustification}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 sm:py-5 text-base sm:text-lg font-medium transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 shadow-lg border border-blue-500/30 hover:border-blue-400/50 hover:shadow-blue-500/20"
-              >
+          {answered && <div className="mt-4 sm:mt-6">
+              <Button onClick={handleShowJustification} className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 sm:py-5 text-base sm:text-lg font-medium transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 shadow-lg border border-blue-500/30 hover:border-blue-400/50 hover:shadow-blue-500/20">
                 <MessageSquare size={20} />
                 <span className="tracking-wide">Ver Comentário da Questão</span>
               </Button>
-            </div>
-          )}
+            </div>}
         </div>
       </Card>
 
@@ -289,13 +237,7 @@ const QuestionCardFinal = ({
       <AnswerFeedback isCorrect={isCorrectAnswer} show={showFeedback} />
 
       {/* Question Justification Modal */}
-      <QuestionJustification 
-        justification={question.justificativa} 
-        isVisible={showJustification} 
-        onClose={() => setShowJustification(false)} 
-      />
-    </>
-  );
+      <QuestionJustification justification={question.justificativa} isVisible={showJustification} onClose={() => setShowJustification(false)} />
+    </>;
 };
-
 export default QuestionCardFinal;
