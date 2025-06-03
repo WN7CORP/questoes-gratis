@@ -133,7 +133,7 @@ const SessionResults = ({
     }
   };
   return <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-      <Card className="bg-gray-800 border-gray-700 p-6 max-w-2xl w-full shadow-2xl py-0">
+      <Card className="bg-gray-800 border-gray-700 p-6 max-w-2xl w-full shadow-2xl py-0 px-[14px]">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
@@ -165,7 +165,7 @@ const SessionResults = ({
 
         {/* Detailed Stats */}
         <div className="space-y-3 mb-6">
-          <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+          <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg border border-gray-600 py-[7px]">
             <div className="flex items-center gap-3">
               <Clock className="text-blue-400" size={18} />
               <span className="text-white text-sm">Tempo total da sessão</span>
@@ -173,7 +173,7 @@ const SessionResults = ({
             <span className="text-gray-300 font-mono">{formatTime(sessionStats.timeSpent)}</span>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+          <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg border border-gray-600 py-[8px]">
             <div className="flex items-center gap-3">
               <BarChart3 className="text-purple-400" size={18} />
               <span className="text-white text-sm">Tempo médio por questão</span>
@@ -181,7 +181,7 @@ const SessionResults = ({
             <span className="text-gray-300 font-mono">{averageTimePerQuestion}s</span>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+          <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg border border-gray-600 py-[9px]">
             <div className="flex items-center gap-3">
               <Target className="text-green-400" size={18} />
               <span className="text-white text-sm">Questões respondidas</span>
@@ -200,7 +200,7 @@ const SessionResults = ({
               <span className="text-gray-300 text-xs">{getPerformanceText()}</span>
             </div>}
 
-          {previousSession && <div className="p-3 bg-gray-700/30 rounded-lg border border-gray-600">
+          {previousSession && <div className="p-3 bg-gray-700/30 rounded-lg border border-gray-600 py-[5px]">
               <div className="text-gray-400 text-xs mb-2">Sessão anterior ({previousSession.session_date}):</div>
               <div className="flex items-center gap-4 text-xs">
                 <span className="text-gray-300">{previousSession.percentage}% aproveitamento</span>
@@ -227,7 +227,7 @@ const SessionResults = ({
 
         {/* Action Buttons */}
         <div className="flex gap-3">
-          <Button onClick={onRestart} className="flex-1 bg-red-600 hover:bg-red-700 text-white shadow-lg">
+          <Button onClick={onRestart} className="flex-1 bg-red-600 hover:bg-red-700 text-white shadow-lg py-0">
             <RotateCcw className="mr-2 h-4 w-4" />
             Nova Sessão
           </Button>
