@@ -127,31 +127,18 @@ const QuestionCardFinal = ({
             <div className="bg-netflix-red rounded-lg p-2 sm:p-3 transition-transform duration-200 hover:scale-110">
               <Scale className="text-white" size={16} />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 rounded">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs">
                   {question.area}
                 </Badge>
-                {question.tema && <Badge variant="outline" className="border-blue-600 text-blue-400 bg-blue-900/20 text-xs">
-                    {question.tema}
-                  </Badge>}
-                {question.assunto && <Badge variant="outline" className="border-green-600 text-green-400 bg-green-900/20 text-xs">
-                    {question.assunto}
-                  </Badge>}
+                {question.tema}
+                {question.assunto}
                 {showQuestionNumber && currentQuestion && totalQuestions && <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card text-xs font-bold">
                     {currentQuestion}/{totalQuestions}
                   </Badge>}
               </div>
-              <div className="flex items-center gap-4 text-xs text-gray-400 py-[8px] flex-wrap">
-                <div className="flex items-center gap-1">
-                  <Calendar size={12} />
-                  <span>Aplicada em: {question.aplicada_em}</span>
-                </div>
-                {question.numero_questao && <div className="flex items-center gap-1">
-                    
-                    
-                  </div>}
-              </div>
+              
             </div>
           </div>
           
