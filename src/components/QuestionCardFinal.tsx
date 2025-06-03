@@ -174,27 +174,27 @@ const QuestionCardFinal = ({
           {/* Topic and Subject Info */}
           <div className="mb-4 sm:mb-6 bg-gray-800/60 border border-gray-700 rounded-lg p-3 sm:p-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {currentQuestion.tema && (
+              {question.tema && (
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
                   <span className="text-blue-400 font-semibold text-xs uppercase tracking-wide">TEMA:</span>
-                  <span className="text-white text-sm font-medium truncate">{currentQuestion.tema}</span>
+                  <span className="text-white text-sm font-medium truncate">{question.tema}</span>
                 </div>
               )}
-              {currentQuestion.assunto && (
+              {question.assunto && (
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
                   <span className="text-green-400 font-semibold text-xs uppercase tracking-wide">ASSUNTO:</span>
-                  <span className="text-white text-sm font-medium truncate">{currentQuestion.assunto}</span>
+                  <span className="text-white text-sm font-medium truncate">{question.assunto}</span>
                 </div>
               )}
             </div>
-            {currentQuestion.aplicada_em && (
+            {question.aplicada_em && (
               <div className="pt-3 border-t border-gray-600 mt-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0"></div>
                   <span className="text-yellow-400 font-medium text-xs">Aplicada em:</span>
-                  <span className="text-gray-300 text-xs">{currentQuestion.aplicada_em}</span>
+                  <span className="text-gray-300 text-xs">{question.aplicada_em}</span>
                 </div>
               </div>
             )}
@@ -275,10 +275,10 @@ const QuestionCardFinal = ({
             <div className="mt-4 sm:mt-6">
               <Button
                 onClick={handleShowJustification}
-                className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white py-3 sm:py-4 text-sm sm:text-base font-semibold transition-all duration-200 hover:scale-[1.01] flex items-center justify-center gap-2 shadow-lg border-2 border-orange-500 hover:border-orange-400"
+                className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white py-4 sm:py-5 text-base sm:text-lg font-bold transition-all duration-200 hover:scale-[1.02] flex items-center justify-center gap-3 shadow-2xl border-2 border-orange-500 hover:border-orange-400 hover:shadow-orange-500/25 animate-pulse"
               >
-                <MessageSquare size={18} />
-                <span className="font-bold">Ver Comentário da Questão</span>
+                <MessageSquare size={20} />
+                <span className="font-black tracking-wide">VER COMENTÁRIO DA QUESTÃO</span>
               </Button>
             </div>
           )}
