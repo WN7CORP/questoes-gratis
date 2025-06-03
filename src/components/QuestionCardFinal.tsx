@@ -127,21 +127,21 @@ const QuestionCardFinal = ({
 
   return (
     <>
-      <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 shadow-xl transition-all duration-200">
+      <Card className="bg-gray-900 border-gray-700 shadow-xl transition-all duration-200">
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-gray-700/50">
+        <div className="bg-gray-800 border-b border-gray-700 p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-2 sm:p-3 shadow-md">
-                <Scale className="text-white" size={18} />
+              <div className="bg-blue-600 rounded-lg p-2 shadow-md">
+                <Scale className="text-white" size={16} />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 sm:gap-3 mb-1 flex-wrap">
-                  <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-800/50 text-xs sm:text-sm font-medium px-2 sm:px-3 py-1">
+                  <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-800/50 text-xs font-medium px-2 py-1">
                     {question.area}
                   </Badge>
                   {showQuestionNumber && currentQuestion && totalQuestions && (
-                    <Badge variant="outline" className="border-blue-600 text-blue-400 bg-blue-900/20 text-xs sm:text-sm font-medium px-2 sm:px-3 py-1">
+                    <Badge variant="outline" className="border-blue-600 text-blue-400 bg-blue-900/30 text-xs font-medium px-2 py-1">
                       {currentQuestion}/{totalQuestions}
                     </Badge>
                   )}
@@ -155,12 +155,12 @@ const QuestionCardFinal = ({
                   {selectedAnswer === question.resposta_correta ? (
                     <div className="flex items-center gap-2 bg-green-900/30 px-2 sm:px-3 py-1 rounded-full">
                       <CheckCircle className="text-green-500" size={16} />
-                      <span className="text-green-400 text-xs sm:text-sm font-medium hidden sm:inline">Correto</span>
+                      <span className="text-green-400 text-xs font-medium hidden sm:inline">Correto</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 bg-red-900/30 px-2 sm:px-3 py-1 rounded-full">
                       <XCircle className="text-red-500" size={16} />
-                      <span className="text-red-400 text-xs sm:text-sm font-medium hidden sm:inline">Incorreto</span>
+                      <span className="text-red-400 text-xs font-medium hidden sm:inline">Incorreto</span>
                     </div>
                   )}
                 </div>
@@ -169,14 +169,44 @@ const QuestionCardFinal = ({
           </div>
         </div>
 
-        {/* Question Statement */}
-        <div className="p-4 sm:p-6">
+        {/* Question Content */}
+        <div className="p-4 sm:p-6 bg-gray-900">
+          {/* Topic and Subject Info */}
+          <div className="mb-4 sm:mb-6 bg-gray-800/60 border border-gray-700 rounded-lg p-3 sm:p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              {currentQuestion.tema && (
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                  <span className="text-blue-400 font-semibold text-xs uppercase tracking-wide">TEMA:</span>
+                  <span className="text-white text-sm font-medium truncate">{currentQuestion.tema}</span>
+                </div>
+              )}
+              {currentQuestion.assunto && (
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                  <span className="text-green-400 font-semibold text-xs uppercase tracking-wide">ASSUNTO:</span>
+                  <span className="text-white text-sm font-medium truncate">{currentQuestion.assunto}</span>
+                </div>
+              )}
+            </div>
+            {currentQuestion.aplicada_em && (
+              <div className="pt-3 border-t border-gray-600 mt-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0"></div>
+                  <span className="text-yellow-400 font-medium text-xs">Aplicada em:</span>
+                  <span className="text-gray-300 text-xs">{currentQuestion.aplicada_em}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Question Statement */}
           <div className="mb-6 sm:mb-8">
             <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-              <BookOpen className="text-blue-400" size={18} />
-              <h3 className="text-blue-400 font-semibold text-base sm:text-lg">Enunciado da Questão</h3>
+              <BookOpen className="text-blue-400" size={16} />
+              <h3 className="text-blue-400 font-semibold text-sm sm:text-base">Enunciado da Questão</h3>
             </div>
-            <div className="bg-gradient-to-r from-gray-800/80 to-gray-900/80 border-l-4 border-blue-500 p-4 sm:p-6 rounded-lg shadow-inner">
+            <div className="bg-gray-800/60 border-l-4 border-blue-500 p-4 sm:p-5 rounded-lg">
               <div className="text-white text-base sm:text-lg leading-relaxed font-normal">
                 {renderHTMLContent(question.enunciado)}
               </div>
@@ -184,9 +214,9 @@ const QuestionCardFinal = ({
           </div>
 
           {/* Alternatives */}
-          <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
-            <h4 className="text-gray-300 font-semibold text-sm sm:text-base mb-3 sm:mb-4 flex items-center gap-2">
-              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-600 rounded-full"></div>
+          <div className="space-y-3 mb-6 sm:mb-8">
+            <h4 className="text-gray-300 font-semibold text-sm mb-3 flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
               Alternativas
             </h4>
             {alternatives.map((alternative, index) => (
@@ -194,13 +224,13 @@ const QuestionCardFinal = ({
                 key={alternative.key}
                 onClick={() => handleAnswerSelect(alternative.key)}
                 disabled={answered}
-                className={`w-full p-3 sm:p-5 rounded-lg border-2 text-left transition-all duration-200 ${getAlternativeStyle(alternative.key)}`}
+                className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-200 ${getAlternativeStyle(alternative.key)}`}
                 style={{
                   animationDelay: `${index * 50}ms`
                 }}
               >
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <span className="font-bold text-base sm:text-lg min-w-[28px] sm:min-w-[32px] flex-shrink-0 bg-black/30 rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center transition-transform duration-150 shadow-md">
+                <div className="flex items-start gap-3">
+                  <span className="font-bold text-sm min-w-[24px] flex-shrink-0 bg-black/30 rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center transition-transform duration-150">
                     {alternative.key}
                   </span>
                   <div className="flex-1 text-sm sm:text-base">
@@ -216,7 +246,7 @@ const QuestionCardFinal = ({
             <Button
               onClick={handleSubmitAnswer}
               disabled={!selectedAnswer}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 sm:py-4 text-base sm:text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] hover:shadow-lg shadow-md"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 sm:py-4 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] hover:shadow-lg"
             >
               Confirmar Resposta
             </Button>
@@ -224,31 +254,31 @@ const QuestionCardFinal = ({
 
           {/* Correct Answer Display */}
           {answered && (
-            <div className="mt-4 sm:mt-6 p-4 sm:p-5 bg-gradient-to-r from-gray-800/60 to-gray-900/60 rounded-lg border border-gray-700/50 shadow-inner">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                <CheckCircle className="text-green-500" size={18} />
-                <span className="text-green-400 font-semibold text-sm sm:text-base">Resposta Correta:</span>
-                <Badge variant="outline" className="border-green-600 text-green-400 bg-green-900/20 font-medium text-xs sm:text-sm">
+            <div className="mt-4 sm:mt-6 p-4 bg-gray-800/60 rounded-lg border border-gray-700">
+              <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                <CheckCircle className="text-green-500" size={16} />
+                <span className="text-green-400 font-semibold text-sm">Resposta Correta:</span>
+                <Badge variant="outline" className="border-green-600 text-green-400 bg-green-900/20 font-medium text-xs">
                   Alternativa {question.resposta_correta}
                 </Badge>
               </div>
               {question.alternativa_correta && (
-                <div className="text-gray-300 text-sm sm:text-base leading-relaxed pl-6 sm:pl-8">
+                <div className="text-gray-300 text-sm leading-relaxed pl-6">
                   {renderHTMLContent(question.alternativa_correta)}
                 </div>
               )}
             </div>
           )}
 
-          {/* Comment Button */}
+          {/* Comment Button - Destacado */}
           {answered && (
             <div className="mt-4 sm:mt-6">
               <Button
                 onClick={handleShowJustification}
-                className="w-full bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white py-3 sm:py-4 text-sm sm:text-base font-medium transition-all duration-200 hover:scale-[1.01] flex items-center justify-center gap-2 shadow-md"
+                className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white py-3 sm:py-4 text-sm sm:text-base font-semibold transition-all duration-200 hover:scale-[1.01] flex items-center justify-center gap-2 shadow-lg border-2 border-orange-500 hover:border-orange-400"
               >
                 <MessageSquare size={18} />
-                Ver Comentário da Questão
+                <span className="font-bold">Ver Comentário da Questão</span>
               </Button>
             </div>
           )}

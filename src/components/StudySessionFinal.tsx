@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { QuestionFinal, QuestionFilters } from '@/types/questionFinal';
 import { transformSupabaseToQuestionsFinal } from '@/utils/questionFinalTransform';
@@ -267,42 +266,6 @@ const StudySessionFinal = ({
           <div className="mb-4 sm:mb-6">
             <EnhancedUserStats />
           </div>
-
-          {/* Question Info Card */}
-          {currentQuestion && (
-            <div className="mb-4 sm:mb-6 bg-gradient-to-r from-gray-800 to-gray-700 border border-gray-600 rounded-lg p-4 sm:p-6 shadow-lg">
-              <div className="space-y-3 sm:space-y-4">
-                {/* Primary info: Tema and Assunto prominently displayed */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
-                  {currentQuestion.tema && (
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
-                      <span className="text-blue-400 font-semibold text-xs sm:text-sm uppercase tracking-wide">Tema:</span>
-                      <span className="text-white text-sm sm:text-base font-medium truncate">{currentQuestion.tema}</span>
-                    </div>
-                  )}
-                  {currentQuestion.assunto && (
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
-                      <span className="text-green-400 font-semibold text-xs sm:text-sm uppercase tracking-wide">Assunto:</span>
-                      <span className="text-white text-sm sm:text-base font-medium truncate">{currentQuestion.assunto}</span>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Secondary info: "Aplicada em" when available */}
-                {currentQuestion.aplicada_em && (
-                  <div className="pt-2 sm:pt-3 border-t border-gray-600">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0"></div>
-                      <span className="text-yellow-400 font-medium text-xs sm:text-sm">Aplicada em:</span>
-                      <span className="text-gray-300 text-xs sm:text-sm">{currentQuestion.aplicada_em}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Question Card */}
           <div className="mb-6 sm:mb-8">
