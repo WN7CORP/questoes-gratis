@@ -152,12 +152,12 @@ const QuestionCardFinal = ({
           <div className="mb-4 sm:mb-6 bg-netflix-card/60 border border-netflix-border rounded-lg p-3 sm:p-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {question.tema && <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-netflix-red rounded-full flex-shrink-0"></div>
+                  
                   <span className="text-red-400 font-semibold text-xs uppercase tracking-wide">TEMA:</span>
                   <span className="text-white text-sm font-medium truncate">{question.tema}</span>
                 </div>}
               {question.assunto && <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                  
                   <span className="text-green-400 font-semibold text-xs uppercase tracking-wide">ASSUNTO:</span>
                   <span className="text-white text-sm font-medium truncate">{question.assunto}</span>
                 </div>}
@@ -187,7 +187,7 @@ const QuestionCardFinal = ({
           {/* Alternatives */}
           <div className="space-y-3 mb-6 sm:mb-8">
             <h4 className="text-netflix-text-secondary font-semibold text-sm mb-3 flex items-center gap-2">
-              <div className="w-2 h-2 bg-netflix-red rounded-full"></div>
+              
               Alternativas
             </h4>
             {alternatives.map((alternative, index) => <button key={alternative.key} onClick={() => handleAnswerSelect(alternative.key)} disabled={answered} className={`w-full p-3 sm:p-4 rounded-lg border-2 text-left transition-all duration-200 ${getAlternativeStyle(alternative.key)}`} style={{
