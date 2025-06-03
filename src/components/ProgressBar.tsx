@@ -25,7 +25,7 @@ const ProgressBar = ({
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-  return <div className="bg-netflix-card border border-netflix-border rounded-lg p-4 mb-4 px-[15px] py-[6px]">
+  return <div className="bg-netflix-card border border-netflix-border rounded-lg p-4 mb-4 px-[13px] py-0">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-white font-semibold flex items-center gap-2">
           <Target size={18} className="text-netflix-red" />
@@ -48,7 +48,7 @@ const ProgressBar = ({
         </div>
       </div>
 
-      {showStats && current > 0 && <div className="grid grid-cols-2 gap-4 pt-3 border-t border-netflix-border">
+      {showStats && current > 0 && <div className="grid grid-cols-2 gap-4 pt-3 border-t border-netflix-border py-[6px]">
           <div className="flex items-center gap-2">
             <CheckCircle size={16} className="text-green-500" />
             <div>
