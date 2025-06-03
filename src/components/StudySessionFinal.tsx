@@ -190,7 +190,7 @@ const StudySessionFinal = ({
     }
     
     if (usage.remainingComments > 0) {
-      return `Ver Comentário (${usage.remainingComments}/3)`;
+      return `Ver Comentário (${usage.remainingComments}/5)`;
     }
     
     return "Ver Comentário Premium";

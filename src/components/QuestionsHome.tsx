@@ -119,7 +119,12 @@ const QuestionsHome = ({
         {/* User Stats Card */}
         <UserStatsCard />
 
-        {/* Stats Cards - Showing Questions, Themes, and Subjects */}
+        {/* Filters at the top */}
+        <div className="mb-6">
+          <QuestionFiltersComponent onFiltersChange={setSelectedFilters} totalQuestions={totalQuestions} onStartStudy={handleStartStudy} />
+        </div>
+
+        {/* Stats Cards - Showing Questions, Themes, and Subjects - Moved below filters */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <Card className="bg-netflix-card border-netflix-border p-3 sm:p-4">
             <div className="flex items-center gap-2 sm:gap-3">
@@ -168,11 +173,6 @@ const QuestionsHome = ({
               </div>
             </div>
           </Card>
-        </div>
-
-        {/* Filters at the top */}
-        <div className="mb-6">
-          <QuestionFiltersComponent onFiltersChange={setSelectedFilters} totalQuestions={totalQuestions} onStartStudy={handleStartStudy} />
         </div>
 
         {/* Start Study Button - Improved mobile responsiveness */}

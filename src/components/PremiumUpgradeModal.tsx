@@ -54,7 +54,7 @@ const PremiumUpgradeModal = ({ isVisible, onClose, remainingComments = 0 }: Prem
                 Upgrade para Premium
               </h3>
               <p className="text-gray-400 text-sm">
-                Você atingiu o limite de {remainingComments === 0 ? '3' : `${3 - remainingComments}`} comentários diários
+                Você tem direito a 5 questões com comentário por dia, ou seja premium para questões ilimitadas
               </p>
             </div>
           </div>
