@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { QuestionFinal, QuestionFilters } from '@/types/questionFinal';
 import { transformSupabaseToQuestionsFinal } from '@/utils/questionFinalTransform';
@@ -10,10 +11,12 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Loader2, MessageSquare, Flag, Crown } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCommentLimits } from '@/hooks/useCommentLimits';
+
 interface StudySessionFinalProps {
   filters: QuestionFilters;
   onExit: () => void;
 }
+
 const StudySessionFinal = ({
   filters,
   onExit
@@ -35,9 +38,11 @@ const StudySessionFinal = ({
     usage,
     loading: usageLoading
   } = useCommentLimits();
+
   useEffect(() => {
     fetchQuestions();
   }, [filters]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeSpent(Math.floor((Date.now() - sessionStartTime) / 1000));
@@ -57,6 +62,7 @@ const StudySessionFinal = ({
       }
     }
   }, [currentQuestionIndex]);
+
   const fetchQuestions = async () => {
     setLoading(true);
     try {
@@ -72,10 +78,12 @@ const StudySessionFinal = ({
       if (filters.assunto) {
         query = query.eq('assunto', filters.assunto);
       }
+
       const {
         data,
         error
       } = await query;
+
       if (error) {
         console.error('Error fetching questions:', error);
       } else {
@@ -89,6 +97,7 @@ const StudySessionFinal = ({
       setLoading(false);
     }
   };
+
   const saveQuestionProgress = async (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
     try {
       const {
@@ -97,6 +106,7 @@ const StudySessionFinal = ({
         }
       } = await supabase.auth.getUser();
       if (!user) return;
+
       const currentQuestion = questions.find(q => q.id === questionId);
       const {
         error
@@ -111,6 +121,7 @@ const StudySessionFinal = ({
         time_spent: Math.floor((Date.now() - sessionStartTime) / 1000),
         session_id: `study_session_${sessionStartTime}`
       });
+
       if (error) {
         console.error('Error saving question progress:', error);
       } else {
@@ -120,8 +131,10 @@ const StudySessionFinal = ({
       console.error('Error saving progress:', error);
     }
   };
+
   const handleAnswer = useCallback(async (questionId: number, selectedAnswer: string, isCorrect: boolean) => {
     if (answeredQuestions.has(questionId)) return;
+
     console.log('Handling answer for question:', questionId, 'Answer:', selectedAnswer, 'Correct:', isCorrect);
     setAnsweredQuestions(prev => new Set(prev).add(questionId));
     setSessionStats(prev => ({
@@ -132,18 +145,21 @@ const StudySessionFinal = ({
     // Save progress to new table
     await saveQuestionProgress(questionId, selectedAnswer, isCorrect);
   }, [answeredQuestions, sessionStartTime, questions]);
+
   const goToNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setShowJustification(false);
     }
   };
+
   const goToPreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
       setShowJustification(false);
     }
   };
+
   const restartSession = () => {
     setCurrentQuestionIndex(0);
     setSessionStats({
@@ -155,15 +171,19 @@ const StudySessionFinal = ({
     setShowResults(false);
     fetchQuestions();
   };
+
   const finishSession = () => {
     setShowResults(true);
   };
+
   const handleShowJustification = () => {
     setShowJustification(true);
   };
+
   const isCurrentQuestionAnswered = () => {
     return answeredQuestions.has(questions[currentQuestionIndex]?.id);
   };
+
   const getCommentButtonText = () => {
     if (usageLoading) return "Carregando...";
     if (usage.isPremium) {
@@ -174,12 +194,14 @@ const StudySessionFinal = ({
     }
     return "Ver Comentário Premium";
   };
+
   const getCommentButtonIcon = () => {
     if (usage.isPremium || usage.remainingComments > 0) {
       return <MessageSquare size={18} />;
     }
     return <Crown size={18} />;
   };
+
   const getCommentButtonStyle = () => {
     if (usage.isPremium) {
       return "bg-blue-500 hover:bg-blue-600 text-white";
@@ -189,12 +211,14 @@ const StudySessionFinal = ({
     }
     return "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white";
   };
+
   if (loading) {
     return <div className="flex items-center justify-center h-full">
         <Loader2 className="mr-2 h-6 w-6 animate-spin text-netflix-red" />
         <span className="text-white">Carregando questões...</span>
       </div>;
   }
+
   if (questions.length === 0) {
     return <div className="flex flex-col items-center justify-center h-full text-center p-6">
         <div className="text-white text-xl mb-4">
@@ -217,8 +241,10 @@ const StudySessionFinal = ({
       assunto: filters.assunto
     }} onRestart={restartSession} onHome={onExit} />;
   }
+
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
+
   return <div className="h-full flex flex-col">
       {/* Header with Back Button and Finish Button */}
       <div className="bg-netflix-card border-b border-netflix-border p-4 flex items-center justify-between py-[10px]">
@@ -239,6 +265,32 @@ const StudySessionFinal = ({
         <div className="max-w-6xl mx-auto p-4 px-[6px]">
           {/* Progress Bar */}
           <ProgressBar current={sessionStats.total} total={questions.length} correct={sessionStats.correct} timeSpent={timeSpent} showStats={true} streak={0} />
+
+          {/* Question Info - Show tema and assunto when aplicada_em is empty */}
+          {currentQuestion && (
+            <div className="mb-4 bg-netflix-card border border-netflix-border rounded-lg p-3">
+              <div className="flex flex-wrap gap-3 items-center">
+                {currentQuestion.aplicada_em ? (
+                  <div className="text-gray-300 text-sm">
+                    <span className="text-gray-400 font-medium">Aplicada em:</span> {currentQuestion.aplicada_em}
+                  </div>
+                ) : (
+                  <>
+                    {currentQuestion.tema && (
+                      <div className="text-gray-300 text-sm">
+                        <span className="text-blue-400 font-medium">Tema:</span> {currentQuestion.tema}
+                      </div>
+                    )}
+                    {currentQuestion.assunto && (
+                      <div className="text-gray-300 text-sm">
+                        <span className="text-green-400 font-medium">Assunto:</span> {currentQuestion.assunto}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Question Card */}
           <div className="mb-6">
@@ -272,4 +324,5 @@ const StudySessionFinal = ({
       <QuestionJustification justification={currentQuestion?.justificativa || ''} isVisible={showJustification} onClose={() => setShowJustification(false)} />
     </div>;
 };
+
 export default StudySessionFinal;
