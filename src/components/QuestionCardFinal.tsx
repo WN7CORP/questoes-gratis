@@ -1,11 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Scale, CheckCircle, XCircle, BookOpen } from 'lucide-react';
+import { Scale, CheckCircle, XCircle, BookOpen, MessageSquare } from 'lucide-react';
 import { QuestionFinal } from '@/types/questionFinal';
 import QuestionJustification from './QuestionJustification';
 import AnswerFeedback from './AnswerFeedback';
+
 interface QuestionCardFinalProps {
   question: QuestionFinal;
   onAnswer?: (questionId: number, selectedAnswer: string, isCorrect: boolean) => void;
@@ -14,6 +16,7 @@ interface QuestionCardFinalProps {
   totalQuestions?: number;
   onShowJustification?: () => void;
 }
+
 const QuestionCardFinal = ({
   question,
   onAnswer,
@@ -28,6 +31,7 @@ const QuestionCardFinal = ({
   const [showJustification, setShowJustification] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrectAnswer, setIsCorrectAnswer] = useState(false);
+
   useEffect(() => {
     console.log('Question changed - resetting state for question:', question.id);
     setSelectedAnswer('');
@@ -37,6 +41,7 @@ const QuestionCardFinal = ({
     setShowFeedback(false);
     setIsCorrectAnswer(false);
   }, [question.id]);
+
   const alternatives = [{
     key: 'A',
     value: question.A
@@ -53,6 +58,7 @@ const QuestionCardFinal = ({
     key: 'E',
     value: question.E
   }].filter(alt => alt.value && alt.value.trim() !== '');
+
   const handleAnswerSelect = (answer: string) => {
     if (answered) {
       console.log('Question already answered, ignoring click');
@@ -61,6 +67,7 @@ const QuestionCardFinal = ({
     console.log('Answer selected:', answer);
     setSelectedAnswer(answer);
   };
+
   const handleSubmitAnswer = () => {
     if (!selectedAnswer || answered) {
       console.log('Cannot submit - no answer selected or already answered');
@@ -72,13 +79,16 @@ const QuestionCardFinal = ({
     setAnswered(true);
     setShowResult(true);
     setShowFeedback(true);
+
     setTimeout(() => {
       setShowFeedback(false);
     }, 600);
+
     if (onAnswer) {
       onAnswer(question.id, selectedAnswer, isCorrect);
     }
   };
+
   const handleShowJustification = () => {
     if (onShowJustification) {
       onShowJustification();
@@ -86,126 +96,176 @@ const QuestionCardFinal = ({
       setShowJustification(true);
     }
   };
+
   const getAlternativeStyle = (key: string) => {
     if (!answered) {
       if (selectedAnswer === key) {
-        return 'bg-blue-600 border-blue-500 text-white shadow-xl transform scale-[1.02] transition-all duration-300 ring-2 ring-blue-300';
+        return 'bg-blue-600 border-blue-500 text-white shadow-lg transform scale-[1.01] transition-all duration-200 ring-1 ring-blue-300';
       }
-      return 'bg-netflix-card border-netflix-border text-gray-100 hover:bg-gray-700 hover:border-gray-500 hover:scale-[1.01] cursor-pointer transition-all duration-300 hover:shadow-lg';
+      return 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-700 hover:border-gray-500 hover:scale-[1.005] cursor-pointer transition-all duration-200 hover:shadow-md';
     }
+
     if (key === question.resposta_correta) {
-      return 'bg-green-600 border-green-500 text-white shadow-xl shadow-green-500/30 ring-2 ring-green-300 animate-pulse';
+      return 'bg-green-600 border-green-500 text-white shadow-lg ring-1 ring-green-300';
     }
     if (key === selectedAnswer && key !== question.resposta_correta) {
-      return 'bg-red-600 border-red-500 text-white shadow-xl shadow-red-500/30 ring-2 ring-red-300';
+      return 'bg-red-600 border-red-500 text-white shadow-lg ring-1 ring-red-300';
     }
-    return 'bg-gray-800/60 border-gray-700/60 text-gray-400/70 opacity-50';
+    return 'bg-gray-800/60 border-gray-600/60 text-gray-400/70 opacity-50';
   };
+
   const renderHTMLContent = (content: string) => {
     if (!content) return content;
     const hasHTML = /<[^>]*>/g.test(content);
     if (hasHTML) {
       return <div dangerouslySetInnerHTML={{
         __html: content
-      }} className="whitespace-pre-wrap leading-relaxed [&>p]:mb-4 [&>ul]:list-disc [&>ul]:ml-6 [&>ol]:list-decimal [&>ol]:ml-6 [&>strong]:font-bold [&>em]:italic [&>u]:underline [&>br]:block [&>br]:my-2" />;
+      }} className="whitespace-pre-wrap leading-relaxed [&>p]:mb-3 [&>ul]:list-disc [&>ul]:ml-5 [&>ol]:list-decimal [&>ol]:ml-5 [&>em]:italic [&>u]:underline [&>br]:block [&>br]:my-1 [&>strong]:font-medium" />;
     }
-    return <div className="whitespace-pre-wrap leading-relaxed rounded-none px-0">{content}</div>;
+    return <div className="whitespace-pre-wrap leading-relaxed">{content}</div>;
   };
-  return <>
-      <Card className="bg-gradient-to-br from-netflix-card to-gray-900 border-netflix-border shadow-2xl transition-all duration-300 hover:shadow-3xl">
-        {/* Enhanced Header */}
-        <div className="p-6 border-b border-netflix-border/50">
+
+  return (
+    <>
+      <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 shadow-xl transition-all duration-200">
+        {/* Header */}
+        <div className="p-4 sm:p-6 border-b border-gray-700/50">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-r from-netflix-red to-red-600 rounded-xl p-3 shadow-lg">
-                <Scale className="text-white" size={20} />
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-2 sm:p-3 shadow-md">
+                <Scale className="text-white" size={18} />
               </div>
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2 flex-wrap">
-                  <Badge variant="outline" className="border-netflix-border text-gray-300 bg-netflix-card/50 text-sm font-medium px-3 py-1">
+                <div className="flex items-center gap-2 sm:gap-3 mb-1 flex-wrap">
+                  <Badge variant="outline" className="border-gray-600 text-gray-300 bg-gray-800/50 text-xs sm:text-sm font-medium px-2 sm:px-3 py-1">
                     {question.area}
                   </Badge>
-                  {showQuestionNumber && currentQuestion && totalQuestions && <Badge variant="outline" className="border-blue-600 text-blue-400 bg-blue-900/20 text-sm font-bold px-3 py-1">
+                  {showQuestionNumber && currentQuestion && totalQuestions && (
+                    <Badge variant="outline" className="border-blue-600 text-blue-400 bg-blue-900/20 text-xs sm:text-sm font-medium px-2 sm:px-3 py-1">
                       {currentQuestion}/{totalQuestions}
-                    </Badge>}
+                    </Badge>
+                  )}
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
-              {answered && <div className="flex items-center gap-2">
-                  {selectedAnswer === question.resposta_correta ? <div className="flex items-center gap-2 bg-green-900/30 px-3 py-1 rounded-full">
-                      <CheckCircle className="text-green-500 animate-bounce" size={20} />
-                      <span className="text-green-400 text-sm font-medium">Correto!</span>
-                    </div> : <div className="flex items-center gap-2 bg-red-900/30 px-3 py-1 rounded-full">
-                      <XCircle className="text-red-500 animate-pulse" size={20} />
-                      <span className="text-red-400 text-sm font-medium">Incorreto</span>
-                    </div>}
-                </div>}
+            <div className="flex items-center gap-2 sm:gap-3">
+              {answered && (
+                <div className="flex items-center gap-2">
+                  {selectedAnswer === question.resposta_correta ? (
+                    <div className="flex items-center gap-2 bg-green-900/30 px-2 sm:px-3 py-1 rounded-full">
+                      <CheckCircle className="text-green-500" size={16} />
+                      <span className="text-green-400 text-xs sm:text-sm font-medium hidden sm:inline">Correto</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 bg-red-900/30 px-2 sm:px-3 py-1 rounded-full">
+                      <XCircle className="text-red-500" size={16} />
+                      <span className="text-red-400 text-xs sm:text-sm font-medium hidden sm:inline">Incorreto</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Strategically highlighted Question Statement */}
-        <div className="p-6 px-[8px]">
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <BookOpen className="text-blue-400" size={20} />
-              <h3 className="text-blue-400 font-semibold text-lg">Enunciado da Questão</h3>
+        {/* Question Statement */}
+        <div className="p-4 sm:p-6">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <BookOpen className="text-blue-400" size={18} />
+              <h3 className="text-blue-400 font-semibold text-base sm:text-lg">Enunciado da Questão</h3>
             </div>
-            <div className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 border-l-4 border-blue-500 p-6 rounded-lg shadow-inner px-[13px]">
-              <div className="text-white text-lg sm:text-xl leading-relaxed font-medium">
+            <div className="bg-gradient-to-r from-gray-800/80 to-gray-900/80 border-l-4 border-blue-500 p-4 sm:p-6 rounded-lg shadow-inner">
+              <div className="text-white text-base sm:text-lg leading-relaxed font-normal">
                 {renderHTMLContent(question.enunciado)}
               </div>
             </div>
           </div>
 
-          {/* Enhanced Alternatives */}
-          <div className="space-y-4 mb-8">
-            <h4 className="text-gray-300 font-semibold text-base mb-4 flex items-center gap-2">
-              <div className="w-3 h-3 bg-netflix-red rounded-full"></div>
+          {/* Alternatives */}
+          <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+            <h4 className="text-gray-300 font-semibold text-sm sm:text-base mb-3 sm:mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-600 rounded-full"></div>
               Alternativas
             </h4>
-            {alternatives.map((alternative, index) => <button key={alternative.key} onClick={() => handleAnswerSelect(alternative.key)} disabled={answered} className={`w-full p-5 rounded-xl border-2 text-left transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] ${getAlternativeStyle(alternative.key)}`} style={{
-            animationDelay: `${index * 100}ms`
-          }}>
-                <div className="flex items-start gap-4">
-                  <span className="font-bold text-lg min-w-[32px] flex-shrink-0 bg-black/30 rounded-full w-8 h-8 flex items-center justify-center transition-transform duration-200 shadow-lg">
+            {alternatives.map((alternative, index) => (
+              <button
+                key={alternative.key}
+                onClick={() => handleAnswerSelect(alternative.key)}
+                disabled={answered}
+                className={`w-full p-3 sm:p-5 rounded-lg border-2 text-left transition-all duration-200 ${getAlternativeStyle(alternative.key)}`}
+                style={{
+                  animationDelay: `${index * 50}ms`
+                }}
+              >
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <span className="font-bold text-base sm:text-lg min-w-[28px] sm:min-w-[32px] flex-shrink-0 bg-black/30 rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center transition-transform duration-150 shadow-md">
                     {alternative.key}
                   </span>
-                  <div className="flex-1 text-base sm:text-lg">
+                  <div className="flex-1 text-sm sm:text-base">
                     {renderHTMLContent(alternative.value)}
                   </div>
                 </div>
-              </button>)}
+              </button>
+            ))}
           </div>
 
-          {/* Enhanced Submit Button */}
-          {!answered && <Button onClick={handleSubmitAnswer} disabled={!selectedAnswer} className="w-full bg-gradient-to-r from-netflix-red to-red-600 hover:from-red-600 hover:to-red-700 text-white py-4 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl shadow-lg">
+          {/* Submit Button */}
+          {!answered && (
+            <Button
+              onClick={handleSubmitAnswer}
+              disabled={!selectedAnswer}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 sm:py-4 text-base sm:text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] hover:shadow-lg shadow-md"
+            >
               Confirmar Resposta
-            </Button>}
+            </Button>
+          )}
 
-          {/* Enhanced Correct Answer Display */}
-          {answered && <div className="mt-6 p-5 bg-gradient-to-r from-gray-800/60 to-gray-900/60 rounded-xl border border-gray-700/50 shadow-inner">
-              <div className="flex items-center gap-3 mb-3">
-                <CheckCircle className="text-green-500" size={20} />
-                <span className="text-green-400 font-semibold text-base">Resposta Correta:</span>
-                <Badge variant="outline" className="border-green-600 text-green-400 bg-green-900/20 font-bold">
+          {/* Correct Answer Display */}
+          {answered && (
+            <div className="mt-4 sm:mt-6 p-4 sm:p-5 bg-gradient-to-r from-gray-800/60 to-gray-900/60 rounded-lg border border-gray-700/50 shadow-inner">
+              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                <CheckCircle className="text-green-500" size={18} />
+                <span className="text-green-400 font-semibold text-sm sm:text-base">Resposta Correta:</span>
+                <Badge variant="outline" className="border-green-600 text-green-400 bg-green-900/20 font-medium text-xs sm:text-sm">
                   Alternativa {question.resposta_correta}
                 </Badge>
               </div>
-              {question.alternativa_correta && <div className="text-gray-300 text-base leading-relaxed pl-8">
+              {question.alternativa_correta && (
+                <div className="text-gray-300 text-sm sm:text-base leading-relaxed pl-6 sm:pl-8">
                   {renderHTMLContent(question.alternativa_correta)}
-                </div>}
-            </div>}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Comment Button */}
+          {answered && (
+            <div className="mt-4 sm:mt-6">
+              <Button
+                onClick={handleShowJustification}
+                className="w-full bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white py-3 sm:py-4 text-sm sm:text-base font-medium transition-all duration-200 hover:scale-[1.01] flex items-center justify-center gap-2 shadow-md"
+              >
+                <MessageSquare size={18} />
+                Ver Comentário da Questão
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
 
-      {/* Enhanced Answer Feedback */}
+      {/* Answer Feedback */}
       <AnswerFeedback isCorrect={isCorrectAnswer} show={showFeedback} />
 
       {/* Question Justification Modal */}
-      <QuestionJustification justification={question.justificativa} isVisible={showJustification} onClose={() => setShowJustification(false)} />
-    </>;
+      <QuestionJustification 
+        justification={question.justificativa} 
+        isVisible={showJustification} 
+        onClose={() => setShowJustification(false)} 
+      />
+    </>
+  );
 };
+
 export default QuestionCardFinal;

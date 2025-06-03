@@ -7,12 +7,10 @@ import QuestionCardFinal from './QuestionCardFinal';
 import ProgressBar from './ProgressBar';
 import QuestionJustification from './QuestionJustification';
 import SessionResults from './SessionResults';
-import PremiumUpgradeModal from './PremiumUpgradeModal';
 import EnhancedUserStats from './EnhancedUserStats';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Loader2, MessageSquare, Flag, Crown } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, Flag } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useCommentLimits } from '@/hooks/useCommentLimits';
 
 interface StudySessionFinalProps {
   filters: QuestionFilters;
@@ -35,13 +33,7 @@ const StudySessionFinal = ({
   const [sessionStartTime] = useState(Date.now());
   const [showJustification, setShowJustification] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const {
-    usage,
-    loading: usageLoading,
-    consumeComment
-  } = useCommentLimits();
 
   useEffect(() => {
     fetchQuestions();
@@ -176,16 +168,7 @@ const StudySessionFinal = ({
     setShowResults(true);
   };
 
-  const handleShowJustification = async () => {
-    if (!usage.isPremium && usage.remainingComments <= 0) {
-      setShowPremiumModal(true);
-      return;
-    }
-
-    if (!usage.isPremium) {
-      await consumeComment();
-    }
-    
+  const handleShowJustification = () => {
     setShowJustification(true);
   };
 
@@ -193,50 +176,24 @@ const StudySessionFinal = ({
     return answeredQuestions.has(questions[currentQuestionIndex]?.id);
   };
 
-  const getCommentButtonText = () => {
-    if (usageLoading) return "Carregando...";
-    if (usage.isPremium) {
-      return "Ver Comentário";
-    }
-    if (usage.remainingComments > 0) {
-      return `Ver Comentário (${usage.remainingComments}/5)`;
-    }
-    return "Ver Comentário Premium";
-  };
-
-  const getCommentButtonIcon = () => {
-    if (usage.isPremium || usage.remainingComments > 0) {
-      return <MessageSquare size={18} />;
-    }
-    return <Crown size={18} />;
-  };
-
-  const getCommentButtonStyle = () => {
-    if (usage.isPremium) {
-      return "bg-blue-500 hover:bg-blue-600 text-white";
-    }
-    if (usage.remainingComments > 0) {
-      return "bg-blue-500 hover:bg-blue-600 text-white";
-    }
-    return "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white";
-  };
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="mr-2 h-6 w-6 animate-spin text-netflix-red" />
-        <span className="text-white">Carregando questões...</span>
+      <div className="flex items-center justify-center h-full bg-gray-900">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-500 mb-4" />
+          <span className="text-white text-lg">Carregando questões...</span>
+        </div>
       </div>
     );
   }
 
   if (questions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-6">
-        <div className="text-white text-xl mb-4">
+      <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-gray-900">
+        <div className="text-white text-xl mb-6">
           Nenhuma questão encontrada com os filtros aplicados
         </div>
-        <Button onClick={onExit} variant="outline">
+        <Button onClick={onExit} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar aos filtros
         </Button>
@@ -264,36 +221,38 @@ const StudySessionFinal = ({
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header with improved spacing and visual hierarchy */}
-      <div className="bg-netflix-card border-b border-netflix-border p-4 flex items-center justify-between shadow-lg">
+    <div className="h-full flex flex-col bg-gray-900">
+      {/* Header */}
+      <div className="bg-gray-800 border-b border-gray-700 p-3 sm:p-4 flex items-center justify-between shadow-lg">
         <Button 
           onClick={onExit} 
           variant="ghost" 
-          className="text-white hover:text-netflix-red hover:bg-gray-800 transition-all duration-200"
+          size="sm"
+          className="text-white hover:text-blue-400 hover:bg-gray-700 transition-all duration-200"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar
+          <ArrowLeft className="mr-1 sm:mr-2 h-4 w-4" />
+          <span className="hidden sm:inline">Voltar</span>
         </Button>
         
-        <div className="text-white font-semibold text-lg">
+        <div className="text-white font-semibold text-sm sm:text-lg">
           Questão {currentQuestionIndex + 1} de {questions.length}
         </div>
         
         <Button 
           onClick={finishSession} 
           variant="outline" 
-          className="border-netflix-red text-netflix-red hover:bg-netflix-red hover:text-white transition-all duration-200"
+          size="sm"
+          className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white transition-all duration-200"
         >
-          <Flag className="mr-2 h-4 w-4" />
-          Finalizar
+          <Flag className="mr-1 sm:mr-2 h-4 w-4" />
+          <span className="hidden sm:inline">Finalizar</span>
         </Button>
       </div>
 
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
-        <div className="max-w-6xl mx-auto p-6 px-[8px]">
-          {/* Enhanced Progress Bar */}
-          <div className="mb-6">
+        <div className="max-w-6xl mx-auto p-3 sm:p-6">
+          {/* Progress Bar */}
+          <div className="mb-4 sm:mb-6">
             <ProgressBar 
               current={sessionStats.total} 
               total={questions.length} 
@@ -304,40 +263,40 @@ const StudySessionFinal = ({
             />
           </div>
 
-          {/* Enhanced User Stats */}
-          <div className="mb-6">
+          {/* User Stats */}
+          <div className="mb-4 sm:mb-6">
             <EnhancedUserStats />
           </div>
 
-          {/* Strategically reorganized Question Info Card */}
+          {/* Question Info Card */}
           {currentQuestion && (
-            <div className="mb-6 bg-gradient-to-r from-netflix-card to-gray-800 border border-netflix-border rounded-xl p-6 shadow-xl">
-              <div className="space-y-4">
+            <div className="mb-4 sm:mb-6 bg-gradient-to-r from-gray-800 to-gray-700 border border-gray-600 rounded-lg p-4 sm:p-6 shadow-lg">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Primary info: Tema and Assunto prominently displayed */}
-                <div className="flex flex-wrap gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
                   {currentQuestion.tema && (
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-blue-400 font-semibold text-sm uppercase tracking-wide">Tema:</span>
-                      <span className="text-white text-base font-medium">{currentQuestion.tema}</span>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                      <span className="text-blue-400 font-semibold text-xs sm:text-sm uppercase tracking-wide">Tema:</span>
+                      <span className="text-white text-sm sm:text-base font-medium truncate">{currentQuestion.tema}</span>
                     </div>
                   )}
                   {currentQuestion.assunto && (
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-green-400 font-semibold text-sm uppercase tracking-wide">Assunto:</span>
-                      <span className="text-white text-base font-medium">{currentQuestion.assunto}</span>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                      <span className="text-green-400 font-semibold text-xs sm:text-sm uppercase tracking-wide">Assunto:</span>
+                      <span className="text-white text-sm sm:text-base font-medium truncate">{currentQuestion.assunto}</span>
                     </div>
                   )}
                 </div>
                 
                 {/* Secondary info: "Aplicada em" when available */}
                 {currentQuestion.aplicada_em && (
-                  <div className="pt-2 border-t border-gray-700">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                      <span className="text-yellow-400 font-medium text-sm">Aplicada em:</span>
-                      <span className="text-gray-300 text-sm">{currentQuestion.aplicada_em}</span>
+                  <div className="pt-2 sm:pt-3 border-t border-gray-600">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0"></div>
+                      <span className="text-yellow-400 font-medium text-xs sm:text-sm">Aplicada em:</span>
+                      <span className="text-gray-300 text-xs sm:text-sm">{currentQuestion.aplicada_em}</span>
                     </div>
                   </div>
                 )}
@@ -345,8 +304,8 @@ const StudySessionFinal = ({
             </div>
           )}
 
-          {/* Enhanced Question Card */}
-          <div className="mb-8">
+          {/* Question Card */}
+          <div className="mb-6 sm:mb-8">
             <QuestionCardFinal 
               question={currentQuestion} 
               onAnswer={handleAnswer}
@@ -357,15 +316,16 @@ const StudySessionFinal = ({
             />
           </div>
 
-          {/* Improved Navigation with better spacing */}
-          <div className="flex justify-between items-center mb-24">
+          {/* Navigation */}
+          <div className="flex justify-between items-center mb-16 sm:mb-24">
             <Button
               onClick={goToPreviousQuestion}
               disabled={currentQuestionIndex === 0}
               variant="outline"
-              className="w-32 h-12 text-base font-medium hover:scale-105 transition-transform duration-200"
+              size="sm"
+              className="w-24 sm:w-32 h-10 sm:h-12 text-sm sm:text-base font-medium hover:scale-105 transition-transform duration-200 border-gray-600 text-gray-300 hover:bg-gray-700"
             >
-              <ArrowLeft className="mr-2 h-5 w-5" />
+              <ArrowLeft className="mr-1 sm:mr-2 h-4 w-4" />
               Anterior
             </Button>
 
@@ -373,40 +333,21 @@ const StudySessionFinal = ({
               onClick={goToNextQuestion}
               disabled={isLastQuestion}
               variant="outline"
-              className="w-32 h-12 text-base font-medium hover:scale-105 transition-transform duration-200"
+              size="sm"
+              className="w-24 sm:w-32 h-10 sm:h-12 text-sm sm:text-base font-medium hover:scale-105 transition-transform duration-200 border-gray-600 text-gray-300 hover:bg-gray-700"
             >
               Próxima
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ml-1 sm:ml-2 h-4 w-4" />
             </Button>
           </div>
         </div>
       </ScrollArea>
-
-      {/* Enhanced Comment Button */}
-      {isCurrentQuestionAnswered() && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
-          <Button
-            onClick={handleShowJustification}
-            disabled={usageLoading}
-            className={`${getCommentButtonStyle()} px-8 py-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-105 hover:shadow-3xl flex items-center gap-3 text-lg font-semibold`}
-          >
-            {getCommentButtonIcon()}
-            {getCommentButtonText()}
-          </Button>
-        </div>
-      )}
 
       {/* Modals */}
       <QuestionJustification 
         justification={currentQuestion?.justificativa || ''} 
         isVisible={showJustification} 
         onClose={() => setShowJustification(false)} 
-      />
-      
-      <PremiumUpgradeModal 
-        isVisible={showPremiumModal} 
-        onClose={() => setShowPremiumModal(false)} 
-        remainingComments={usage.remainingComments} 
       />
     </div>
   );
